@@ -797,49 +797,57 @@ ruby rt {
     color: #fb7185;
 }
 
-/* Furigana Hide Mode (只作用於文章閱讀區，不影響右側文法例句與抽屜詳解) */
-body[data-ruby-mode="hide"] .article-content-box ruby rt {
+/* ==========================================================================
+   全域假名顯示控制 (文章、整句深度分析器原文、文法例句與詳解抽屜全面連動)
+   ========================================================================== */
+
+/* 1. 隱藏假名模式 (Hide Mode) */
+body[data-ruby-mode="hide"] ruby rt {
     display: none !important;
 }
 
-/* Furigana Mask Mode (獨家遮蔽測驗模式：只作用於文章閱讀區) */
-body[data-ruby-mode="mask"] .article-content-box ruby rt {
-    filter: blur(4px);
-    opacity: 0.18;
-    background: #94a3b8;
-    border-radius: 3px;
-    color: transparent;
-    user-select: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* 2. 遮蔽假名模式 (Mask Mode) - 測驗盲讀專用，含文章、分析器原文、文法例句 */
+body[data-ruby-mode="mask"] ruby rt {
+    filter: blur(4.5px) !important;
+    opacity: 0.15 !important;
+    background: #94a3b8 !important;
+    border-radius: 3px !important;
+    color: transparent !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-body[data-ruby-mode="mask"] .article-content-box .word-token:hover ruby rt,
-body[data-ruby-mode="mask"] .article-content-box ruby:hover rt,
-body[data-ruby-mode="mask"] .article-content-box .word-token.revealed ruby rt {
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby rt {
+    background: #64748b !important;
+}
+
+/* 懸停或點擊切換揭示 (Hover or Click to Reveal) */
+body[data-ruby-mode="mask"] ruby:hover rt,
+body[data-ruby-mode="mask"] ruby.revealed rt,
+body[data-ruby-mode="mask"] .word-token:hover ruby rt,
+body[data-ruby-mode="mask"] .word-token.revealed ruby rt,
+body[data-ruby-mode="mask"] .sentence-row:hover ruby rt,
+body[data-ruby-mode="mask"] .sentence-row.revealed ruby rt,
+body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt,
+body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box:hover ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box.revealed ruby rt,
+body[data-ruby-mode="mask"] .grammar-item-card:hover .grammar-example-box ruby rt,
+body[data-ruby-mode="mask"] .drawer-box:hover ruby rt,
+body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
     filter: none !important;
     opacity: 1 !important;
     background: transparent !important;
-    color: #e11d48 !important;
-}
-
-/* 確保文法例句與深度分析欄振假名完整顯示，絕不被遮蔽或隱藏 */
-.analyzer-column ruby rt,
-.drawer-container ruby rt,
-.grammar-item-card ruby rt,
-.grammar-example-box ruby rt,
-body[data-ruby-mode="mask"] .analyzer-column ruby rt,
-body[data-ruby-mode="mask"] .drawer-container ruby rt,
-body[data-ruby-mode="mask"] .grammar-example-box ruby rt,
-body[data-ruby-mode="hide"] .analyzer-column ruby rt,
-body[data-ruby-mode="hide"] .drawer-container ruby rt,
-body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
-    filter: none !important;
-    opacity: 1 !important;
-    display: inline !important;
-    visibility: visible !important;
-    color: #e11d48 !important;
-    background: transparent !important;
+    color: #dc2626 !important;
     user-select: text !important;
+}
+
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby:hover rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby.revealed rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .grammar-example-box:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt {
+    color: #fb7185 !important;
 }
 
 /* Word Token Interactive Span */

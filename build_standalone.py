@@ -428,30 +428,53 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     margin-bottom: 0.25em !important;
 }
 
-/* 確保文章區的「遮蔽假名/隱藏假名」測驗模式絕不波及右側文法例句與抽屜詳解 */
-.analyzer-column ruby rt,
-.drawer-container ruby rt,
-.grammar-item-card ruby rt,
-.grammar-example-box ruby rt,
-body[data-ruby-mode="mask"] .analyzer-column ruby rt,
-body[data-ruby-mode="mask"] .drawer-container ruby rt,
-body[data-ruby-mode="mask"] .grammar-example-box ruby rt,
-body[data-ruby-mode="hide"] .analyzer-column ruby rt,
-body[data-ruby-mode="hide"] .drawer-container ruby rt,
-body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
+/* ==========================================================================
+   整句深度分析器原文與例句 假名標示遮蔽與隱藏功能
+   ========================================================================== */
+body[data-ruby-mode="hide"] ruby rt {
+    display: none !important;
+}
+
+body[data-ruby-mode="mask"] ruby rt {
+    filter: blur(4.5px) !important;
+    opacity: 0.15 !important;
+    background: #94a3b8 !important;
+    border-radius: 3px !important;
+    color: transparent !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby rt {
+    background: #64748b !important;
+}
+
+/* 滑鼠懸停或點擊切換揭示 (Hover or Click to Reveal) */
+body[data-ruby-mode="mask"] ruby:hover rt,
+body[data-ruby-mode="mask"] ruby.revealed rt,
+body[data-ruby-mode="mask"] .word-token:hover ruby rt,
+body[data-ruby-mode="mask"] .word-token.revealed ruby rt,
+body[data-ruby-mode="mask"] .sentence-row:hover ruby rt,
+body[data-ruby-mode="mask"] .sentence-row.revealed ruby rt,
+body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt,
+body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box:hover ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box.revealed ruby rt,
+body[data-ruby-mode="mask"] .grammar-item-card:hover .grammar-example-box ruby rt,
+body[data-ruby-mode="mask"] .drawer-box:hover ruby rt,
+body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
     filter: none !important;
     opacity: 1 !important;
-    display: block !important;
-    visibility: visible !important;
-    color: #dc2626 !important;
     background: transparent !important;
+    color: #dc2626 !important;
     user-select: text !important;
 }
 
-[data-theme="dark"] .analyzer-column ruby rt,
-[data-theme="dark"] .drawer-container ruby rt,
-[data-theme="dark"] .grammar-item-card ruby rt,
-[data-theme="dark"] .grammar-example-box ruby rt {
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby:hover rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] ruby.revealed rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .grammar-example-box:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt {
     color: #fb7185 !important;
 }
 """
@@ -1789,6 +1812,10 @@ body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
             dom.btnClearNotebook.addEventListener('click', clearNotebook);
 
             document.addEventListener('click', (e) => {{
+                const r = e.target.closest('ruby');
+                if (r && state.rubyMode === 'mask') {{
+                    r.classList.toggle('revealed');
+                }}
                 if (dom.wordPopover.style.display !== 'none' &&
                     !dom.wordPopover.contains(e.target) &&
                     !e.target.closest('.word-token')) {{
@@ -2116,7 +2143,7 @@ body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
                     ${{g.form ? `<div class="grammar-form-box"><strong>接續：</strong>${{escapeHtml(g.form)}}</div>` : ''}}
                     <div class="grammar-meaning-box">${{escapeHtml(g.meaningZh || '暫無解析')}}</div>
                     ${{(g.exampleRuby || g.example) ? `
-                        <div class="grammar-example-box">
+                        <div class="grammar-example-box" onclick="this.classList.toggle('revealed')" title="點擊切換假名揭示/遮蔽">
                             <div class="example-jp-line"><strong>例句：</strong>${{g.exampleRuby || escapeHtml(g.example)}}</div>
                             ${{g.translation ? `<div class="example-trans-line"><i class="fa-solid fa-language" style="margin-right:4px;"></i>${{escapeHtml(g.translation)}}</div>` : ''}}
                         </div>
@@ -2285,7 +2312,7 @@ body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
                     ${{g.meaningJa ? `<div style="font-size:0.9rem;color:var(--text-muted);margin-top:0.5rem;border-top:1px dashed var(--border-color);padding-top:0.5rem;">日語說明：${{escapeHtml(g.meaningJa)}}</div>` : ''}}
                 </div>
 
-                <div class="drawer-box">
+                <div class="drawer-box" onclick="this.classList.toggle('revealed')" title="點擊切換假名揭示/遮蔽" style="cursor:pointer;">
                     <div class="drawer-label"><i class="fa-solid fa-quote-left"></i> 精選例文與振假名 (Example Sentence)</div>
                     <div style="font-size:1.25rem;font-weight:700;font-family:var(--font-jp);line-height:2.4;overflow:visible;word-break:break-word;">${{g.exampleRuby || escapeHtml(g.example || '')}}</div>
                     <div style="font-size:1.02rem;color:var(--text-muted);margin-top:0.75rem;border-top:1px dashed var(--border-color);padding-top:0.75rem;line-height:1.6;">
