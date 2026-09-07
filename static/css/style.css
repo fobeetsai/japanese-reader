@@ -1000,6 +1000,87 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 }
 
 /* ==========================================================================
+   漢字音讀與訓讀欄樣式
+   ========================================================================== */
+.kanji-readings-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.kanji-reading-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg-sub);
+    padding: 0.18rem 0.45rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.kanji-char-badge {
+    font-family: var(--font-jp);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-right: 0.2rem;
+}
+
+.badge-on {
+    background: #dbeafe;
+    color: #1e40af;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .badge-on {
+    background: #1e3a8a;
+    color: #93c5fd;
+}
+
+.badge-kun {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .badge-kun {
+    background: #064e3b;
+    color: #6ee7b7;
+}
+
+.reading-val-on {
+    font-family: var(--font-jp);
+    color: #2563eb;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+[data-theme="dark"] .reading-val-on {
+    color: #60a5fa;
+}
+
+.reading-val-kun {
+    font-family: var(--font-jp);
+    color: #059669;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .reading-val-kun {
+    color: #34d399;
+}
+
+/* ==========================================================================
    Right Column: Sentence & Grammar Deep Analyzer
    ========================================================================== */
 .analyzer-column {

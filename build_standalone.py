@@ -172,6 +172,86 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     color: inherit !important;
     user-select: text !important;
 }
+/* ==========================================================================
+   漢字音讀與訓讀欄樣式
+   ========================================================================== */
+.kanji-readings-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.kanji-reading-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg-sub);
+    padding: 0.18rem 0.45rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.kanji-char-badge {
+    font-family: var(--font-jp);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-right: 0.2rem;
+}
+
+.badge-on {
+    background: #dbeafe;
+    color: #1e40af;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .badge-on {
+    background: #1e3a8a;
+    color: #93c5fd;
+}
+
+.badge-kun {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .badge-kun {
+    background: #064e3b;
+    color: #6ee7b7;
+}
+
+.reading-val-on {
+    font-family: var(--font-jp);
+    color: #2563eb;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+[data-theme="dark"] .reading-val-on {
+    color: #60a5fa;
+}
+
+.reading-val-kun {
+    font-family: var(--font-jp);
+    color: #059669;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .reading-val-kun {
+    color: #34d399;
+}
 
 /* 單字複習專用樣式 */
 .review-flashcard {
@@ -567,10 +647,11 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                                 <table class="words-breakdown-table">
                                     <thead>
                                         <tr>
-                                            <th style="min-width:85px;">單字 (辭書形)</th>
-                                            <th style="min-width:75px;">讀音</th>
-                                            <th style="min-width:60px;">級數</th>
-                                            <th style="min-width:110px;">中文翻譯</th>
+                                            <th style="min-width:80px;">單字 (辭書形)</th>
+                                            <th style="min-width:68px;">讀音</th>
+                                            <th style="min-width:150px;">漢字 (音讀／訓讀)</th>
+                                            <th style="min-width:52px;">級數</th>
+                                            <th style="min-width:95px;">中文翻譯</th>
                                             <th style="text-align:center;width:40px;">收藏</th>
                                         </tr>
                                     </thead>
@@ -784,11 +865,50 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
         function getSingleKanjiReading(char, isCompound = false) {{
             const entry = KANJI_DICT[char];
             if (!entry) return '';
-            const [on, kunStem, fullKun] = entry;
+            const [on, kunStem] = entry;
             if (isCompound) {{
-                return on || kunStem || fullKun || '';
+                return on || kunStem || '';
             }}
-            return kunStem || fullKun || on || '';
+            return kunStem || on || '';
+        }}
+
+        // 取得單字之漢字音讀與訓讀對照標籤
+        function getKanjiReadingsHtml(word) {{
+            if (!word) return '<span style="color:var(--text-muted);">-</span>';
+            const kanjis = [];
+            for (let i = 0; i < word.length; i++) {{
+                const ch = word[i];
+                if (KANJI_REGEX.test(ch) && !kanjis.includes(ch)) {{
+                    kanjis.push(ch);
+                }}
+            }}
+            if (kanjis.length === 0) {{
+                return '<span style="color:var(--text-muted);font-size:0.8rem;">- (無漢字)</span>';
+            }}
+            let html = '<div class="kanji-readings-box">';
+            kanjis.forEach(ch => {{
+                const entry = KANJI_DICT[ch];
+                if (entry) {{
+                    const onStr = entry[2] || '-';
+                    const kunStr = entry[3] || '-';
+                    html += `
+                        <div class="kanji-reading-item">
+                            <span class="kanji-char-badge">${{ch}}</span>
+                            <span class="badge-on">音</span><span class="reading-val-on">${{escapeHtml(onStr)}}</span>
+                            <span class="badge-kun">訓</span><span class="reading-val-kun">${{escapeHtml(kunStr)}}</span>
+                        </div>
+                    `;
+                }} else {{
+                    html += `
+                        <div class="kanji-reading-item">
+                            <span class="kanji-char-badge">${{ch}}</span>
+                            <span style="color:var(--text-muted);">-</span>
+                        </div>
+                    `;
+                }}
+            }});
+            html += '</div>';
+            return html;
         }}
 
         // 生成 Ruby HTML 標籤
@@ -1930,12 +2050,25 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             }});
         }}
 
+        const JAPANESE_PARTICLES = new Set([
+            'は', 'が', 'を', 'に', 'で', 'と', 'も', 'へ', 'から', 'まで', 'より', 
+            'ね', 'よ', 'か', 'な', 'の', 'ば', 'や', 'わ', 'ぜ', 'ぞ', 'し',
+            'たり', 'だの', 'なり', 'ながら', 'つつ', 'ても', 'でも', 'のに', 'ので',
+            'ばかり', 'だけ', 'ほど', 'くらい', 'ぐらい', 'など', 'なんぞ',
+            'なんか', 'こそ', 'さえ', 'しか', 'ずつ', 'かしら', 'かな', 'て'
+        ]);
+
         function renderSentenceWordsTable(words, grammars = []) {{
-            // 1. 過濾純符號、純標點與空白
+            // 1. 過濾純符號、純標點、純空白與助詞 (不分析助詞，專注核心實詞)
             const validWords = words.filter(w => {{
                 const s = (w.surface || '').trim();
                 if (!s) return false;
                 if (/^[、。！？「」『』（）…—\\s.,!?]+$/.test(s)) return false;
+                if (w.pos === '符號/助詞') return false;
+                if (JAPANESE_PARTICLES.has(s)) return false;
+                if (w.base_form && JAPANESE_PARTICLES.has(w.base_form)) return false;
+                // 單一平假名且無漢字通常為助詞/感嘆詞
+                if (/^[\\u3040-\\u309f]$/.test(s) && !KANJI_REGEX.test(s)) return false;
                 return true;
             }});
 
@@ -1955,11 +2088,13 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                 }}
 
                 const isFav = state.notebook.words.some(item => item.surface === baseForm || item.surface === w.surface);
+                const kanjiReadingsHtml = getKanjiReadingsHtml(baseForm);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${{escapeHtml(baseForm)}}</strong></td>
                     <td style="color:#e11d48;font-weight:700;">${{escapeHtml(displayReading)}}</td>
+                    <td>${{kanjiReadingsHtml}}</td>
                     <td>${{displayLevel ? `<span class="badge-jlpt badge-${{displayLevel.toLowerCase()}}">${{displayLevel}}</span>` : '<span style="color:var(--text-muted);">-</span>'}}</td>
                     <td style="color:var(--text-main);font-size:0.88rem;" id="word-trans-cell-${{wIdx}}">
                         <span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
