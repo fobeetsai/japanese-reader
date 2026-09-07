@@ -504,13 +504,14 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
     color: #d97706;
 }
 
-/* 多分類遮蔽自測狀態 (全部遮蔽 / 格助詞 / 副助詞 / 複合助詞 / 文型句型) */
-body[data-grammar-mode="mask-all"] .grammar-elem-token,
-body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"],
-body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"],
-body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"],
-body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"],
-body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"] {{
+/* 多分類遮蔽自測狀態 (全部遮蔽 / 格助詞 / 副助詞 / 複合助詞 / 文型句型 / 單句強制遮蔽) */
+body[data-grammar-mode="mask-all"] .grammar-elem-token:not(.revealed),
+body[data-grammar-mode="mask-case"] .grammar-elem-token[data-category="case"]:not(.revealed),
+body[data-grammar-mode="mask-adverbial"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+body[data-grammar-mode="mask-compound"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+body[data-grammar-mode="mask-sentence"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+body[data-grammar-mode="mask-conjunctive"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+.grammar-elem-token.force-masked:not(.revealed) {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -527,59 +528,43 @@ body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="�
     user-select: none !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}}
+}
 
 /* 各分類色彩風格 (遮蔽狀態) */
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="case"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="case"]:not(.revealed) {
     background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
     border: 1.8px dashed #d97706 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="adverbial"]:not(.revealed) {
     background: linear-gradient(135deg, #ede9fe, #ddd6fe) !important;
     border: 1.8px dashed #7c3aed !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="compound"]:not(.revealed) {
     background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
     border: 1.8px dashed #059669 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="sentence"]:not(.revealed) {
     background: linear-gradient(135deg, #ffe4e6, #fecdd3) !important;
     border: 1.8px dashed #e11d48 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="conjunctive"]:not(.revealed) {
     background: linear-gradient(135deg, #e0f2fe, #bae6fd) !important;
     border: 1.8px dashed #0284c7 !important;
-}}
-
-/* 暗色主題適配 */
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
-    background: linear-gradient(135deg, #78350f, #92400e) !important;
-    border-color: #f59e0b !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
-    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
-    border-color: #a78bfa !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
-    background: linear-gradient(135deg, #064e3b, #065f46) !important;
-    border-color: #34d399 !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
-    background: linear-gradient(135deg, #881337, #9f1239) !important;
-    border-color: #fb7185 !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
-    background: linear-gradient(135deg, #0c4a6e, #075985) !important;
-    border-color: #38bdf8 !important;
-}}
+}
 
 /* 遮蔽提示文字 (透過 data-mask-placeholder 動態設置) */
-body[data-grammar-mode="mask-all"] .grammar-elem-token::before,
-body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"]::before,
-body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"]::before,
-body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"]::before,
-body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"]::before,
-body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"]::before {{
+body[data-grammar-mode="mask-all"] .grammar-elem-token:not(.revealed)::before,
+body[data-grammar-mode="mask-case"] .grammar-elem-token[data-category="case"]:not(.revealed)::before,
+body[data-grammar-mode="mask-adverbial"] .grammar-elem-token[data-category="adverbial"]:not(.revealed)::before,
+body[data-grammar-mode="mask-compound"] .grammar-elem-token[data-category="compound"]:not(.revealed)::before,
+body[data-grammar-mode="mask-sentence"] .grammar-elem-token[data-category="sentence"]:not(.revealed)::before,
+body[data-grammar-mode="mask-conjunctive"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed)::before,
+.grammar-elem-token.force-masked:not(.revealed)::before {
     content: attr(data-mask-placeholder) !important;
     position: absolute !important;
     left: 50% !important;
@@ -589,43 +574,78 @@ body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="�
     font-weight: 800 !important;
     letter-spacing: 0.5px !important;
     white-space: nowrap !important;
-}}
+}
 
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #b45309 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #6d28d9 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #047857 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #be123c !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #0369a1 !important; }}
+.grammar-elem-token[data-category="case"]::before { color: #b45309 !important; }
+.grammar-elem-token[data-category="adverbial"]::before { color: #6d28d9 !important; }
+.grammar-elem-token[data-category="compound"]::before { color: #047857 !important; }
+.grammar-elem-token[data-category="sentence"]::before { color: #be123c !important; }
+.grammar-elem-token[data-category="conjunctive"]::before { color: #0369a1 !important; }
 
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #fde68a !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #ddd6fe !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #a7f3d0 !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #fecdd3 !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #bae6fd !important; }}
+/* 暗色主題適配 (遮蔽狀態) */
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="case"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="case"]:not(.revealed) {
+    background: linear-gradient(135deg, #78350f, #92400e) !important;
+    border-color: #f59e0b !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="adverbial"]:not(.revealed) {
+    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
+    border-color: #a78bfa !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="compound"]:not(.revealed) {
+    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+    border-color: #34d399 !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="sentence"]:not(.revealed) {
+    background: linear-gradient(135deg, #881337, #9f1239) !important;
+    border-color: #fb7185 !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="conjunctive"]:not(.revealed) {
+    background: linear-gradient(135deg, #0c4a6e, #075985) !important;
+    border-color: #38bdf8 !important;
+}
 
-/* 懸浮揭示或點擊解開狀態 */
+[data-theme="dark"] .grammar-elem-token[data-category="case"]::before { color: #fde68a !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="adverbial"]::before { color: #ddd6fe !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="compound"]::before { color: #a7f3d0 !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="sentence"]::before { color: #fecdd3 !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="conjunctive"]::before { color: #bae6fd !important; }
+
+/* 懸浮揭示或點擊解開狀態 (文字恢復可見、綠色亮起) */
 body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
-body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed,
+.grammar-elem-token.force-masked:hover,
+.grammar-elem-token.force-masked.revealed {
+    display: inline-flex !important;
     background: #dcfce7 !important;
     border: 1.8px solid #16a34a !important;
     color: #15803d !important;
     font-weight: 800 !important;
     transform: scale(1.04) !important;
-}}
+}
 
 [data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token.revealed,
+[data-theme="dark"] .grammar-elem-token.force-masked:hover,
+[data-theme="dark"] .grammar-elem-token.force-masked.revealed {
     background: #064e3b !important;
     border-color: #34d399 !important;
     color: #a7f3d0 !important;
-}}
+}
 
 body[data-grammar-mode^="mask"] .grammar-elem-token:hover::before,
-body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
+.grammar-elem-token.force-masked:hover::before,
+.grammar-elem-token.force-masked.revealed::before {
     display: none !important;
-}}
+}
 
-.cat-badge {{
+/* 分類徽章 (Cat Badges) */
+.cat-badge {
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 700;
@@ -633,237 +653,18 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
     border-radius: 4px;
     letter-spacing: 0.5px;
     margin-left: 0.25rem;
-}}
-.cat-badge-格助詞 {{ background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }}
-.cat-badge-副助詞 {{ background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }}
-.cat-badge-複合助詞 {{ background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }}
-.cat-badge-文型 {{ background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }}
-.cat-badge-接續助詞 {{ background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }}
-
-[data-theme="dark"] .cat-badge-格助詞 {{ background: #78350f; color: #fde68a; border-color: #92400e; }}
-[data-theme="dark"] .cat-badge-副助詞 {{ background: #4c1d95; color: #ddd6fe; border-color: #5b21b6; }}
-[data-theme="dark"] .cat-badge-複合助詞 {{ background: #064e3b; color: #a7f3d0; border-color: #065f46; }}
-[data-theme="dark"] .cat-badge-文型 {{ background: #881337; color: #fecdd3; border-color: #9f1239; }}
-[data-theme="dark"] .cat-badge-接續助詞 {{ background: #0c4a6e; color: #bae6fd; border-color: #075985; }}
-
-/* ==========================================================================
-   整句深度分析器：助詞運用與代用換句話說專用樣式
-   ========================================================================== */
-.sentence-particles-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    margin-top: 0.5rem;
 }
+.cat-badge-case { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.cat-badge-adverbial { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+.cat-badge-compound { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+.cat-badge-sentence { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+.cat-badge-conjunctive { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-.particle-item-card {
-    background: var(--bg-sub);
-    border: 1px solid var(--border-color);
-    border-left: 4px solid #f59e0b;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 0.85rem 1rem;
-    transition: all 0.2s ease;
-}
-
-.particle-item-card:hover {
-    border-color: #f59e0b;
-    box-shadow: var(--shadow-sm);
-}
-
-.particle-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.particle-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.particle-main-badge {
-    background: #fef3c7;
-    color: #b45309;
-    border: 1px solid #fde68a;
-    font-size: 1.15rem;
-    font-weight: 800;
-    padding: 0.1rem 0.55rem;
-    border-radius: 6px;
-    font-family: var(--font-jp);
-}
-
-[data-theme="dark"] .particle-main-badge {
-    background: #78350f;
-    color: #fef3c7;
-    border-color: #92400e;
-}
-
-.particle-context-chip {
-    font-family: var(--font-jp);
-    font-size: 0.88rem;
-    color: var(--text-main);
-    background: var(--bg-card);
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    border: 1px dashed var(--border-color);
-}
-
-.particle-context-chip strong {
-    color: #d97706;
-}
-
-.particle-role-badge {
-    font-size: 0.76rem;
-    font-weight: 700;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: #e0e7ff;
-    color: #3730a3;
-}
-
-[data-theme="dark"] .particle-role-badge {
-    background: #312e81;
-    color: #c7d2fe;
-}
-
-.particle-desc-text {
-    font-size: 0.86rem;
-    color: var(--text-muted);
-    line-height: 1.45;
-    margin-bottom: 0.55rem;
-}
-
-.particle-substitutes-area {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.65rem 0.8rem;
-    margin-top: 0.5rem;
-}
-
-.substitute-title {
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: #059669;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-bottom: 0.45rem;
-}
-
-.substitute-items-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-
-.substitute-item-card {
-    background: var(--bg-sub);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.55rem 0.75rem;
-}
-
-.substitute-tag {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-    font-weight: 700;
-    font-size: 0.76rem;
-    padding: 0.1rem 0.35rem;
-    border-radius: 4px;
-    margin-right: 0.35rem;
-}
-
-[data-theme="dark"] .substitute-tag {
-    background: #064e3b;
-    color: #6ee7b7;
-    border-color: #047857;
-}
-
-.paraphrase-demo-box {
-    background: rgba(16, 185, 129, 0.08);
-    border-left: 3px solid #10b981;
-    padding: 0.4rem 0.65rem;
-    border-radius: 0 4px 4px 0;
-    font-size: 0.84rem;
-    font-family: var(--font-jp);
-    margin-top: 0.4rem;
-    line-height: 1.5;
-}
-
-.paraphrase-demo-box strong {
-    color: #059669;
-}
-
-/* ==========================================================================
-   助詞隨堂快速測驗浮動卡 (Quick Particle Popover)
-   ========================================================================== */
-.particle-popover {
-    position: fixed;
-    z-index: 1050;
-    background: var(--bg-card);
-    border: 1.5px solid #f59e0b;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    padding: 1.2rem;
-    width: 320px;
-    max-width: 92vw;
-    animation: fadeIn 0.2s ease;
-}
-
-.popover-quiz-context {
-    background: var(--bg-sub);
-    padding: 0.65rem 0.85rem;
-    border-radius: 6px;
-    font-size: 0.98rem;
-    font-family: var(--font-jp);
-    text-align: center;
-    margin: 0.6rem 0;
-    line-height: 1.6;
-}
-
-.popover-options-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    margin: 0.6rem 0;
-}
-
-.btn-popover-opt {
-    padding: 0.5rem 0.6rem;
-    border-radius: 6px;
-    border: 1.5px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-main);
-    font-size: 1.05rem;
-    font-weight: 700;
-    font-family: var(--font-jp);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.btn-popover-opt:hover {
-    border-color: #f59e0b;
-    background: #fef3c7;
-    color: #b45309;
-}
-
-.btn-popover-opt.correct {
-    border-color: #10b981 !important;
-    background: #d1fae5 !important;
-    color: #065f46 !important;
-}
-
-.btn-popover-opt.wrong {
-    border-color: #ef4444 !important;
-    background: #fee2e2 !important;
-    color: #991b1b !important;
-}
+[data-theme="dark"] .cat-badge-case { background: #78350f; color: #fde68a; border-color: #92400e; }
+[data-theme="dark"] .cat-badge-adverbial { background: #4c1d95; color: #ddd6fe; border-color: #5b21b6; }
+[data-theme="dark"] .cat-badge-compound { background: #064e3b; color: #a7f3d0; border-color: #065f46; }
+[data-theme="dark"] .cat-badge-sentence { background: #881337; color: #fecdd3; border-color: #9f1239; }
+[data-theme="dark"] .cat-badge-conjunctive { background: #0c4a6e; color: #bae6fd; border-color: #075985; }
 
 /* ==========================================================================
    全篇助詞測驗挑戰彈窗樣式
@@ -1074,14 +875,15 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
                 <!-- Particle Mode Switch (助詞遮蔽測驗) -->
                 <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
+                <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
                 <div class="control-pill-group" title="助詞與文型階層遮蔽自測模式：可按格助詞、副助詞、複合助詞、文型句型進行單項或全文挖空自測">
                     <span class="group-label"><i class="fa-solid fa-shapes"></i> 語法自測:</span>
                     <button class="pill-btn active" id="btnGrammarShow" data-mode="show" title="正常顯示所有助詞與文型">顯示</button>
                     <button class="pill-btn" id="btnGrammarMaskAll" data-mode="mask-all" title="【全部遮蔽】遮蔽全文所有格助詞、副助詞、複合助詞與文型">全部遮蔽</button>
-                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-格助詞" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-副助詞" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-複合助詞" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-文型" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
+                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-case" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-adverbial" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-compound" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-sentence" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
                     <button id="btnParticleShow" style="display:none;"></button>
                     <button id="btnParticleMask" style="display:none;"></button>
                 </div>
@@ -1370,12 +1172,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             </div>
 
             <!-- 分類篩選頁籤 (格助詞 / 副助詞 / 複合助詞 / 文型句型) -->
+            <!-- 分類篩選頁籤 (格助詞 / 副助詞 / 複合助詞 / 文型句型) -->
             <div class="notebook-tabs" style="margin-bottom:0.75rem;">
                 <button class="notebook-tab-btn active" id="btnQuizFilterAll" onclick="setQuizCategoryFilter('all')">全部 (<span id="quizCountAll">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterCase" onclick="setQuizCategoryFilter('格助詞')">格助詞 (<span id="quizCountCase">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterAdverbial" onclick="setQuizCategoryFilter('副助詞')">副助詞 (<span id="quizCountAdverbial">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterCompound" onclick="setQuizCategoryFilter('複合助詞')">複合助詞 (<span id="quizCountCompound">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterSentence" onclick="setQuizCategoryFilter('文型')">文型句型 (<span id="quizCountSentence">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCase" onclick="setQuizCategoryFilter('case')">格助詞 (<span id="quizCountCase">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterAdverbial" onclick="setQuizCategoryFilter('adverbial')">副助詞 (<span id="quizCountAdverbial">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCompound" onclick="setQuizCategoryFilter('compound')">複合助詞 (<span id="quizCountCompound">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterSentence" onclick="setQuizCategoryFilter('sentence')">文型句型 (<span id="quizCountSentence">0</span>)</button>
             </div>
 
             <div class="quiz-status-bar">
@@ -1558,6 +1361,14 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
         // 24 組日文助詞代用與換句話說知識庫
         const PARTICLE_DATA = {particle_json_str};
+                const CATEGORY_MAP = {{
+            '格助詞': {{ code: 'case', name: '格助詞', placeholder: '？格助' }},
+            '副助詞': {{ code: 'adverbial', name: '副助詞', placeholder: '？副助' }},
+            '複合助詞': {{ code: 'compound', name: '複合助詞', placeholder: '？複合' }},
+            '文型': {{ code: 'sentence', name: '文型句型', placeholder: '？文型' }},
+            '接續助詞': {{ code: 'conjunctive', name: '接續助詞', placeholder: '？接續' }}
+        }};
+
         const SPECIAL_GRAMMAR_PATTERNS = {special_grammar_json};
         const COMPOUND_PARTICLES = {compound_particles_json};
         const ADVERBIAL_PARTICLES = {adverbial_particles_json};
@@ -2602,10 +2413,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             if (dom.btnParticleMask) dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
             if (dom.btnGrammarShow) dom.btnGrammarShow.addEventListener('click', () => setGrammarMode('show'));
             if (dom.btnGrammarMaskAll) dom.btnGrammarMaskAll.addEventListener('click', () => setGrammarMode('mask-all'));
-            if (dom.btnGrammarMaskCase) dom.btnGrammarMaskCase.addEventListener('click', () => setGrammarMode('mask-格助詞'));
-            if (dom.btnGrammarMaskAdverbial) dom.btnGrammarMaskAdverbial.addEventListener('click', () => setGrammarMode('mask-副助詞'));
-            if (dom.btnGrammarMaskCompound) dom.btnGrammarMaskCompound.addEventListener('click', () => setGrammarMode('mask-複合助詞'));
-            if (dom.btnGrammarMaskSentence) dom.btnGrammarMaskSentence.addEventListener('click', () => setGrammarMode('mask-文型'));
+            if (dom.btnGrammarMaskCase) dom.btnGrammarMaskCase.addEventListener('click', () => setGrammarMode('mask-case'));
+            if (dom.btnGrammarMaskAdverbial) dom.btnGrammarMaskAdverbial.addEventListener('click', () => setGrammarMode('mask-adverbial'));
+            if (dom.btnGrammarMaskCompound) dom.btnGrammarMaskCompound.addEventListener('click', () => setGrammarMode('mask-compound'));
+            if (dom.btnGrammarMaskSentence) dom.btnGrammarMaskSentence.addEventListener('click', () => setGrammarMode('mask-sentence'));
             if (dom.btnOpenParticleQuiz) dom.btnOpenParticleQuiz.addEventListener('click', openParticleQuizModal);
             if (dom.btnOpenParticleQuizTop) dom.btnOpenParticleQuizTop.addEventListener('click', openParticleQuizModal);
             if (dom.btnMaskSentenceParticles) dom.btnMaskSentenceParticles.addEventListener('click', toggleMaskSentenceParticles);
@@ -2726,13 +2537,16 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             document.body.setAttribute('data-grammar-mode', mode);
             document.body.setAttribute('data-particle-mode', (mode === 'show') ? 'show' : 'mask');
 
+            // 移除已揭示狀態，切換模式時題目立即遮蔽
+            document.querySelectorAll('.grammar-elem-token.revealed').forEach(el => el.classList.remove('revealed'));
+
             const btns = [
                 ['show', dom.btnGrammarShow],
                 ['mask-all', dom.btnGrammarMaskAll],
-                ['mask-格助詞', dom.btnGrammarMaskCase],
-                ['mask-副助詞', dom.btnGrammarMaskAdverbial],
-                ['mask-複合助詞', dom.btnGrammarMaskCompound],
-                ['mask-文型', dom.btnGrammarMaskSentence]
+                ['mask-case', dom.btnGrammarMaskCase],
+                ['mask-adverbial', dom.btnGrammarMaskAdverbial],
+                ['mask-compound', dom.btnGrammarMaskCompound],
+                ['mask-sentence', dom.btnGrammarMaskSentence]
             ];
 
             btns.forEach(([m, btn]) => {{
@@ -2742,10 +2556,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             const msgMap = {{
                 'show': '已切換為助詞與文型【正常顯示】模式',
                 'mask-all': '已開啟【全部遮蔽】自測：遮蔽全文所有格助詞、副助詞、複合助詞與文型！',
-                'mask-格助詞': '已開啟【格助詞遮蔽】自測：僅遮蔽全文格助詞 (が、を、に、で、へ、と等)！',
-                'mask-副助詞': '已開啟【副助詞遮蔽】自測：僅遮蔽副助詞／係助詞 (は、も、ばかり、だけ、さえ等)！',
-                'mask-複合助詞': '已開啟【複合助詞遮蔽】自測：僅遮蔽複合助詞 (について、に対して、として等)！',
-                'mask-文型': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
+                'mask-case': '已開啟【格助詞遮蔽】自測：僅遮蔽全文格助詞 (が、を、に、で、へ、と等)！',
+                'mask-adverbial': '已開啟【副助詞遮蔽】自測：僅遮蔽副助詞／係助詞 (は、も、ばかり、だけ、さえ等)！',
+                'mask-compound': '已開啟【複合助詞遮蔽】自測：僅遮蔽複合助詞 (について、に対して、として等)！',
+                'mask-sentence': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
             }};
 
             showToast(msgMap[mode] || `已切換自測模式: ${{mode}}`);
@@ -2965,16 +2779,17 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             words.forEach((w, wIdx) => {{
                 const tokenSpan = document.createElement('span');
                 const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
-                const elCategory = (w.grammar_elem_info && w.grammar_elem_info.category) || (PARTICLE_DATA && PARTICLE_DATA[w.surface] && PARTICLE_DATA[w.surface].category) || '格助詞';
+                const rawCategory = (w.grammar_elem_info && w.grammar_elem_info.category) || (PARTICLE_DATA && PARTICLE_DATA[w.surface] && PARTICLE_DATA[w.surface].category) || '格助詞';
+                const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCategory]) ? CATEGORY_MAP[rawCategory] : {{ code: 'case', name: '格助詞', placeholder: '？格助' }};
 
                 if (isGrammarElem) {{
                     tokenSpan.className = `word-token grammar-elem-token particle-token`;
                     tokenSpan.dataset.isGrammarElem = 'true';
-                    tokenSpan.dataset.category = elCategory;
-                    const placeholderText = '？' + (elCategory === '接續助詞' ? '接續' : (elCategory === '複合助詞' ? '複合助' : elCategory));
-                    tokenSpan.dataset.maskPlaceholder = placeholderText;
+                    tokenSpan.dataset.category = catMeta.code;
+                    tokenSpan.dataset.categoryName = catMeta.name;
+                    tokenSpan.dataset.maskPlaceholder = catMeta.placeholder;
                     tokenSpan.dataset.surface = w.surface;
-                    tokenSpan.title = `【${{elCategory}}】${{w.surface}} (點擊進行自測與查看換句話說)`;
+                    tokenSpan.title = `【${{catMeta.name}}】${{w.surface}} (點擊進行自測與查看換句話說)`;
                 }} else {{
                     tokenSpan.className = `word-token ${{w.jlpt ? `jlpt-${{w.jlpt}}` : ''}}`;
                 }}
@@ -3001,64 +2816,20 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     showWordPopover(tokenSpan, w, e);
                 }});
 
-                const curOffset = wordOffsets[wIdx];
-                const matchedGrammar = grammars.find(g => 
-                    (curOffset.start >= g.start && curOffset.start < g.end) ||
-                    (curOffset.end > g.start && curOffset.end <= g.end)
-                );
+                // 檢查是否與 941 文法重疊標註
+                const tokenStart = wordOffsets[wIdx].start;
+                const tokenEnd = wordOffsets[wIdx].end;
 
-                if (matchedGrammar) {{
+                const hasGrammarMatch = grammars.some(g => {{
+                    return g.matches.some(m => tokenStart < m.end && tokenEnd > m.start);
+                }});
+
+                if (hasGrammarMatch) {{
                     tokenSpan.classList.add('grammar-highlight');
-                    tokenSpan.title = `【941文型】${{matchedGrammar.title}} (${{matchedGrammar.level || '文型'}})`;
-                    tokenSpan.dataset.grammarId = matchedGrammar.id;
-
-                    const isLastOfGrammar = (wIdx === words.length - 1) || (wordOffsets[wIdx + 1].start >= matchedGrammar.end);
-                    if (isLastOfGrammar) {{
-                        const miniBadge = document.createElement('span');
-                        miniBadge.className = 'grammar-mini-badge';
-                        miniBadge.textContent = matchedGrammar.level ? `${{matchedGrammar.level}}` : '文型';
-                        miniBadge.onclick = (e) => {{
-                            e.stopPropagation();
-                            openGrammarDrawer(matchedGrammar);
-                        }};
-                        tokenSpan.appendChild(miniBadge);
-                    }}
                 }}
 
                 container.appendChild(tokenSpan);
             }});
-        }}
-
-        function selectSentence(idx) {{
-            if (!state.analyzedData || !state.analyzedData.sentences[idx]) return;
-            state.currentSentenceIdx = idx;
-            const sentence = state.analyzedData.sentences[idx];
-            const total = state.analyzedData.sentences.length;
-
-            document.querySelectorAll('.sentence-row').forEach(r => r.classList.remove('active'));
-            const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${{idx}}"]`);
-            if (activeRow) activeRow.classList.add('active');
-
-            dom.currentSentenceBadge.textContent = `第 ${{idx + 1}} 句 / 共 ${{total}} 句`;
-            dom.selectedSentenceJp.innerHTML = sentence.words.map(w => w.ruby_html).join('');
-            dom.selectedSentenceZh.textContent = sentence.translation || '暫無翻譯';
-
-            renderSentenceParticles(sentence, idx);
-            renderSentenceGrammars(sentence.grammars || []);
-            renderSentenceWordsTable(sentence.words, sentence.grammars || []);
-
-            dom.btnPrevSentence.disabled = (idx === 0);
-            dom.btnNextSentence.disabled = (idx === total - 1);
-        }}
-
-        function navigateSentence(delta) {{
-            if (!state.analyzedData) return;
-            const newIdx = state.currentSentenceIdx + delta;
-            if (newIdx >= 0 && newIdx < state.analyzedData.sentences.length) {{
-                selectSentence(newIdx);
-                const target = document.querySelector(`.sentence-row[data-sentence-idx="${{newIdx}}"]`);
-                if (target) target.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
-            }}
         }}
 
         function renderSentenceGrammars(grammars) {{
@@ -3804,25 +3575,26 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
         function toggleMaskSentenceParticles() {{
             const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${{state.currentSentenceIdx}}"]`);
             if (!activeRow) return;
-            const particleTokens = activeRow.querySelectorAll('.particle-token');
+            const particleTokens = activeRow.querySelectorAll('.grammar-elem-token, .particle-token');
             if (particleTokens.length === 0) {{
-                showToast('本句無主要助詞');
+                showToast('本句無特殊助詞或文型');
                 return;
             }}
-            const isAnyMasked = Array.from(particleTokens).some(el => !el.classList.contains('revealed'));
-            particleTokens.forEach(el => {{
-                if (isAnyMasked) {{
+            const isAnyMasked = Array.from(particleTokens).some(el => el.classList.contains('force-masked') && !el.classList.contains('revealed'));
+            if (isAnyMasked) {{
+                particleTokens.forEach(el => {{
+                    el.classList.remove('force-masked');
                     el.classList.add('revealed');
-                }} else {{
+                }});
+                showToast('已揭示本句助詞與文型');
+            }} else {{
+                particleTokens.forEach(el => {{
+                    el.classList.add('force-masked');
                     el.classList.remove('revealed');
-                }}
-            }});
-            showToast(isAnyMasked ? '已揭示本句所有助詞' : '已遮蔽本句所有助詞，請點擊自測！');
+                }});
+                showToast('已遮蔽本句助詞與文型，請點擊進行隨堂自測！');
+            }}
         }}
-
-        // ==========================================================================
-        // 助詞隨堂快速測驗浮動卡 (Quick Popover)
-        // ==========================================================================
 
         function showParticleQuickPopover(targetEl, token, sIdx, wIdx, event) {{
             const popover = document.getElementById('particlePopover');
@@ -3834,19 +3606,22 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             const sentenceText = sentence ? sentence.text : '';
             const usage = matchParticleUsage(pSurface, sentenceText);
 
-            document.getElementById('popoverParticleTitle').textContent = `助詞隨堂測驗`;
-            document.getElementById('popoverParticleRole').textContent = usage ? usage.role : '格助詞';
+            const rawCat = (token.grammar_elem_info && token.grammar_elem_info.category) || (pData && pData.category) || '格助詞';
+            const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCat]) ? CATEGORY_MAP[rawCat] : {{ code: 'case', name: '格助詞', placeholder: '？格助' }};
+
+            document.getElementById('popoverParticleTitle').innerHTML = `${{escapeHtml(pSurface)}} <span class="cat-badge cat-badge-${{catMeta.code}}">${{escapeHtml(catMeta.name)}}</span>`;
+            document.getElementById('popoverParticleRole').textContent = usage ? usage.role : (token.grammar_elem_info ? token.grammar_elem_info.role : '語法功能');
 
             // 語境預覽 (將助詞挖空)
             const words = sentence ? sentence.words : [];
             const prev = wIdx > 0 ? words[wIdx - 1].surface : '';
             const next = wIdx + 1 < words.length ? words[wIdx + 1].surface : '';
             document.getElementById('popoverParticleContext').innerHTML = `
-                ${{escapeHtml(prev)}}<span class="quiz-blank-slot" style="min-width:2rem;height:1.5rem;line-height:1.5rem;">？</span>${{escapeHtml(next)}}
+                ${{escapeHtml(prev)}}<span class="quiz-blank-slot" style="min-width:2.4rem;height:1.6rem;line-height:1.6rem;">${{catMeta.placeholder}}</span>${{escapeHtml(next)}}
             `;
 
             // 4 個選項：正確答案 + 3 個干擾項
-            const distractors = pData && pData.distractors ? pData.distractors : ['は', 'が', 'を', 'に', 'で'];
+            const distractors = (token.grammar_elem_info && token.grammar_elem_info.distractors) || (pData && pData.distractors) || ['は', 'が', 'を', 'に', 'で'];
             const wrongChoices = distractors.filter(d => d !== pSurface).sort(() => Math.random() - 0.5).slice(0, 3);
             const allChoices = [pSurface, ...wrongChoices].sort(() => Math.random() - 0.5);
 
@@ -3878,9 +3653,19 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     feedbackBox.style.display = 'block';
                     feedbackBox.innerHTML = `
                         <div style="font-size:0.84rem; line-height:1.45; color:var(--text-main); background:var(--bg-sub); padding:0.5rem 0.7rem; border-radius:6px; border-left:3px solid #f59e0b;">
-                            <strong>【語法解析】</strong>${{escapeHtml(usage ? usage.desc : '日語常用助詞用法。')}}
+                            <strong>【語法解析】</strong>${{escapeHtml(usage ? usage.desc : (token.grammar_elem_info ? token.grammar_elem_info.desc : '日語重要助詞與文型。'))}}
                         </div>
                     `;
+
+                    if (token.grammar_elem_info && token.grammar_elem_info.grammar_id) {{
+                        feedbackBox.innerHTML += `
+                            <div style="margin-top:0.4rem;">
+                                <button class="btn-grammar-detail" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="closeParticlePopover(); openGrammarDrawerById(${{token.grammar_elem_info.grammar_id}})">
+                                    <i class="fa-solid fa-book-open"></i> 查看 941 文型庫詳解
+                                </button>
+                            </div>
+                        `;
+                    }}
 
                     if (usage && usage.substitutes && usage.substitutes.length > 0) {{
                         substitutesBox.style.display = 'block';
@@ -3939,7 +3724,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     if (isGrammarElem) {{
                         const elInfo = w.grammar_elem_info || {{}};
                         const pData = getParticleData(s) || (elInfo.pData) || {{}};
-                        const cat = elInfo.category || pData.category || '格助詞';
+                        const rawCat = elInfo.category || pData.category || '格助詞';
+                        const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCat]) ? CATEGORY_MAP[rawCat] : {{ code: 'case', name: '格助詞', placeholder: '？格助' }};
                         const usage = matchParticleUsage(s, sText);
                         const distractors = pData && pData.distractors ? pData.distractors : (elInfo.distractors || ['は', 'が', 'を', 'に', 'で']);
                         const wrongChoices = distractors.filter(d => d !== s).sort(() => Math.random() - 0.5).slice(0, 3);
@@ -3949,7 +3735,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                         let maskedHtml = '';
                         words.forEach((mw, mi) => {{
                             if (mi === wIdx) {{
-                                maskedHtml += `<span class="quiz-blank-slot" title="【${{cat}}】">？</span>`;
+                                maskedHtml += `<span class="quiz-blank-slot" title="【${{catMeta.name}}】">${{catMeta.placeholder}}</span>`;
                             }} else {{
                                 maskedHtml += escapeHtml(mw.surface);
                             }}
@@ -3957,7 +3743,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
                         items.push({{
                             particle: s,
-                            category: cat,
+                            categoryCode: catMeta.code,
+                            categoryName: catMeta.name,
                             title: elInfo.title || pData.default_role || s,
                             grammar_id: elInfo.grammar_id,
                             sentenceIdx: sIdx,
@@ -3977,34 +3764,34 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
         }}
 
         function updateQuizCategoryCounts(allItems) {{
-            const counts = {{ 'all': allItems.length, '格助詞': 0, '副助詞': 0, '複合助詞': 0, '文型': 0 }};
+            const counts = {{ 'all': allItems.length, 'case': 0, 'adverbial': 0, 'compound': 0, 'sentence': 0 }};
             allItems.forEach(it => {{
-                if (counts[it.category] !== undefined) counts[it.category]++;
+                if (counts[it.categoryCode] !== undefined) counts[it.categoryCode]++;
             }});
             const elAll = document.getElementById('quizCountAll'); if (elAll) elAll.textContent = counts['all'];
-            const elCase = document.getElementById('quizCountCase'); if (elCase) elCase.textContent = counts['格助詞'];
-            const elAdv = document.getElementById('quizCountAdverbial'); if (elAdv) elAdv.textContent = counts['副助詞'];
-            const elCmp = document.getElementById('quizCountCompound'); if (elCmp) elCmp.textContent = counts['複合助詞'];
-            const elSen = document.getElementById('quizCountSentence'); if (elSen) elSen.textContent = counts['文型'];
+            const elCase = document.getElementById('quizCountCase'); if (elCase) elCase.textContent = counts['case'];
+            const elAdv = document.getElementById('quizCountAdverbial'); if (elAdv) elAdv.textContent = counts['adverbial'];
+            const elCmp = document.getElementById('quizCountCompound'); if (elCmp) elCmp.textContent = counts['compound'];
+            const elSen = document.getElementById('quizCountSentence'); if (elSen) elSen.textContent = counts['sentence'];
         }}
 
-        function setQuizCategoryFilter(cat) {{
-            currentQuizCategoryFilter = cat;
+        function setQuizCategoryFilter(catCode) {{
+            currentQuizCategoryFilter = catCode;
             const filterBtns = [
                 ['all', document.getElementById('btnQuizFilterAll')],
-                ['格助詞', document.getElementById('btnQuizFilterCase')],
-                ['副助詞', document.getElementById('btnQuizFilterAdverbial')],
-                ['複合助詞', document.getElementById('btnQuizFilterCompound')],
-                ['文型', document.getElementById('btnQuizFilterSentence')]
+                ['case', document.getElementById('btnQuizFilterCase')],
+                ['adverbial', document.getElementById('btnQuizFilterAdverbial')],
+                ['compound', document.getElementById('btnQuizFilterCompound')],
+                ['sentence', document.getElementById('btnQuizFilterSentence')]
             ];
             filterBtns.forEach(([c, btn]) => {{
-                if (btn) btn.classList.toggle('active', cat === c);
+                if (btn) btn.classList.toggle('active', catCode === c);
             }});
 
             if (!state.quiz || !state.quiz.allItems) return;
-            const filtered = cat === 'all' ? state.quiz.allItems : state.quiz.allItems.filter(it => it.category === cat);
+            const filtered = catCode === 'all' ? state.quiz.allItems : state.quiz.allItems.filter(it => it.categoryCode === catCode);
             if (filtered.length === 0) {{
-                showToast(`所選類別【${{cat}}】在本文中無題目`);
+                showToast(`所選類別在本文中無題目`);
                 return;
             }}
             state.quiz.items = filtered;
@@ -4026,7 +3813,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
             const filteredItems = currentQuizCategoryFilter === 'all' 
                 ? allItems 
-                : allItems.filter(it => it.category === currentQuizCategoryFilter);
+                : allItems.filter(it => it.categoryCode === currentQuizCategoryFilter);
 
             state.quiz = {{
                 allItems: allItems,
@@ -4065,7 +3852,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
             const instructionEl = document.querySelector('.quiz-instruction');
             if (instructionEl) {{
-                instructionEl.innerHTML = `請依句意、語境與結構，選出正確的 <span class="cat-badge cat-badge-${{curItem.category}}">${{escapeHtml(curItem.category)}}</span>：`;
+                instructionEl.innerHTML = `請依句意、語境與結構，選出正確的 <span class="cat-badge cat-badge-${{curItem.categoryCode}}">${{escapeHtml(curItem.categoryName)}}</span>：`;
             }}
 
             const hasAnswered = quiz.answered.has(quiz.currentIdx);

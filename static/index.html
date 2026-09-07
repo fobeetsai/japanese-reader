@@ -2347,13 +2347,14 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
     color: #d97706;
 }
 
-/* 多分類遮蔽自測狀態 (全部遮蔽 / 格助詞 / 副助詞 / 複合助詞 / 文型句型) */
-body[data-grammar-mode="mask-all"] .grammar-elem-token,
-body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"],
-body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"],
-body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"],
-body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"],
-body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"] {{
+/* 多分類遮蔽自測狀態 (全部遮蔽 / 格助詞 / 副助詞 / 複合助詞 / 文型句型 / 單句強制遮蔽) */
+body[data-grammar-mode="mask-all"] .grammar-elem-token:not(.revealed),
+body[data-grammar-mode="mask-case"] .grammar-elem-token[data-category="case"]:not(.revealed),
+body[data-grammar-mode="mask-adverbial"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+body[data-grammar-mode="mask-compound"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+body[data-grammar-mode="mask-sentence"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+body[data-grammar-mode="mask-conjunctive"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+.grammar-elem-token.force-masked:not(.revealed) {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2370,59 +2371,43 @@ body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="�
     user-select: none !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}}
+}
 
 /* 各分類色彩風格 (遮蔽狀態) */
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="case"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="case"]:not(.revealed) {
     background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
     border: 1.8px dashed #d97706 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="adverbial"]:not(.revealed) {
     background: linear-gradient(135deg, #ede9fe, #ddd6fe) !important;
     border: 1.8px dashed #7c3aed !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="compound"]:not(.revealed) {
     background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
     border: 1.8px dashed #059669 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="sentence"]:not(.revealed) {
     background: linear-gradient(135deg, #ffe4e6, #fecdd3) !important;
     border: 1.8px dashed #e11d48 !important;
-}}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+.grammar-elem-token.force-masked[data-category="conjunctive"]:not(.revealed) {
     background: linear-gradient(135deg, #e0f2fe, #bae6fd) !important;
     border: 1.8px dashed #0284c7 !important;
-}}
-
-/* 暗色主題適配 */
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
-    background: linear-gradient(135deg, #78350f, #92400e) !important;
-    border-color: #f59e0b !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
-    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
-    border-color: #a78bfa !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
-    background: linear-gradient(135deg, #064e3b, #065f46) !important;
-    border-color: #34d399 !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
-    background: linear-gradient(135deg, #881337, #9f1239) !important;
-    border-color: #fb7185 !important;
-}}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
-    background: linear-gradient(135deg, #0c4a6e, #075985) !important;
-    border-color: #38bdf8 !important;
-}}
+}
 
 /* 遮蔽提示文字 (透過 data-mask-placeholder 動態設置) */
-body[data-grammar-mode="mask-all"] .grammar-elem-token::before,
-body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"]::before,
-body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"]::before,
-body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"]::before,
-body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"]::before,
-body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"]::before {{
+body[data-grammar-mode="mask-all"] .grammar-elem-token:not(.revealed)::before,
+body[data-grammar-mode="mask-case"] .grammar-elem-token[data-category="case"]:not(.revealed)::before,
+body[data-grammar-mode="mask-adverbial"] .grammar-elem-token[data-category="adverbial"]:not(.revealed)::before,
+body[data-grammar-mode="mask-compound"] .grammar-elem-token[data-category="compound"]:not(.revealed)::before,
+body[data-grammar-mode="mask-sentence"] .grammar-elem-token[data-category="sentence"]:not(.revealed)::before,
+body[data-grammar-mode="mask-conjunctive"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed)::before,
+.grammar-elem-token.force-masked:not(.revealed)::before {
     content: attr(data-mask-placeholder) !important;
     position: absolute !important;
     left: 50% !important;
@@ -2432,43 +2417,78 @@ body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="�
     font-weight: 800 !important;
     letter-spacing: 0.5px !important;
     white-space: nowrap !important;
-}}
+}
 
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #b45309 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #6d28d9 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #047857 !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #be123c !important; }}
-body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #0369a1 !important; }}
+.grammar-elem-token[data-category="case"]::before { color: #b45309 !important; }
+.grammar-elem-token[data-category="adverbial"]::before { color: #6d28d9 !important; }
+.grammar-elem-token[data-category="compound"]::before { color: #047857 !important; }
+.grammar-elem-token[data-category="sentence"]::before { color: #be123c !important; }
+.grammar-elem-token[data-category="conjunctive"]::before { color: #0369a1 !important; }
 
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #fde68a !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #ddd6fe !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #a7f3d0 !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #fecdd3 !important; }}
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #bae6fd !important; }}
+/* 暗色主題適配 (遮蔽狀態) */
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="case"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="case"]:not(.revealed) {
+    background: linear-gradient(135deg, #78350f, #92400e) !important;
+    border-color: #f59e0b !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="adverbial"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="adverbial"]:not(.revealed) {
+    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
+    border-color: #a78bfa !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="compound"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="compound"]:not(.revealed) {
+    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+    border-color: #34d399 !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="sentence"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="sentence"]:not(.revealed) {
+    background: linear-gradient(135deg, #881337, #9f1239) !important;
+    border-color: #fb7185 !important;
+}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="conjunctive"]:not(.revealed),
+[data-theme="dark"] .grammar-elem-token.force-masked[data-category="conjunctive"]:not(.revealed) {
+    background: linear-gradient(135deg, #0c4a6e, #075985) !important;
+    border-color: #38bdf8 !important;
+}
 
-/* 懸浮揭示或點擊解開狀態 */
+[data-theme="dark"] .grammar-elem-token[data-category="case"]::before { color: #fde68a !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="adverbial"]::before { color: #ddd6fe !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="compound"]::before { color: #a7f3d0 !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="sentence"]::before { color: #fecdd3 !important; }
+[data-theme="dark"] .grammar-elem-token[data-category="conjunctive"]::before { color: #bae6fd !important; }
+
+/* 懸浮揭示或點擊解開狀態 (文字恢復可見、綠色亮起) */
 body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
-body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed,
+.grammar-elem-token.force-masked:hover,
+.grammar-elem-token.force-masked.revealed {
+    display: inline-flex !important;
     background: #dcfce7 !important;
     border: 1.8px solid #16a34a !important;
     color: #15803d !important;
     font-weight: 800 !important;
     transform: scale(1.04) !important;
-}}
+}
 
 [data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
-[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token.revealed,
+[data-theme="dark"] .grammar-elem-token.force-masked:hover,
+[data-theme="dark"] .grammar-elem-token.force-masked.revealed {
     background: #064e3b !important;
     border-color: #34d399 !important;
     color: #a7f3d0 !important;
-}}
+}
 
 body[data-grammar-mode^="mask"] .grammar-elem-token:hover::before,
-body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
+.grammar-elem-token.force-masked:hover::before,
+.grammar-elem-token.force-masked.revealed::before {
     display: none !important;
-}}
+}
 
-.cat-badge {{
+/* 分類徽章 (Cat Badges) */
+.cat-badge {
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 700;
@@ -2476,237 +2496,18 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
     border-radius: 4px;
     letter-spacing: 0.5px;
     margin-left: 0.25rem;
-}}
-.cat-badge-格助詞 {{ background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }}
-.cat-badge-副助詞 {{ background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }}
-.cat-badge-複合助詞 {{ background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }}
-.cat-badge-文型 {{ background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }}
-.cat-badge-接續助詞 {{ background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }}
-
-[data-theme="dark"] .cat-badge-格助詞 {{ background: #78350f; color: #fde68a; border-color: #92400e; }}
-[data-theme="dark"] .cat-badge-副助詞 {{ background: #4c1d95; color: #ddd6fe; border-color: #5b21b6; }}
-[data-theme="dark"] .cat-badge-複合助詞 {{ background: #064e3b; color: #a7f3d0; border-color: #065f46; }}
-[data-theme="dark"] .cat-badge-文型 {{ background: #881337; color: #fecdd3; border-color: #9f1239; }}
-[data-theme="dark"] .cat-badge-接續助詞 {{ background: #0c4a6e; color: #bae6fd; border-color: #075985; }}
-
-/* ==========================================================================
-   整句深度分析器：助詞運用與代用換句話說專用樣式
-   ========================================================================== */
-.sentence-particles-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    margin-top: 0.5rem;
 }
+.cat-badge-case { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.cat-badge-adverbial { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+.cat-badge-compound { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+.cat-badge-sentence { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+.cat-badge-conjunctive { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-.particle-item-card {
-    background: var(--bg-sub);
-    border: 1px solid var(--border-color);
-    border-left: 4px solid #f59e0b;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 0.85rem 1rem;
-    transition: all 0.2s ease;
-}
-
-.particle-item-card:hover {
-    border-color: #f59e0b;
-    box-shadow: var(--shadow-sm);
-}
-
-.particle-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.particle-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.particle-main-badge {
-    background: #fef3c7;
-    color: #b45309;
-    border: 1px solid #fde68a;
-    font-size: 1.15rem;
-    font-weight: 800;
-    padding: 0.1rem 0.55rem;
-    border-radius: 6px;
-    font-family: var(--font-jp);
-}
-
-[data-theme="dark"] .particle-main-badge {
-    background: #78350f;
-    color: #fef3c7;
-    border-color: #92400e;
-}
-
-.particle-context-chip {
-    font-family: var(--font-jp);
-    font-size: 0.88rem;
-    color: var(--text-main);
-    background: var(--bg-card);
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    border: 1px dashed var(--border-color);
-}
-
-.particle-context-chip strong {
-    color: #d97706;
-}
-
-.particle-role-badge {
-    font-size: 0.76rem;
-    font-weight: 700;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: #e0e7ff;
-    color: #3730a3;
-}
-
-[data-theme="dark"] .particle-role-badge {
-    background: #312e81;
-    color: #c7d2fe;
-}
-
-.particle-desc-text {
-    font-size: 0.86rem;
-    color: var(--text-muted);
-    line-height: 1.45;
-    margin-bottom: 0.55rem;
-}
-
-.particle-substitutes-area {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.65rem 0.8rem;
-    margin-top: 0.5rem;
-}
-
-.substitute-title {
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: #059669;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-bottom: 0.45rem;
-}
-
-.substitute-items-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-
-.substitute-item-card {
-    background: var(--bg-sub);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.55rem 0.75rem;
-}
-
-.substitute-tag {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-    font-weight: 700;
-    font-size: 0.76rem;
-    padding: 0.1rem 0.35rem;
-    border-radius: 4px;
-    margin-right: 0.35rem;
-}
-
-[data-theme="dark"] .substitute-tag {
-    background: #064e3b;
-    color: #6ee7b7;
-    border-color: #047857;
-}
-
-.paraphrase-demo-box {
-    background: rgba(16, 185, 129, 0.08);
-    border-left: 3px solid #10b981;
-    padding: 0.4rem 0.65rem;
-    border-radius: 0 4px 4px 0;
-    font-size: 0.84rem;
-    font-family: var(--font-jp);
-    margin-top: 0.4rem;
-    line-height: 1.5;
-}
-
-.paraphrase-demo-box strong {
-    color: #059669;
-}
-
-/* ==========================================================================
-   助詞隨堂快速測驗浮動卡 (Quick Particle Popover)
-   ========================================================================== */
-.particle-popover {
-    position: fixed;
-    z-index: 1050;
-    background: var(--bg-card);
-    border: 1.5px solid #f59e0b;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    padding: 1.2rem;
-    width: 320px;
-    max-width: 92vw;
-    animation: fadeIn 0.2s ease;
-}
-
-.popover-quiz-context {
-    background: var(--bg-sub);
-    padding: 0.65rem 0.85rem;
-    border-radius: 6px;
-    font-size: 0.98rem;
-    font-family: var(--font-jp);
-    text-align: center;
-    margin: 0.6rem 0;
-    line-height: 1.6;
-}
-
-.popover-options-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    margin: 0.6rem 0;
-}
-
-.btn-popover-opt {
-    padding: 0.5rem 0.6rem;
-    border-radius: 6px;
-    border: 1.5px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-main);
-    font-size: 1.05rem;
-    font-weight: 700;
-    font-family: var(--font-jp);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.btn-popover-opt:hover {
-    border-color: #f59e0b;
-    background: #fef3c7;
-    color: #b45309;
-}
-
-.btn-popover-opt.correct {
-    border-color: #10b981 !important;
-    background: #d1fae5 !important;
-    color: #065f46 !important;
-}
-
-.btn-popover-opt.wrong {
-    border-color: #ef4444 !important;
-    background: #fee2e2 !important;
-    color: #991b1b !important;
-}
+[data-theme="dark"] .cat-badge-case { background: #78350f; color: #fde68a; border-color: #92400e; }
+[data-theme="dark"] .cat-badge-adverbial { background: #4c1d95; color: #ddd6fe; border-color: #5b21b6; }
+[data-theme="dark"] .cat-badge-compound { background: #064e3b; color: #a7f3d0; border-color: #065f46; }
+[data-theme="dark"] .cat-badge-sentence { background: #881337; color: #fecdd3; border-color: #9f1239; }
+[data-theme="dark"] .cat-badge-conjunctive { background: #0c4a6e; color: #bae6fd; border-color: #075985; }
 
 /* ==========================================================================
    全篇助詞測驗挑戰彈窗樣式
@@ -2902,14 +2703,15 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
                 <!-- Particle Mode Switch (助詞遮蔽測驗) -->
                 <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
+                <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
                 <div class="control-pill-group" title="助詞與文型階層遮蔽自測模式：可按格助詞、副助詞、複合助詞、文型句型進行單項或全文挖空自測">
                     <span class="group-label"><i class="fa-solid fa-shapes"></i> 語法自測:</span>
                     <button class="pill-btn active" id="btnGrammarShow" data-mode="show" title="正常顯示所有助詞與文型">顯示</button>
                     <button class="pill-btn" id="btnGrammarMaskAll" data-mode="mask-all" title="【全部遮蔽】遮蔽全文所有格助詞、副助詞、複合助詞與文型">全部遮蔽</button>
-                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-格助詞" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-副助詞" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-複合助詞" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-文型" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
+                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-case" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-adverbial" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-compound" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-sentence" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
                     <button id="btnParticleShow" style="display:none;"></button>
                     <button id="btnParticleMask" style="display:none;"></button>
                 </div>
@@ -3198,12 +3000,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             </div>
 
             <!-- 分類篩選頁籤 (格助詞 / 副助詞 / 複合助詞 / 文型句型) -->
+            <!-- 分類篩選頁籤 (格助詞 / 副助詞 / 複合助詞 / 文型句型) -->
             <div class="notebook-tabs" style="margin-bottom:0.75rem;">
                 <button class="notebook-tab-btn active" id="btnQuizFilterAll" onclick="setQuizCategoryFilter('all')">全部 (<span id="quizCountAll">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterCase" onclick="setQuizCategoryFilter('格助詞')">格助詞 (<span id="quizCountCase">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterAdverbial" onclick="setQuizCategoryFilter('副助詞')">副助詞 (<span id="quizCountAdverbial">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterCompound" onclick="setQuizCategoryFilter('複合助詞')">複合助詞 (<span id="quizCountCompound">0</span>)</button>
-                <button class="notebook-tab-btn" id="btnQuizFilterSentence" onclick="setQuizCategoryFilter('文型')">文型句型 (<span id="quizCountSentence">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCase" onclick="setQuizCategoryFilter('case')">格助詞 (<span id="quizCountCase">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterAdverbial" onclick="setQuizCategoryFilter('adverbial')">副助詞 (<span id="quizCountAdverbial">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCompound" onclick="setQuizCategoryFilter('compound')">複合助詞 (<span id="quizCountCompound">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterSentence" onclick="setQuizCategoryFilter('sentence')">文型句型 (<span id="quizCountSentence">0</span>)</button>
             </div>
 
             <div class="quiz-status-bar">
@@ -3386,6 +3189,14 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
         // 24 組日文助詞代用與換句話說知識庫
         const PARTICLE_DATA = {"で":{"particle":"で","default_role":"格助詞・手段/場所/原因","distractors":["に","を","が","へ","と"],"usages":[{"role":"格助詞・手段／方法／媒介","desc":"表示達成動作所使用的工具、手段、方式、媒介或語言。","context_clue":["使っ","利用","書く","話す","連絡","行っ","移動","作っ","作成"],"substitutes":[{"type":"文型代用","title":"〜によって・〜による","grammarId":685,"level":"N3","desc":"更正式、書面化的「透過／藉由……手段」。","paraphrase_demo":"將「名詞＋で」替換為「名詞＋によって」"},{"type":"文型代用","title":"〜を通して・〜を通じて","grammarId":917,"level":"N3","desc":"表示以人、事物或媒介作為管道或仲介來實現後項。","paraphrase_demo":"將「媒介名詞＋で」替換為「名詞＋を通じて」"},{"type":"文型代用","title":"〜をもとに・〜をもとにして","grammarId":929,"level":"N1","desc":"以某素材、數據、事實或經驗為基礎依據來進行創作或判斷。","paraphrase_demo":"將「名詞＋で」替換為「名詞＋をもとにして」"}]},{"role":"格助詞・動作場所／場面","desc":"表示動作、行為或事件具體發生的地點、舞台或場合。","context_clue":["病院","ホテル","駅","学校","会社","日本","世界","行われ","開催","始まっ"],"substitutes":[{"type":"助詞代用","title":"にて","grammarId":null,"level":"正式公文","desc":"公文、公告、正式商務書信中格助詞「で」的代用語（如：東京にて開催）。","paraphrase_demo":"「〜にて」為格助詞「で」之正式書面代用語"},{"type":"文型代用","title":"〜において・〜における","grammarId":608,"level":"N2","desc":"極度正式書面的「在……場所／領域／場合」，常用於新聞、學術與論說文。","paraphrase_demo":"將「場所名詞＋で」改寫為「名詞＋において」"}]},{"role":"格助詞・原因／理由","desc":"表示引起後續狀態、事件或變化的原因、理由或契機。","context_clue":["事故","病気","地震","火事","理由","影響","ため","増え","減少"],"substitutes":[{"type":"文型代用","title":"〜によって・〜により","grammarId":684,"level":"N3","desc":"表示因某自然現象、事件或重大原因而導致後項結果。","paraphrase_demo":"將「原因名詞＋で」改寫為「名詞＋によって」"},{"type":"文型代用","title":"〜ことから","grammarId":136,"level":"N2","desc":"由某客觀事實或緣由作為根據，導出後項判斷或命名。","paraphrase_demo":"將原因句改寫為「〜ことから」"},{"type":"文型代用","title":"〜につき","grammarId":658,"level":"N2","desc":"通知、告示專用文體，表示「因……之故」（如：改装工事中につき休業）。","paraphrase_demo":"書面公告改寫為「名詞＋につき」"}]}],"category":"格助詞"},"に":{"particle":"に","default_role":"格助詞・對象/時間/歸著點","distractors":["で","を","へ","と","が"],"usages":[{"role":"格助詞・動作對象／面向","desc":"表示動作、情感、態度或言行直接指向的對象與相手。","context_clue":["対し","人","客","相手","教え","話す","伝え","求め","向かっ"],"substitutes":[{"type":"文型代用","title":"〜に対して・〜に対する","grammarId":651,"level":"N3","desc":"指出動作、態度或言行直接針對的具體對象，強調面向性。","paraphrase_demo":"將「對象＋に」改寫為「對象＋に対して」"},{"type":"文型代用","title":"〜にとって","grammarId":666,"level":"N3","desc":"站在特定人物或群體的立場觀點來看，後接價值判斷（對……而言）。","paraphrase_demo":"將「立場名詞＋に」改寫為「立場名詞＋にとって」"},{"type":"文型代用","title":"〜に向けて・〜に向け","grammarId":678,"level":"N2","desc":"朝向特定目標、對象或時期積極推進行動。","paraphrase_demo":"將「目標對象＋に」改寫為「目標＋に向けて」"}]},{"role":"格助詞・時間點／契機場合","desc":"表示動作或事件發生的明確時間點、階段或契機場合。","context_clue":["時","際","日","年","月","朝","夜","開始","終了"],"substitutes":[{"type":"文型代用","title":"〜にあたって・〜にあたり","grammarId":598,"level":"N2","desc":"在重要、正式或全新階段開始之際（如：新生活を始めるにあたって）。","paraphrase_demo":"將「動作・時間＋に」改寫為「〜にあたって」"},{"type":"文型代用","title":"〜において","grammarId":608,"level":"N2","desc":"表示在某歷史時期、時代或特定場合（在……之際／期間）。","paraphrase_demo":"將「時期名詞＋に」改寫為「時期＋において」"}]},{"role":"格助詞・移動歸著點／方向","desc":"表示移動行為的終點、抵達處或進入的場所空間。","context_clue":["行く","来る","帰る","入る","着く","届く","戻る","山","川","家"],"substitutes":[{"type":"助詞代用","title":"へ","grammarId":null,"level":"格助詞代用","desc":"表示移動之目標方向，可與「へ」互換代用（如：山に行く ↔ 山へ行く）。","paraphrase_demo":"「移動方向・地點＋へ」可與「＋に」互換代用"}]}],"category":"格助詞"},"を":{"particle":"を","default_role":"格助詞・受詞/通過點","distractors":["が","に","で","は","と"],"usages":[{"role":"格助詞・賓格受詞／對象","desc":"表示他動詞動作直接涉及的實體、客體或事物。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜をもとに・〜をもとにして","grammarId":929,"level":"N1","desc":"以某事物、素材或事實為基礎依據（替換「〜を使って」）。","paraphrase_demo":"「〜を使って」可換句話說為「〜をもとにして」"},{"type":"文型代用","title":"〜をきっかけに・〜を契機に","grammarId":905,"level":"N2","desc":"以某事作為開端、契機或起點（替換「〜を機に」）。","paraphrase_demo":"改寫為「〜をきっかけにして」"},{"type":"文型代用","title":"〜を通して・〜を通じて","grammarId":917,"level":"N3","desc":"透過某媒介或歷經某過程來實現。","paraphrase_demo":"改寫為「〜を通じて」"}]}],"category":"格助詞"},"が":{"particle":"が","default_role":"格助詞・主格/逆接","distractors":["は","を","に","の","で"],"usages":[{"role":"主格助詞・連體修飾節主語","desc":"在修飾後方名詞的子句（連体修飾節）中擔任主語。","context_clue":["読んだ","書いた","咲く","住む","診察する","使う","持っ"],"substitutes":[{"type":"助詞代用","title":"の","grammarId":null,"level":"文法常考代用","desc":"【連體修飾節「が」與「の」交代】：修飾名詞子句中的主語助詞「が」極常代用為「の」（如：私が読んだ本 ↔ 私の読んだ本、医師が診察する時 ↔ 医師の診察する時）。","paraphrase_demo":"在連體修飾節中將主語「〜が」替換為「〜の」"}]},{"role":"格助詞・主格主語／排他強調","desc":"明確標示執行動作的主體、狀態發生的焦點主體（排他性強調）。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜こそ","grammarId":131,"level":"N3","desc":"特別強調被提示之主體：「正是……／才是……」。","paraphrase_demo":"將強烈主體改寫為「〜こそ」"}]},{"role":"接續助詞・逆接轉折","desc":"連接前句與後句，表示前後情況相反、對立或語氣轉折。","context_clue":["が、","けれども","しかし"],"substitutes":[{"type":"文型代用","title":"〜ものの","grammarId":838,"level":"N2","desc":"雖然前項為事實，但後項卻不如預期或有所保留。","paraphrase_demo":"將逆接「〜が」改寫為「〜ものの」"},{"type":"文型代用","title":"〜にもかかわらず","grammarId":679,"level":"N2","desc":"儘管處於前項狀態，後項卻完全不受其拘束影響。","paraphrase_demo":"改寫為「〜にもかかわらず」"}]}],"category":"格助詞"},"は":{"particle":"は","default_role":"副助詞・主題提示/對比","distractors":["が","を","に","も","で"],"usages":[{"role":"副助詞・主題提示／談論焦點","desc":"提出整句談論的已知大主題，後項句子均圍繞此主題展開說明。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜について・〜に関して","grammarId":657,"level":"N3","desc":"提到該事物或主題時，以「關於……／針對……」進行更聚焦的正式論述。","paraphrase_demo":"將主題「Aは」換句話說為「Aについて・Aに関しては」"},{"type":"文型代用","title":"〜としては","grammarId":498,"level":"N3","desc":"強調身分、立場或資格主題：「作為……來說，則是……」。","paraphrase_demo":"將立場主題改寫為「〜としては」"}]}],"category":"副助詞"},"と":{"particle":"と","default_role":"格助詞・伴隨/共同/引用","distractors":["に","で","を","も","へ"],"usages":[{"role":"格助詞・共同伴隨／互相","desc":"表示一同進行動作的同伴、伴隨狀態或相互作用。","context_clue":["一緒","付き合っ","協力","話し合い","ともに","相談"],"substitutes":[{"type":"文型代用","title":"〜とともに","grammarId":506,"level":"N2","desc":"更具文雅感與正式感的「與……一同／彼此合作」。","paraphrase_demo":"將「名詞＋と一緒に」改寫為「名詞＋とともに」"},{"type":"文型代用","title":"〜にともなって","grammarId":663,"level":"N2","desc":"隨著前項發生變遷發展，後項也伴隨進行相應轉變。","paraphrase_demo":"改寫為「〜にともなって」"},{"type":"文型代用","title":"〜をはじめ（として）","grammarId":922,"level":"N3","desc":"以某代表性事物為首，列舉同類事項（代表列舉代用）。","paraphrase_demo":"改寫為「〜をはじめとして」"}]}],"category":"格助詞"},"から":{"particle":"から","default_role":"格助詞・原因/起點","distractors":["ので","まで","より","で","に"],"usages":[{"role":"接續助詞・原因／理由","desc":"指出引發後項判斷、主張、行動或客觀事實的原因由來。","context_clue":["理由","ため","だから","ので"],"substitutes":[{"type":"助詞代用","title":"ので","grammarId":null,"level":"常用代用","desc":"相較於「から」帶有主觀主張感，「ので」更客觀禮貌、柔和自然。","paraphrase_demo":"口語或書面中將「〜から」代用為「〜ので」"},{"type":"文型代用","title":"〜からこそ","grammarId":87,"level":"N2","desc":"極度強調「正因為這個特別的理由，才會出現後項結果」。","paraphrase_demo":"將原因句改寫為「〜からこそ」"},{"type":"文型代用","title":"〜ことから","grammarId":136,"level":"N2","desc":"以客觀事實或特徵作為命名、推論或判斷的依據。","paraphrase_demo":"改寫為「〜ことから」"},{"type":"文型代用","title":"〜によって・〜により","grammarId":684,"level":"N3","desc":"因該理由或事件導致後續影響或結果。","paraphrase_demo":"改寫為「〜によって」"}]},{"role":"格助詞・時間空間起點","desc":"表示時間、空間、順序的起點或發源地。","context_clue":["始ま","出張","出発","今日","明日","駅","山"],"substitutes":[{"type":"助詞代用","title":"より","grammarId":null,"level":"格助詞代用","desc":"在正式公文、通知或書面中常以「より」代替起點（如：東京より出発）。","paraphrase_demo":"將起點「〜から」代用為書面「〜より」"},{"type":"文型代用","title":"〜からして","grammarId":88,"level":"N2","desc":"單從某個起點或代表性特徵來看，即可推知其他整體。","paraphrase_demo":"改寫為「〜からして」"}]}],"category":"格助詞"},"について":{"particle":"について","default_role":"複合同格助詞・談論主題","distractors":["に対して","にとって","として","によって"],"usages":[{"role":"複合同格助詞・談論主題","desc":"表示思考、說話、研究或調查所圍繞的題目或主題。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜に関して・〜に関する","grammarId":626,"level":"N3","desc":"比「について」更具書面規範與學術正式感（關於……／有關……）。","paraphrase_demo":"將「名詞＋について」換句話說為「名詞＋に関して」"},{"type":"文型代用","title":"〜をめぐって・〜をめぐる","grammarId":926,"level":"N1","desc":"圍繞某個引起各界熱烈討論或爭執的核心議題。","paraphrase_demo":"改寫為「〜をめぐって」"}]}],"category":"複合助詞"},"より":{"particle":"より","default_role":"格助詞・比較基準/起點","distractors":["ほど","くらい","から","まで","に"],"usages":[{"role":"格助詞・比較基準","desc":"指出在兩相比較之下，作為參照或基準的一方（比……更……）。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜に比べて・〜と比較して","grammarId":629,"level":"N3","desc":"明確的比較文型：「與……相比較之下」。","paraphrase_demo":"將「Aより」改寫為「Aに比べて」"}]}],"category":"格助詞"},"だけ":{"particle":"だけ","default_role":"副助詞・限定","distractors":["しか","ばかり","ほど","くらい","さえ"],"usages":[{"role":"副助詞・限定範圍","desc":"限定僅限於此一範圍或數量，排除其他可能。","context_clue":[],"substitutes":[{"type":"文型代用","title":"ただ〜のみ","grammarId":266,"level":"N2","desc":"格調優雅的正式書面語：「僅僅……／唯有……」。","paraphrase_demo":"改寫為「ただ〜のみ」"},{"type":"文型代用","title":"〜にすぎない","grammarId":643,"level":"N2","desc":"帶有「只不過是……而已」的評價語氣。","paraphrase_demo":"改寫為「〜にすぎない」"},{"type":"文型代用","title":"〜のみならず〜も","grammarId":704,"level":"N2","desc":"「不僅……而且……」（反向拓展限定）。","paraphrase_demo":"改寫為「〜のみならず」"}]}],"category":"副助詞"},"しか":{"particle":"しか","default_role":"副助詞・限定否定","distractors":["だけ","ばかり","さえ","こそ"],"usages":[{"role":"副助詞・限定呼應否定","desc":"與後方否定動詞呼應，表示「除了此項之外別無其他選擇」。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜よりほかない・〜ほかない","grammarId":886,"level":"N2","desc":"沒有其他辦法，唯有做出此決定（「只好……／只能……」）。","paraphrase_demo":"將「動詞原型＋しかない」改寫為「動詞＋よりほかない」"}]}],"category":"副助詞"},"さえ":{"particle":"さえ","default_role":"副助詞・極端例示","distractors":["すら","こそ","しか","だけ"],"usages":[{"role":"副助詞・極端例示／甚至","desc":"舉出極端例子，暗示其他情況更是不在話下（連……都……）。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜すら","grammarId":210,"level":"N2","desc":"更具書面與文學感的「連……都」。","paraphrase_demo":"將「〜さえ」改寫為「〜すら」"},{"type":"文型代用","title":"〜さえ〜ば","grammarId":178,"level":"N3","desc":"「只要滿足這唯一條件，就……」。","paraphrase_demo":"改寫為「〜さえ〜ば」"}]}],"category":"副助詞"},"こそ":{"particle":"こそ","default_role":"副助詞・強烈強調","distractors":["さえ","だけ","しか","は"],"usages":[{"role":"副助詞・強烈提示強調","desc":"特別強調某成分，意為「正是……／才是……」。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜からこそ","grammarId":87,"level":"N2","desc":"強調「正因為前項這個特別理由，才會……」。","paraphrase_demo":"改寫為「〜からこそ」"}]}],"category":"副助詞"},"として":{"particle":"として","default_role":"複合同格助詞・身分資格","distractors":["にとって","に対して","について","によって"],"usages":[{"role":"複合同格助詞・身分資格立場","desc":"表示某人的身分、立場、資格或名義，意為「作為……」。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜としての＋N","grammarId":498,"level":"N3","desc":"作為修飾名詞的表現型態。","paraphrase_demo":"改寫為「名詞＋としての＋名詞」"}]}],"category":"複合助詞"},"も":{"particle":"も","default_role":"係助詞・同類並立/強調","distractors":["は","が","を","に","で"],"usages":[{"role":"係助詞・同類並立／兼具添加","desc":"表示與前述同類情況成立（也……／同樣……），或用於極端強調。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜のみならず〜も","grammarId":704,"level":"N2","desc":"較正式的「不但……而且……」。","paraphrase_demo":"改寫為「〜のみならず〜も」"},{"type":"文型代用","title":"〜ばかりか〜も","grammarId":714,"level":"N2","desc":"不僅前項如此，後項更是程度加深。","paraphrase_demo":"改寫為「〜ばかりか〜も」"}]}],"category":"副助詞"},"へ":{"particle":"へ","default_role":"格助詞・移動方向","distractors":["に","で","を","から","まで"],"usages":[{"role":"格助詞・移動方向／指向目標","desc":"表示移動行為朝向的目標方向（往……／朝……前進）。","context_clue":["行く","来る","帰る","向かう","旅","山","川","海","駅"],"substitutes":[{"type":"助詞代用","title":"に","grammarId":null,"level":"格助詞代用","desc":"「へ」表示方向，「に」表示到達目的地／歸著點，兩者常可代用（如：山へ行く ↔ 山に行く）。","paraphrase_demo":"將方向助詞「名詞＋へ」代用為歸著點「名詞＋に」"},{"type":"文型代用","title":"〜に向けて・〜に向け","grammarId":678,"level":"N2","desc":"朝向特定目標、對象或時期積極推進。","paraphrase_demo":"改寫為「目標名詞＋に向けて」"}]}],"category":"格助詞"},"まで":{"particle":"まで","default_role":"副助詞/格助詞・終點/極端","distractors":["から","より","に","で","へ"],"usages":[{"role":"副助詞・時間空間終點／界限","desc":"表示時間、空間或順序延續的終止點（到……為止）。","context_clue":["至る","続く","終わる","帰る"],"substitutes":[{"type":"文型代用","title":"〜に至るまで","grammarId":618,"level":"N1","desc":"極度正式、範圍深廣的「甚至達到……地步／直到……為止」。","paraphrase_demo":"改寫為「名詞＋に至るまで」"},{"type":"文型代用","title":"〜にかけて","grammarId":627,"level":"N2~N3","desc":"表示從前項大致涵蓋延續到後項的時空範圍（從……到……）。","paraphrase_demo":"「AからBまで」可換句話說為「AからBにかけて」"}]}],"category":"格助詞"},"ほど":{"particle":"ほど","default_role":"副助詞・程度/比較基準","distractors":["くらい","ばかり","だけ","より","さえ"],"usages":[{"role":"副助詞・程度高深／比喻","desc":"表示程度極高，達到令人驚訝的地步，或用於最高級否定比較。","context_clue":["ない","高い","多い"],"substitutes":[{"type":"助詞代用","title":"くらい・ぐらい","grammarId":null,"level":"常用代用","desc":"「ほど」較文雅高尚，口語中常代用為「くらい／ぐらい」。","paraphrase_demo":"「〜ほど」可代用為「〜くらい」"},{"type":"文型代用","title":"〜ほど〜はない","grammarId":179,"level":"N2","desc":"「沒有像……那樣……的了」，表示最高級程度。","paraphrase_demo":"改寫為最高級否定句型「〜ほど〜はない」"}]}],"category":"副助詞"},"くらい":{"particle":"くらい","default_role":"副助詞・大約程度/輕視","distractors":["ほど","ばかり","だけ","しか"],"usages":[{"role":"副助詞・程度概算／最低限度","desc":"表示大約的數量程度，或視為簡單、微不足道的最低限度。","context_clue":[],"substitutes":[{"type":"助詞代用","title":"ほど","grammarId":null,"level":"書面代用","desc":"較正式、高雅的程度表現，常與「くらい」互換。","paraphrase_demo":"改寫為「〜ほど」"},{"type":"文型代用","title":"〜くらい①（軽視）","grammarId":117,"level":"N3","desc":"把某事視為微不足道：「至少這點小事……／連……這點程度」。","paraphrase_demo":"套用 941 語法庫 [N3] 〜くらい"}]}],"category":"副助詞"},"ぐらい":{"particle":"ぐらい","default_role":"副助詞・大約程度","distractors":["ほど","ばかり","だけ","しか"],"usages":[{"role":"副助詞・概算程度","desc":"表示概略數量或最低限度（相當於「くらい」的濁音形式）。","context_clue":[],"substitutes":[{"type":"助詞代用","title":"ほど","grammarId":null,"level":"書面代用","desc":"書面正式文體中常以「ほど」代用。","paraphrase_demo":"改寫為「〜ほど」"}]}],"category":"副助詞"},"ばかり":{"particle":"ばかり","default_role":"副助詞・限定/總是/剛完成","distractors":["だけ","しか","ほど","くらい"],"usages":[{"role":"副助詞・總是／光是（負面評價）","desc":"表示經常反覆進行同一件事，帶有批評或無奈語氣。","context_clue":["いる","食べて","遊んで","文句"],"substitutes":[{"type":"文型代用","title":"〜てばかりいる","grammarId":400,"level":"N2","desc":"光是做某事而不顧正事（動詞て形＋ばかりいる）。","paraphrase_demo":"改寫為「動詞て形＋ばかりいる」"},{"type":"文型代用","title":"〜ばかりか〜も","grammarId":714,"level":"N2","desc":"「不但……就連……也……」（程度遞進代用）。","paraphrase_demo":"改寫為「〜ばかりか〜も」"}]}],"category":"副助詞"},"ので":{"particle":"ので","default_role":"接續助詞・客觀原因","distractors":["から","ため","のに","けど"],"usages":[{"role":"接續助詞・客觀客氣因果","desc":"客觀敘述造成後項自然演變的原因，語氣委婉禮貌。","context_clue":[],"substitutes":[{"type":"助詞代用","title":"から","grammarId":null,"level":"常用代用","desc":"「から」帶有較強說服、主觀命令或個人主張色彩。","paraphrase_demo":"「〜ので」可代用為「〜から」"},{"type":"文型代用","title":"〜ことから","grammarId":136,"level":"N2","desc":"由客觀事實或緣由引導出的原因論述。","paraphrase_demo":"改寫為「〜ことから」"},{"type":"文型代用","title":"〜によって・〜により","grammarId":684,"level":"N3","desc":"因該理由導致後續重大變化或結果。","paraphrase_demo":"改寫為「〜によって」"}]}],"category":"接續助詞"},"のに":{"particle":"のに","default_role":"接續助詞・轉折抱怨","distractors":["ので","から","ても","けど"],"usages":[{"role":"接續助詞・逆接抱怨／出乎意料","desc":"前項與後項出現預料之外的逆接結果，常帶有遺憾、不滿或意外之情。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜ものの","grammarId":838,"level":"N2","desc":"雖然前項是既成事實，但後項卻未達預期（客觀論說代用）。","paraphrase_demo":"將帶有情緒的「〜のに」改寫為客觀文雅的「〜ものの」"},{"type":"文型代用","title":"〜にもかかわらず","grammarId":679,"level":"N2","desc":"儘管處於前項狀況，後項卻照樣進行（更為正式堅定）。","paraphrase_demo":"改寫為「〜にもかかわらず」"}]}],"category":"接續助詞"},"など":{"particle":"など","default_role":"副助詞・列舉/輕描淡寫","distractors":["やら","とか","だの","たり"],"usages":[{"role":"副助詞・代表性列舉／等等","desc":"舉出同類事物中的代表一兩項，暗示還有其他同類事物（……等等）。","context_clue":[],"substitutes":[{"type":"文型代用","title":"〜をはじめ（として）","grammarId":922,"level":"N3","desc":"以某具代表性的事物為首進行列舉。","paraphrase_demo":"改寫為「名詞＋をはじめとして」"}]}],"category":"副助詞"},"の":{"particle":"の","category":"格助詞","default_role":"格助詞・所屬修飾/連體修飾節主語","distractors":["が","に","で","を"],"usages":[{"role":"格助詞・所屬／領屬／連體修飾","desc":"連接前後兩個名詞，表示所屬、性質、產地或狀態（……的）。","context_clue":["日本","会社","私の","あなたの","本","車"],"substitutes":[{"type":"文型代用","title":"〜における","grammarId":608,"level":"N2","desc":"極正式書面之「在……場合／領域／地點的」（如：日本における文化 ↔ 日本の文化）。","paraphrase_demo":"將「名詞＋の」換為「名詞＋における＋名詞」"},{"type":"文型代用","title":"〜に関する","grammarId":626,"level":"N3","desc":"表示「關於……方面的」（如：歴史に関する本 ↔ 歴史の本）。","paraphrase_demo":"將「名詞＋の」換為「名詞＋に関する＋名詞」"}]}]},"ばかりか":{"particle":"ばかりか","category":"副助詞","default_role":"副助詞・遞進強調/不僅","distractors":["ばかり","だけ","さえ","こそ"],"usages":[{"role":"副助詞・遞進強調（不但……而且……）","desc":"承認前項事實，進一步提出後項程度更甚的事物（不僅……就連……）。","context_clue":["だけでなく","も","まで","のみならず"],"substitutes":[{"type":"文型代用","title":"〜のみならず〜も","grammarId":704,"level":"N2","desc":"更正式論說體的「不僅前項，後項亦同」。","paraphrase_demo":"將「〜ばかりか」改寫為「〜のみならず」"},{"type":"文型代用","title":"〜ばかりでなく","grammarId":715,"level":"N3","desc":"常見之「不僅……而且……」。","paraphrase_demo":"將「〜ばかりか」代換為「〜ばかりでなく」"}]}]},"のみ":{"particle":"のみ","category":"副助詞","default_role":"副助詞・限定（唯有/僅僅）","distractors":["だけ","しか","ばかり","さえ"],"usages":[{"role":"副助詞・正式限定（唯有……／僅……）","desc":"書面正式文體中表示排除其他可能性的絕對限定。","context_clue":["だけ","限り","限定"],"substitutes":[{"type":"助詞代用","title":"だけ","grammarId":null,"level":"副助詞代用","desc":"口語與中性語境中常用的「只有／僅」。","paraphrase_demo":"將「名詞＋のみ」換為「名詞＋だけ」"},{"type":"文型代用","title":"〜に限る","grammarId":617,"level":"N2","desc":"表示「唯有……才是最好的／僅限於……」。","paraphrase_demo":"改寫為「〜に限る」"}]}]},"に関して":{"particle":"に関して","category":"複合助詞","default_role":"複合助詞・關於/針對（書面）","distractors":["について","に対して","にとって","として"],"usages":[{"role":"複合助詞・書面正式關涉主題（關於／針對）","desc":"比「について」更正式、書面化的論說用語，探討或研究核心主題。","context_clue":["調査","研究","報告","議論","発表","意見"],"substitutes":[{"type":"複合助詞代用","title":"について","grammarId":null,"level":"複合助詞代用","desc":"通用中性語氣的「關於……」。","paraphrase_demo":"將「名詞＋に関して」代換為「名詞＋について」"},{"type":"文型代用","title":"〜をめぐって","grammarId":926,"level":"N1","desc":"圍繞某個引發眾人爭議或熱烈討論的核心議題。","paraphrase_demo":"若語境帶有爭議對立，改寫為「名詞＋をめぐって」"}]}]},"に対して":{"particle":"に対して","category":"複合助詞","default_role":"複合助詞・對象/對比","distractors":["について","に関して","にとって","として"],"usages":[{"role":"複合助詞・動作態度指向對象（面對……／對於……）","desc":"表示動作、態度、提問或情緒直接朝向特定人物、團體或事物。","context_clue":["質問","態度","厳しい","優しい","反対","意見","発言"],"substitutes":[{"type":"文型代用","title":"〜に向かって・〜に向けて","grammarId":678,"level":"N2","desc":"朝向特定目標方向或受眾。","paraphrase_demo":"改寫為「名詞＋に向けて」"},{"type":"文型代用","title":"〜に対して（對比）","grammarId":650,"level":"N3","desc":"將兩件事物鮮明對比（與……相反／與……相對照）。","paraphrase_demo":"用於前後兩項事物對照"}]}]},"にとって":{"particle":"にとって","category":"複合助詞","default_role":"複合助詞・立場觀點（對……而言）","distractors":["に対して","として","について","によって"],"usages":[{"role":"複合助詞・評價判斷之立場觀點（對……而言／從……的角度）","desc":"站在特定人物、組織或立場出發，對後項事物作出價值判斷或評價。","context_clue":["大切","重要","必要","難しい","簡単","嬉しい","問題"],"substitutes":[{"type":"文型代用","title":"〜から見ると・〜から見れば","grammarId":82,"level":"N2","desc":"從某方的立場或視角客觀審視評斷。","paraphrase_demo":"改寫為「名詞＋から見ると」"},{"type":"文型代用","title":"〜の立場から言えば","grammarId":null,"level":"習慣表現","desc":"站在該人物的立場而言。","paraphrase_demo":"改寫為「名詞＋の立場からすれば」"}]}]},"をめぐって":{"particle":"をめぐって","category":"複合助詞","default_role":"複合助詞・圍繞爭議（圍繞……）","distractors":["について","に関して","に対して","によって"],"usages":[{"role":"複合助詞・圍繞核心爭議議題（圍繞著……）","desc":"針對引起多人關注、爭論、對立或競逐的核心問題展開行動。","context_clue":["議論","対立","争い","意見","裁判","問題"],"substitutes":[{"type":"文型代用","title":"〜に関して","grammarId":626,"level":"N3","desc":"中性客觀論述相關主題。","paraphrase_demo":"改寫為「名詞＋に関して」"}]}]},"を通じて":{"particle":"を通じて","category":"複合助詞","default_role":"複合助詞・途徑媒介/貫穿全程","distractors":["によって","をもとに","について","として"],"usages":[{"role":"複合助詞・途徑媒介（透過……仲介）","desc":"不直接進行，而是藉由中介者、媒介管道或手段來達成某事。","context_clue":["友人","インターネット","活動","体験","交流"],"substitutes":[{"type":"文型代用","title":"〜を通して","grammarId":917,"level":"N3","desc":"語意相同，常互為代用。","paraphrase_demo":"改寫為「名詞＋を通して」"},{"type":"文型代用","title":"〜によって","grammarId":685,"level":"N3","desc":"表示手段或方法。","paraphrase_demo":"改寫為「名詞＋によって」"}]}]},"をもとに":{"particle":"をもとに","category":"複合助詞","default_role":"複合助詞・依據素材（以……為基礎）","distractors":["を通じて","によって","について","として"],"usages":[{"role":"複合助詞・依據素材創作基礎（以……為根基／取材自……）","desc":"以某事實、數據、故事、經驗或素材為基礎，創造出全新的作品或判斷。","context_clue":["小説","映画","データ","事実","経験","調査結果","作成","作ら"],"substitutes":[{"type":"文型代用","title":"〜をもとにして","grammarId":929,"level":"N1","desc":"語意相同之完整形式。","paraphrase_demo":"改寫為「名詞＋をもとにして」"},{"type":"文型代用","title":"〜に基づいて","grammarId":675,"level":"N2","desc":"以客觀方針、法規、數據為行動基準（根據……）。","paraphrase_demo":"若是法規數據基準，改寫為「名詞＋に基づいて」"}]}]},"にあたって":{"particle":"にあたって","category":"複合助詞","default_role":"複合助詞・重大活動之際（在……之際）","distractors":["に際して","について","にとって","として"],"usages":[{"role":"複合助詞・面臨重大新階段之際（在……之際／臨……之時）","desc":"在即將展開全新、正式且積極的重大活動或階段之際（如開業、留學、結婚）。","context_clue":["新生活","留学","開業","出発","始める","注意","準備"],"substitutes":[{"type":"文型代用","title":"〜に際して","grammarId":633,"level":"N2","desc":"同樣表示在正式特殊場合之際，常可互換。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋に際して」"}]}]},"に際して":{"particle":"に際して","category":"複合助詞","default_role":"複合助詞・正式特殊場合之際","distractors":["にあたって","について","にとって","に対して"],"usages":[{"role":"複合助詞・面臨特殊場合之際（在……之時／值此……之際）","desc":"比「にあたって」更具公務感、正式儀式場合的用詞。","context_clue":["契約","入学","卒業","退職","利用","申込"],"substitutes":[{"type":"文型代用","title":"〜にあたって","grammarId":598,"level":"N2","desc":"在重大前瞻新階段之際。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋にあたって」"}]}]},"にかけて":{"particle":"にかけて","category":"複合助詞","default_role":"複合助詞・時空延續區間（從……到……）","distractors":["まで","から","について","によって"],"usages":[{"role":"複合助詞・時空延續區間（大致跨越……期間）","desc":"與「から」呼應（〜から〜にかけて），表示從前項大致延續跨越到後項。","context_clue":["明日","夜","朝","週末","春","秋","地域"],"substitutes":[{"type":"助詞代用","title":"まで","grammarId":null,"level":"格助詞代用","desc":"精確表示明確界限終點。","paraphrase_demo":"若要精確標明終止點，替換為「〜まで」"},{"type":"文型代用","title":"〜にわたって","grammarId":688,"level":"N3","desc":"強調整個時間或空間廣大範圍的全部歷程。","paraphrase_demo":"改寫為「名詞＋にわたって」"}]}]},"につれて":{"particle":"につれて","category":"複合助詞","default_role":"複合助詞・比例伴隨（隨著……）","distractors":["に伴って","にしたがって","とともに","によって"],"usages":[{"role":"複合助詞・自然演變之比例伴隨變化（隨著……）","desc":"前項一方程度逐漸推進，後項也自然而然隨之產生相應變化。","context_clue":["高くなる","増える","変わる","進む","年をとる"],"substitutes":[{"type":"文型代用","title":"〜に伴って","grammarId":663,"level":"N2","desc":"伴隨前項事件變遷而生。","paraphrase_demo":"改寫為「動詞辭書形／名詞＋に伴って」"},{"type":"文型代用","title":"〜にしたがって","grammarId":637,"level":"N2","desc":"隨著一方進展，另一方相應發生變化。","paraphrase_demo":"改寫為「動詞辭書形／名詞＋にしたがって」"}]}]},"にわたって":{"particle":"にわたって","category":"複合助詞","default_role":"複合助詞・時空廣泛跨越（歷時/跨越）","distractors":["にかけて","まで","について","によって"],"usages":[{"role":"複合助詞・時空跨越廣泛歷程（歷經……之久／跨越……範圍）","desc":"表示時間長度、次數規模或空間範疇廣大（如：3年間にわたって、全国にわたって）。","context_clue":["年間","日間","か所","全国","長期","数回"],"substitutes":[{"type":"文型代用","title":"〜を通じて","grammarId":918,"level":"N3","desc":"歷經整個時間期間。","paraphrase_demo":"改寫為「期間名詞＋を通じて」"}]}]},"をはじめ":{"particle":"をはじめ","category":"複合助詞","default_role":"複合助詞・代表列舉（以……為首）","distractors":["として","について","にとって","に対して"],"usages":[{"role":"複合助詞・以代表性事物為首列舉同類（以……為首）","desc":"舉出最主要、最具代表性的例子，暗示同類事物還有很多。","context_clue":["代表","中心","多く","たくさん","人々"],"substitutes":[{"type":"文型代用","title":"〜をはじめとして","grammarId":922,"level":"N3","desc":"語意相同之完整形式。","paraphrase_demo":"改寫為「名詞＋をはじめとして」"}]}]},"によって":{"particle":"によって","category":"複合助詞","default_role":"複合助詞・手段/原因/依據（因……/藉由）","distractors":["で","を通じて","について","に対して"],"usages":[{"role":"複合助詞・正式手段／原因理由／個別差異","desc":"表示達成手段（透過……）、造成結果之客觀原因（由於……）或區別基準（因人而異）。","context_clue":["原因","手段","方法","違う","異なる","破壊","成功"],"substitutes":[{"type":"助詞代用","title":"で","grammarId":null,"level":"格助詞代用","desc":"日常口語手段或原因。","paraphrase_demo":"將「名詞＋によって」在日常語境代換為「名詞＋で」"},{"type":"文型代用","title":"〜を通じて","grammarId":917,"level":"N3","desc":"透過人或媒介管道。","paraphrase_demo":"改寫為「名詞＋を通じて」"}]}]},"において":{"particle":"において","category":"複合助詞","default_role":"複合助詞・正式場所場合（在……）","distractors":["で","について","に対して","として"],"usages":[{"role":"複合助詞・極正式之場所／時代／領域／場合（在……）","desc":"格調莊重的書面表達，相當於正式的格助詞「で」。","context_clue":["時代","分野","国際会議","社会","現代","行われ"],"substitutes":[{"type":"助詞代用","title":"で","grammarId":null,"level":"格助詞代用","desc":"中性日常之動作場所。","paraphrase_demo":"將「名詞＋において」替換為「名詞＋で」"}]}]},"に比べて":{"particle":"に比べて","category":"複合助詞","default_role":"複合助詞・比較基準（與……相較）","distractors":["より","に対して","について","にとって"],"usages":[{"role":"複合助詞・與基準比較（相較於……）","desc":"以某事物為標準對照，指出兩者在程度、數量或性質上的差異。","context_clue":["多い","少ない","高い","低い","去年","以前","比較"],"substitutes":[{"type":"助詞代用","title":"より","grammarId":null,"level":"格助詞代用","desc":"簡潔之比較基準。","paraphrase_demo":"將「名詞＋に比べて」替換為「名詞＋より」"}]}]},"ながらも":{"particle":"ながらも","category":"文型","default_role":"文型・轉折逆接（雖然……但是）","distractors":["つつも","ものの","わりに","ながら"],"usages":[{"role":"文型・轉折逆接（承認前項事實，同時後項出乎意料）","desc":"【嚴禁拆解為獨立的助詞「も」】！此為完整接續文型（〜ながらも），前接名詞、形容詞詞幹或動詞連用形，表示轉折矛盾。","context_clue":["残念","狭い","貧しい","知っ","子供","小さい"],"substitutes":[{"type":"文型代用","title":"〜つつも","grammarId":330,"level":"N2","desc":"心中明明清楚明白，行為卻與之矛盾（明知……卻還是……）。","paraphrase_demo":"動詞連用形時可換為「動詞連用形＋つつも」"},{"type":"文型代用","title":"〜ものの","grammarId":838,"level":"N2","desc":"客觀承認前項為既成事實，但後項未達理想或與之矛盾。","paraphrase_demo":"改寫為「普通形＋ものの」"},{"type":"文型代用","title":"〜にもかかわらず","grammarId":671,"level":"N2","desc":"不顧前項不利條件或事實，依然出現後項情況。","paraphrase_demo":"改寫為「名詞／普通形＋にもかかわらず」"}]}]},"ながら":{"particle":"ながら","category":"文型","default_role":"文型・同時進行動作/逆接轉折","distractors":["つつ","ながらも","一方で","ものの"],"usages":[{"role":"文型・一邊……一邊……（同時進行）／轉折逆接","desc":"【完整文型單位】前接動詞連用形，表示同時進行兩個動作，或用於表示逆接轉折。","context_clue":["歩き","聞き","見","食べ","話し","考え"],"substitutes":[{"type":"文型代用","title":"〜つつ","grammarId":331,"level":"N2","desc":"正式書面語之同時進行動作（一邊……一邊……）。","paraphrase_demo":"改寫為「動詞連用形＋つつ」"},{"type":"文型代用","title":"〜ながらも","grammarId":551,"level":"N2","desc":"若用於逆接轉折，加「も」加強語氣。","paraphrase_demo":"逆接語境下改為「〜ながらも」"}]}]},"つつも":{"particle":"つつも","category":"文型","default_role":"文型・心理矛盾轉折（明知……卻）","distractors":["ながらも","ものの","つつ","わりに"],"usages":[{"role":"文型・心理矛盾逆接（明知……卻還是……）","desc":"【完整文型】前接動詞連用形，表示心理明明明白或不情願，行為卻仍違背心意。","context_clue":["悪いと思い","知っ","分かっ","思い"],"substitutes":[{"type":"文型代用","title":"〜ながらも","grammarId":551,"level":"N2","desc":"轉折逆接（雖然……但是）。","paraphrase_demo":"改寫為「動詞連用形＋ながらも」"},{"type":"文型代用","title":"〜ものの","grammarId":838,"level":"N2","desc":"客觀承認前項事實的逆接轉折。","paraphrase_demo":"改寫為「普通形＋ものの」"}]}]},"つつ":{"particle":"つつ","category":"文型","default_role":"文型・文雅同時動作/轉折","distractors":["ながら","つつも","ながらも","一方で"],"usages":[{"role":"文型・文雅同時進行動作（一邊……一邊……）","desc":"前接動詞連用形，格調高雅的書面同時動作或轉折表現。","context_clue":["進め","考え","願っ","行い"],"substitutes":[{"type":"文型代用","title":"〜ながら","grammarId":550,"level":"N2~N3","desc":"常見口語與通用的同時進行。","paraphrase_demo":"改寫為「動詞連用形＋ながら」"}]}]},"ものの":{"particle":"ものの","category":"接續助詞","default_role":"接續助詞・客觀既成事實轉折","distractors":["ながらも","つつも","のに","けれども"],"usages":[{"role":"接續助詞・客觀事實轉折（雖然已……但是……）","desc":"承認前項已是既成事實，但後項卻未能如預期展開（多用於書面論說）。","context_clue":["買った","言った","合格した","始めた"],"substitutes":[{"type":"文型代用","title":"〜とはいえ","grammarId":565,"level":"N2","desc":"雖說如此但事實上……","paraphrase_demo":"改寫為「〜とはいえ」"}]}]},"ても":{"particle":"ても","category":"接續助詞","default_role":"接續助詞・讓步假定（即使……也）","distractors":["のに","ので","なら","たら"],"usages":[{"role":"接續助詞・讓步假定／條件（即使……也……）","desc":"前項條件即使成立，後項結果依然不變或不受阻礙。","context_clue":["いくら","どんなに","雨が降っ","失敗し"],"substitutes":[{"type":"文型代用","title":"〜たところで","grammarId":506,"level":"N1","desc":"即使做了某事也無濟於事。","paraphrase_demo":"改寫為「動詞過去形＋ところで」"}]}]},"でも":{"particle":"でも","category":"接續助詞","default_role":"接續助詞/副助詞・讓步/極端舉例","distractors":["ても","なら","ほど","さえ"],"usages":[{"role":"接續助詞・讓步逆接／舉例提示（即使……／像……之類的）","desc":"名詞接續之讓步，或舉出非唯一選擇之範例（如：お茶でも飲みましょう）。","context_clue":["お茶","コーヒー","子供","誰"],"substitutes":[{"type":"副助詞代用","title":"さえ","grammarId":null,"level":"副助詞代用","desc":"極端舉例（連……都）。","paraphrase_demo":"若為極端舉例，替換為「名詞＋さえ」"}]}]},"に伴い":{"particle":"に伴い","category":"文型","default_role":"文型・伴隨變遷（隨著……）","distractors":["に対して","に関して","について","によって"],"usages":[{"role":"文型・伴隨事物發展之客觀相應變化（隨著……變遷）","desc":"【嚴禁拆解為格助詞「に」】！此為重大變遷伴隨文型（〜に伴って・〜に伴い），前接動詞辭書形或名詞。","context_clue":["発展","変化","進展","高齢化","増加","普及"],"substitutes":[{"type":"文型代用","title":"〜に伴って","grammarId":663,"level":"N2","desc":"完全對等之標準形式。","paraphrase_demo":"代換為「名詞／動詞辭書形＋に伴って」"},{"type":"文型代用","title":"〜につれて","grammarId":661,"level":"N2","desc":"自然演變之一方進展帶動另一方轉變。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋につれて」"},{"type":"文型代用","title":"〜とともに","grammarId":573,"level":"N2","desc":"與此同時，伴隨產生。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋とともに」"}]}]},"に伴って":{"particle":"に伴って","category":"文型","default_role":"文型・伴隨變遷（隨著……）","distractors":["に対して","に関して","について","によって"],"usages":[{"role":"文型・伴隨變遷（隨著……演進）","desc":"【完整文型】前項發生重大變化，後項相應跟進轉變。","context_clue":["発展","変化","進展","普及","成長"],"substitutes":[{"type":"文型代用","title":"〜に伴い","grammarId":663,"level":"N2","desc":"更簡潔書面體。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋に伴い」"},{"type":"文型代用","title":"〜につれて","grammarId":661,"level":"N2","desc":"伴隨轉變。","paraphrase_demo":"改寫為「名詞／動詞辭書形＋につれて」"}]}]},"にほかならない":{"particle":"にほかならない","category":"文型","default_role":"文型・斷定強調（無非是/正是）","distractors":["わけにはいかない","にすぎない","にちがいない","はずがない"],"usages":[{"role":"文型・強調斷定唯一原因（無非是……／正是……）","desc":"【完整文型】極強烈的確信判斷，斷定除了這項原因或事實之外絕無其他。","context_clue":["理由","原因","努力","結果","姿勢","愛"],"substitutes":[{"type":"文型代用","title":"〜にすぎない","grammarId":641,"level":"N2","desc":"只不過是……而已。","paraphrase_demo":"若語氣為貶抑縮小範圍，改寫為「〜にすぎない」"},{"type":"文型代用","title":"〜こそが理由である","grammarId":null,"level":"強調表現","desc":"正是該原因。","paraphrase_demo":"改寫為「〜こそが……だ」"}]}]},"わけにはいかない":{"particle":"わけにはいかない","category":"文型","default_role":"文型・情理限制（不能/無法）","distractors":["にほかならない","わけではない","はずがない","たまらない"],"usages":[{"role":"文型・基於道德、社會常理或責任之心理限制（不能／無法……）","desc":"【完整文型】並非物理能力做不到，而是受到良心、常識、社會情理約束而絕不能做。","context_clue":["休む","諦める","負ける","約束","仕事"],"substitutes":[{"type":"文型代用","title":"〜ないわけにはいかない","grammarId":545,"level":"N2","desc":"雙重否定表強烈必然義務（不得不……／必須……）。","paraphrase_demo":"若要表達不得不做，改為「未然形＋ないわけにはいかない」"}]}]},"のみならず":{"particle":"のみならず","category":"文型","default_role":"文型・不僅……而且","distractors":["ばかりか","だけでなく","どころか","さえ"],"usages":[{"role":"文型・遞進添加（不僅……而且……）","desc":"【完整文型】格調崇高之書面論述，常與「〜も」呼應。","context_clue":["日本","世界","国内","だけでなく","も"],"substitutes":[{"type":"文型代用","title":"〜ばかりか","grammarId":714,"level":"N2","desc":"不但前項，後項更是超出常態。","paraphrase_demo":"改寫為「〜ばかりか」"}]}]},"一方で":{"particle":"一方で","category":"文型","default_role":"文型・兩面性/對比（一方面……另一方面）","distractors":["一方だ","反面","ながらも","つつも"],"usages":[{"role":"文型・並存對立之兩面性（一方面……另一方面……）","desc":"【完整文型】同一事物同時存在著互斥或對照的兩個面向。","context_clue":["便利","問題","危険","AI","進化","増える"],"substitutes":[{"type":"文型代用","title":"〜反面","grammarId":727,"level":"N2","desc":"強調同一事物的相反另一面。","paraphrase_demo":"改寫為「普通形＋反面」"}]}]},"一方だ":{"particle":"一方だ","category":"文型","default_role":"文型・持續趨向（不斷往某方向發展）","distractors":["一方で","ばかりだ","ぎみだ","がちだ"],"usages":[{"role":"文型・單向持續變遷趨向（不斷……／越來越……）","desc":"【完整文型】動詞辭書形接續，表示朝著某方向持續單純演化，常接惡化或增長動詞。","context_clue":["増える","減る","悪化","便利になる","高くなる"],"substitutes":[{"type":"文型代用","title":"〜ばかりだ","grammarId":713,"level":"N3","desc":"特別用於朝負面不良方向持續惡化。","paraphrase_demo":"若為負面變遷，改為「動詞辭書形＋ばかりだ」"}]}]},"あげく":{"particle":"あげく","category":"文型","default_role":"文型・歷經曲折後的負面結果（到頭來/最後）","distractors":["末に","結果","あまり","がち"],"usages":[{"role":"文型・經過漫長糾結後的遺憾結局（到頭來……／最後……）","desc":"【完整文型】前接動詞過去形或名詞＋の，表示經歷了很長時間的煩惱、爭執或折騰，最終得出令人遺憾或不滿的負面結果。","context_clue":["悩んだ","考えた","議論した","買った","別れた","失敗"],"substitutes":[{"type":"文型代用","title":"〜末に","grammarId":494,"level":"N2","desc":"歷經漫長波折後得到的結果（中性，結果可好可壞）。","paraphrase_demo":"若結局為正面成果，改寫為「動詞過去形／名詞＋の末に」"}]}]}};
+                const CATEGORY_MAP = {
+            '格助詞': { code: 'case', name: '格助詞', placeholder: '？格助' },
+            '副助詞': { code: 'adverbial', name: '副助詞', placeholder: '？副助' },
+            '複合助詞': { code: 'compound', name: '複合助詞', placeholder: '？複合' },
+            '文型': { code: 'sentence', name: '文型句型', placeholder: '？文型' },
+            '接續助詞': { code: 'conjunctive', name: '接續助詞', placeholder: '？接續' }
+        };
+
         const SPECIAL_GRAMMAR_PATTERNS = [{"pattern":"ながらも","title":"〜ながら（も）（逆接）","level":"N2","category":"文型","grammar_id":551},{"pattern":"ながら","title":"〜ながら（同時進行・逆接）","level":"N3","category":"文型","grammar_id":550},{"pattern":"つつも","title":"〜つつ（も）","level":"N2","category":"文型","grammar_id":330},{"pattern":"つつ","title":"〜つつ","level":"N2","category":"文型","grammar_id":331},{"pattern":"に伴い","title":"〜に伴って・〜に伴い","level":"N2","category":"文型","grammar_id":663},{"pattern":"に伴って","title":"〜に伴って・〜に伴い","level":"N2","category":"文型","grammar_id":663},{"pattern":"にほかならない","title":"〜にほかならない","level":"N1","category":"文型","grammar_id":676},{"pattern":"わけにはいかない","title":"〜わけにはいかない","level":"N2","category":"文型","grammar_id":897},{"pattern":"のみならず","title":"〜のみならず","level":"N2","category":"文型","grammar_id":704},{"pattern":"一方である","title":"〜一方だ","level":"N3","category":"文型","grammar_id":24},{"pattern":"一方で","title":"〜一方で","level":"N3","category":"文型","grammar_id":25},{"pattern":"一方だ","title":"〜一方だ","level":"N3","category":"文型","grammar_id":24},{"pattern":"あげく","title":"〜あげく（に）","level":"N3","category":"文型","grammar_id":9},{"pattern":"あまり","title":"〜あまり","level":"N2","category":"文型","grammar_id":11},{"pattern":"がち","title":"〜がちだ","level":"N3","category":"文型","grammar_id":71}];
         const COMPOUND_PARTICLES = [{"pattern":"についての","title":"複合助詞：についての","category":"複合助詞","base":"について"},{"pattern":"について","title":"複合助詞：について","category":"複合助詞","base":"について"},{"pattern":"に関する","title":"複合助詞：に関する","category":"複合助詞","base":"に関して"},{"pattern":"に関して","title":"複合助詞：に関して","category":"複合助詞","base":"に関して"},{"pattern":"に対する","title":"複合助詞：に対する","category":"複合助詞","base":"に対して"},{"pattern":"に対して","title":"複合助詞：に対して","category":"複合助詞","base":"に対して"},{"pattern":"にとっての","title":"複合助詞：にとっての","category":"複合助詞","base":"にとって"},{"pattern":"にとって","title":"複合助詞：にとって","category":"複合助詞","base":"にとって"},{"pattern":"としての","title":"複合助詞：としての","category":"複合助詞","base":"として"},{"pattern":"として","title":"複合助詞：として","category":"複合助詞","base":"として"},{"pattern":"をめぐって","title":"複合助詞：をめぐって","category":"複合助詞","base":"をめぐって"},{"pattern":"をめぐる","title":"複合助詞：をめぐる","category":"複合助詞","base":"をめぐって"},{"pattern":"を通して","title":"複合助詞：を通して","category":"複合助詞","base":"を通じて"},{"pattern":"を通じて","title":"複合助詞：を通じて","category":"複合助詞","base":"を通じて"},{"pattern":"をもとにして","title":"複合助詞：をもとにして","category":"複合助詞","base":"をもとに"},{"pattern":"をもとに","title":"複合助詞：をもとに","category":"複合助詞","base":"をもとに"},{"pattern":"にあたって","title":"複合助詞：にあたって","category":"複合助詞","base":"にあたって"},{"pattern":"にあたり","title":"複合助詞：にあたり","category":"複合助詞","base":"にあたって"},{"pattern":"に際して","title":"複合助詞：に際して","category":"複合助詞","base":"に際して"},{"pattern":"に沿って","title":"複合助詞：に沿って","category":"複合助詞","base":"に沿って"},{"pattern":"に応じて","title":"複合助詞：に応じて","category":"複合助詞","base":"に応じて"},{"pattern":"に先立って","title":"複合助詞：に先立って","category":"複合助詞","base":"に先立って"},{"pattern":"にかけて","title":"複合助詞：にかけて","category":"複合助詞","base":"にかけて"},{"pattern":"につれて","title":"複合助詞：につれて","category":"複合助詞","base":"につれて"},{"pattern":"にわたって","title":"複合助詞：にわたって","category":"複合助詞","base":"にわたって"},{"pattern":"をはじめ","title":"複合助詞：をはじめ","category":"複合助詞","base":"をはじめ"},{"pattern":"によって","title":"複合助詞：によって","category":"複合助詞","base":"によって"},{"pattern":"により","title":"複合助詞：により","category":"複合助詞","base":"によって"},{"pattern":"による","title":"複合助詞：による","category":"複合助詞","base":"によって"},{"pattern":"に伴って","title":"複合助詞：に伴って","category":"複合助詞","base":"に伴って"},{"pattern":"に伴い","title":"複合助詞：に伴い","category":"複合助詞","base":"に伴って"},{"pattern":"に伴う","title":"複合助詞：に伴う","category":"複合助詞","base":"に伴って"},{"pattern":"において","title":"複合助詞：において","category":"複合助詞","base":"において"},{"pattern":"における","title":"複合助詞：における","category":"複合助詞","base":"において"},{"pattern":"に比べて","title":"複合助詞：に比べて","category":"複合助詞","base":"に比べて"}];
         const ADVERBIAL_PARTICLES = [{"pattern":"ばかりか","title":"副助詞：ばかりか","category":"副助詞","base":"ばかりか"},{"pattern":"ばかりでなく","title":"副助詞：ばかりでなく","category":"副助詞","base":"ばかりでなく"},{"pattern":"ばかり","title":"副助詞：ばかり","category":"副助詞","base":"ばかり"},{"pattern":"くらい","title":"副助詞：くらい","category":"副助詞","base":"くらい"},{"pattern":"ぐらい","title":"副助詞：ぐらい","category":"副助詞","base":"くらい"},{"pattern":"ほど","title":"副助詞：ほど","category":"副助詞","base":"ほど"},{"pattern":"だけ","title":"副助詞：だけ","category":"副助詞","base":"だけ"},{"pattern":"のみ","title":"副助詞：のみ","category":"副助詞","base":"のみ"},{"pattern":"しか","title":"副助詞：しか","category":"副助詞","base":"しか"},{"pattern":"さえ","title":"副助詞：さえ","category":"副助詞","base":"さえ"},{"pattern":"こそ","title":"副助詞：こそ","category":"副助詞","base":"こそ"},{"pattern":"など","title":"副助詞：など","category":"副助詞","base":"など"},{"pattern":"なんか","title":"副助詞：なんか","category":"副助詞","base":"なんか"},{"pattern":"なんて","title":"副助詞：なんて","category":"副助詞","base":"なんて"},{"pattern":"ずつ","title":"副助詞：ずつ","category":"副助詞","base":"ずつ"},{"pattern":"は","title":"係助詞：は","category":"副助詞","base":"は"},{"pattern":"も","title":"係助詞：も","category":"副助詞","base":"も"}];
@@ -4430,10 +4241,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             if (dom.btnParticleMask) dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
             if (dom.btnGrammarShow) dom.btnGrammarShow.addEventListener('click', () => setGrammarMode('show'));
             if (dom.btnGrammarMaskAll) dom.btnGrammarMaskAll.addEventListener('click', () => setGrammarMode('mask-all'));
-            if (dom.btnGrammarMaskCase) dom.btnGrammarMaskCase.addEventListener('click', () => setGrammarMode('mask-格助詞'));
-            if (dom.btnGrammarMaskAdverbial) dom.btnGrammarMaskAdverbial.addEventListener('click', () => setGrammarMode('mask-副助詞'));
-            if (dom.btnGrammarMaskCompound) dom.btnGrammarMaskCompound.addEventListener('click', () => setGrammarMode('mask-複合助詞'));
-            if (dom.btnGrammarMaskSentence) dom.btnGrammarMaskSentence.addEventListener('click', () => setGrammarMode('mask-文型'));
+            if (dom.btnGrammarMaskCase) dom.btnGrammarMaskCase.addEventListener('click', () => setGrammarMode('mask-case'));
+            if (dom.btnGrammarMaskAdverbial) dom.btnGrammarMaskAdverbial.addEventListener('click', () => setGrammarMode('mask-adverbial'));
+            if (dom.btnGrammarMaskCompound) dom.btnGrammarMaskCompound.addEventListener('click', () => setGrammarMode('mask-compound'));
+            if (dom.btnGrammarMaskSentence) dom.btnGrammarMaskSentence.addEventListener('click', () => setGrammarMode('mask-sentence'));
             if (dom.btnOpenParticleQuiz) dom.btnOpenParticleQuiz.addEventListener('click', openParticleQuizModal);
             if (dom.btnOpenParticleQuizTop) dom.btnOpenParticleQuizTop.addEventListener('click', openParticleQuizModal);
             if (dom.btnMaskSentenceParticles) dom.btnMaskSentenceParticles.addEventListener('click', toggleMaskSentenceParticles);
@@ -4554,13 +4365,16 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             document.body.setAttribute('data-grammar-mode', mode);
             document.body.setAttribute('data-particle-mode', (mode === 'show') ? 'show' : 'mask');
 
+            // 移除已揭示狀態，切換模式時題目立即遮蔽
+            document.querySelectorAll('.grammar-elem-token.revealed').forEach(el => el.classList.remove('revealed'));
+
             const btns = [
                 ['show', dom.btnGrammarShow],
                 ['mask-all', dom.btnGrammarMaskAll],
-                ['mask-格助詞', dom.btnGrammarMaskCase],
-                ['mask-副助詞', dom.btnGrammarMaskAdverbial],
-                ['mask-複合助詞', dom.btnGrammarMaskCompound],
-                ['mask-文型', dom.btnGrammarMaskSentence]
+                ['mask-case', dom.btnGrammarMaskCase],
+                ['mask-adverbial', dom.btnGrammarMaskAdverbial],
+                ['mask-compound', dom.btnGrammarMaskCompound],
+                ['mask-sentence', dom.btnGrammarMaskSentence]
             ];
 
             btns.forEach(([m, btn]) => {
@@ -4570,10 +4384,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             const msgMap = {
                 'show': '已切換為助詞與文型【正常顯示】模式',
                 'mask-all': '已開啟【全部遮蔽】自測：遮蔽全文所有格助詞、副助詞、複合助詞與文型！',
-                'mask-格助詞': '已開啟【格助詞遮蔽】自測：僅遮蔽全文格助詞 (が、を、に、で、へ、と等)！',
-                'mask-副助詞': '已開啟【副助詞遮蔽】自測：僅遮蔽副助詞／係助詞 (は、も、ばかり、だけ、さえ等)！',
-                'mask-複合助詞': '已開啟【複合助詞遮蔽】自測：僅遮蔽複合助詞 (について、に対して、として等)！',
-                'mask-文型': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
+                'mask-case': '已開啟【格助詞遮蔽】自測：僅遮蔽全文格助詞 (が、を、に、で、へ、と等)！',
+                'mask-adverbial': '已開啟【副助詞遮蔽】自測：僅遮蔽副助詞／係助詞 (は、も、ばかり、だけ、さえ等)！',
+                'mask-compound': '已開啟【複合助詞遮蔽】自測：僅遮蔽複合助詞 (について、に対して、として等)！',
+                'mask-sentence': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
             };
 
             showToast(msgMap[mode] || `已切換自測模式: ${mode}`);
@@ -4793,16 +4607,17 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             words.forEach((w, wIdx) => {
                 const tokenSpan = document.createElement('span');
                 const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
-                const elCategory = (w.grammar_elem_info && w.grammar_elem_info.category) || (PARTICLE_DATA && PARTICLE_DATA[w.surface] && PARTICLE_DATA[w.surface].category) || '格助詞';
+                const rawCategory = (w.grammar_elem_info && w.grammar_elem_info.category) || (PARTICLE_DATA && PARTICLE_DATA[w.surface] && PARTICLE_DATA[w.surface].category) || '格助詞';
+                const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCategory]) ? CATEGORY_MAP[rawCategory] : { code: 'case', name: '格助詞', placeholder: '？格助' };
 
                 if (isGrammarElem) {
                     tokenSpan.className = `word-token grammar-elem-token particle-token`;
                     tokenSpan.dataset.isGrammarElem = 'true';
-                    tokenSpan.dataset.category = elCategory;
-                    const placeholderText = '？' + (elCategory === '接續助詞' ? '接續' : (elCategory === '複合助詞' ? '複合助' : elCategory));
-                    tokenSpan.dataset.maskPlaceholder = placeholderText;
+                    tokenSpan.dataset.category = catMeta.code;
+                    tokenSpan.dataset.categoryName = catMeta.name;
+                    tokenSpan.dataset.maskPlaceholder = catMeta.placeholder;
                     tokenSpan.dataset.surface = w.surface;
-                    tokenSpan.title = `【${elCategory}】${w.surface} (點擊進行自測與查看換句話說)`;
+                    tokenSpan.title = `【${catMeta.name}】${w.surface} (點擊進行自測與查看換句話說)`;
                 } else {
                     tokenSpan.className = `word-token ${w.jlpt ? `jlpt-${w.jlpt}` : ''}`;
                 }
@@ -4829,64 +4644,20 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     showWordPopover(tokenSpan, w, e);
                 });
 
-                const curOffset = wordOffsets[wIdx];
-                const matchedGrammar = grammars.find(g => 
-                    (curOffset.start >= g.start && curOffset.start < g.end) ||
-                    (curOffset.end > g.start && curOffset.end <= g.end)
-                );
+                // 檢查是否與 941 文法重疊標註
+                const tokenStart = wordOffsets[wIdx].start;
+                const tokenEnd = wordOffsets[wIdx].end;
 
-                if (matchedGrammar) {
+                const hasGrammarMatch = grammars.some(g => {
+                    return g.matches.some(m => tokenStart < m.end && tokenEnd > m.start);
+                });
+
+                if (hasGrammarMatch) {
                     tokenSpan.classList.add('grammar-highlight');
-                    tokenSpan.title = `【941文型】${matchedGrammar.title} (${matchedGrammar.level || '文型'})`;
-                    tokenSpan.dataset.grammarId = matchedGrammar.id;
-
-                    const isLastOfGrammar = (wIdx === words.length - 1) || (wordOffsets[wIdx + 1].start >= matchedGrammar.end);
-                    if (isLastOfGrammar) {
-                        const miniBadge = document.createElement('span');
-                        miniBadge.className = 'grammar-mini-badge';
-                        miniBadge.textContent = matchedGrammar.level ? `${matchedGrammar.level}` : '文型';
-                        miniBadge.onclick = (e) => {
-                            e.stopPropagation();
-                            openGrammarDrawer(matchedGrammar);
-                        };
-                        tokenSpan.appendChild(miniBadge);
-                    }
                 }
 
                 container.appendChild(tokenSpan);
             });
-        }
-
-        function selectSentence(idx) {
-            if (!state.analyzedData || !state.analyzedData.sentences[idx]) return;
-            state.currentSentenceIdx = idx;
-            const sentence = state.analyzedData.sentences[idx];
-            const total = state.analyzedData.sentences.length;
-
-            document.querySelectorAll('.sentence-row').forEach(r => r.classList.remove('active'));
-            const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${idx}"]`);
-            if (activeRow) activeRow.classList.add('active');
-
-            dom.currentSentenceBadge.textContent = `第 ${idx + 1} 句 / 共 ${total} 句`;
-            dom.selectedSentenceJp.innerHTML = sentence.words.map(w => w.ruby_html).join('');
-            dom.selectedSentenceZh.textContent = sentence.translation || '暫無翻譯';
-
-            renderSentenceParticles(sentence, idx);
-            renderSentenceGrammars(sentence.grammars || []);
-            renderSentenceWordsTable(sentence.words, sentence.grammars || []);
-
-            dom.btnPrevSentence.disabled = (idx === 0);
-            dom.btnNextSentence.disabled = (idx === total - 1);
-        }
-
-        function navigateSentence(delta) {
-            if (!state.analyzedData) return;
-            const newIdx = state.currentSentenceIdx + delta;
-            if (newIdx >= 0 && newIdx < state.analyzedData.sentences.length) {
-                selectSentence(newIdx);
-                const target = document.querySelector(`.sentence-row[data-sentence-idx="${newIdx}"]`);
-                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
         }
 
         function renderSentenceGrammars(grammars) {
@@ -5632,25 +5403,26 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
         function toggleMaskSentenceParticles() {
             const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${state.currentSentenceIdx}"]`);
             if (!activeRow) return;
-            const particleTokens = activeRow.querySelectorAll('.particle-token');
+            const particleTokens = activeRow.querySelectorAll('.grammar-elem-token, .particle-token');
             if (particleTokens.length === 0) {
-                showToast('本句無主要助詞');
+                showToast('本句無特殊助詞或文型');
                 return;
             }
-            const isAnyMasked = Array.from(particleTokens).some(el => !el.classList.contains('revealed'));
-            particleTokens.forEach(el => {
-                if (isAnyMasked) {
+            const isAnyMasked = Array.from(particleTokens).some(el => el.classList.contains('force-masked') && !el.classList.contains('revealed'));
+            if (isAnyMasked) {
+                particleTokens.forEach(el => {
+                    el.classList.remove('force-masked');
                     el.classList.add('revealed');
-                } else {
+                });
+                showToast('已揭示本句助詞與文型');
+            } else {
+                particleTokens.forEach(el => {
+                    el.classList.add('force-masked');
                     el.classList.remove('revealed');
-                }
-            });
-            showToast(isAnyMasked ? '已揭示本句所有助詞' : '已遮蔽本句所有助詞，請點擊自測！');
+                });
+                showToast('已遮蔽本句助詞與文型，請點擊進行隨堂自測！');
+            }
         }
-
-        // ==========================================================================
-        // 助詞隨堂快速測驗浮動卡 (Quick Popover)
-        // ==========================================================================
 
         function showParticleQuickPopover(targetEl, token, sIdx, wIdx, event) {
             const popover = document.getElementById('particlePopover');
@@ -5662,19 +5434,22 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
             const sentenceText = sentence ? sentence.text : '';
             const usage = matchParticleUsage(pSurface, sentenceText);
 
-            document.getElementById('popoverParticleTitle').textContent = `助詞隨堂測驗`;
-            document.getElementById('popoverParticleRole').textContent = usage ? usage.role : '格助詞';
+            const rawCat = (token.grammar_elem_info && token.grammar_elem_info.category) || (pData && pData.category) || '格助詞';
+            const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCat]) ? CATEGORY_MAP[rawCat] : { code: 'case', name: '格助詞', placeholder: '？格助' };
+
+            document.getElementById('popoverParticleTitle').innerHTML = `${escapeHtml(pSurface)} <span class="cat-badge cat-badge-${catMeta.code}">${escapeHtml(catMeta.name)}</span>`;
+            document.getElementById('popoverParticleRole').textContent = usage ? usage.role : (token.grammar_elem_info ? token.grammar_elem_info.role : '語法功能');
 
             // 語境預覽 (將助詞挖空)
             const words = sentence ? sentence.words : [];
             const prev = wIdx > 0 ? words[wIdx - 1].surface : '';
             const next = wIdx + 1 < words.length ? words[wIdx + 1].surface : '';
             document.getElementById('popoverParticleContext').innerHTML = `
-                ${escapeHtml(prev)}<span class="quiz-blank-slot" style="min-width:2rem;height:1.5rem;line-height:1.5rem;">？</span>${escapeHtml(next)}
+                ${escapeHtml(prev)}<span class="quiz-blank-slot" style="min-width:2.4rem;height:1.6rem;line-height:1.6rem;">${catMeta.placeholder}</span>${escapeHtml(next)}
             `;
 
             // 4 個選項：正確答案 + 3 個干擾項
-            const distractors = pData && pData.distractors ? pData.distractors : ['は', 'が', 'を', 'に', 'で'];
+            const distractors = (token.grammar_elem_info && token.grammar_elem_info.distractors) || (pData && pData.distractors) || ['は', 'が', 'を', 'に', 'で'];
             const wrongChoices = distractors.filter(d => d !== pSurface).sort(() => Math.random() - 0.5).slice(0, 3);
             const allChoices = [pSurface, ...wrongChoices].sort(() => Math.random() - 0.5);
 
@@ -5706,9 +5481,19 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     feedbackBox.style.display = 'block';
                     feedbackBox.innerHTML = `
                         <div style="font-size:0.84rem; line-height:1.45; color:var(--text-main); background:var(--bg-sub); padding:0.5rem 0.7rem; border-radius:6px; border-left:3px solid #f59e0b;">
-                            <strong>【語法解析】</strong>${escapeHtml(usage ? usage.desc : '日語常用助詞用法。')}
+                            <strong>【語法解析】</strong>${escapeHtml(usage ? usage.desc : (token.grammar_elem_info ? token.grammar_elem_info.desc : '日語重要助詞與文型。'))}
                         </div>
                     `;
+
+                    if (token.grammar_elem_info && token.grammar_elem_info.grammar_id) {
+                        feedbackBox.innerHTML += `
+                            <div style="margin-top:0.4rem;">
+                                <button class="btn-grammar-detail" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="closeParticlePopover(); openGrammarDrawerById(${token.grammar_elem_info.grammar_id})">
+                                    <i class="fa-solid fa-book-open"></i> 查看 941 文型庫詳解
+                                </button>
+                            </div>
+                        `;
+                    }
 
                     if (usage && usage.substitutes && usage.substitutes.length > 0) {
                         substitutesBox.style.display = 'block';
@@ -5767,7 +5552,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                     if (isGrammarElem) {
                         const elInfo = w.grammar_elem_info || {};
                         const pData = getParticleData(s) || (elInfo.pData) || {};
-                        const cat = elInfo.category || pData.category || '格助詞';
+                        const rawCat = elInfo.category || pData.category || '格助詞';
+                        const catMeta = (typeof CATEGORY_MAP !== 'undefined' && CATEGORY_MAP[rawCat]) ? CATEGORY_MAP[rawCat] : { code: 'case', name: '格助詞', placeholder: '？格助' };
                         const usage = matchParticleUsage(s, sText);
                         const distractors = pData && pData.distractors ? pData.distractors : (elInfo.distractors || ['は', 'が', 'を', 'に', 'で']);
                         const wrongChoices = distractors.filter(d => d !== s).sort(() => Math.random() - 0.5).slice(0, 3);
@@ -5777,7 +5563,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
                         let maskedHtml = '';
                         words.forEach((mw, mi) => {
                             if (mi === wIdx) {
-                                maskedHtml += `<span class="quiz-blank-slot" title="【${cat}】">？</span>`;
+                                maskedHtml += `<span class="quiz-blank-slot" title="【${catMeta.name}】">${catMeta.placeholder}</span>`;
                             } else {
                                 maskedHtml += escapeHtml(mw.surface);
                             }
@@ -5785,7 +5571,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
                         items.push({
                             particle: s,
-                            category: cat,
+                            categoryCode: catMeta.code,
+                            categoryName: catMeta.name,
                             title: elInfo.title || pData.default_role || s,
                             grammar_id: elInfo.grammar_id,
                             sentenceIdx: sIdx,
@@ -5805,34 +5592,34 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
         }
 
         function updateQuizCategoryCounts(allItems) {
-            const counts = { 'all': allItems.length, '格助詞': 0, '副助詞': 0, '複合助詞': 0, '文型': 0 };
+            const counts = { 'all': allItems.length, 'case': 0, 'adverbial': 0, 'compound': 0, 'sentence': 0 };
             allItems.forEach(it => {
-                if (counts[it.category] !== undefined) counts[it.category]++;
+                if (counts[it.categoryCode] !== undefined) counts[it.categoryCode]++;
             });
             const elAll = document.getElementById('quizCountAll'); if (elAll) elAll.textContent = counts['all'];
-            const elCase = document.getElementById('quizCountCase'); if (elCase) elCase.textContent = counts['格助詞'];
-            const elAdv = document.getElementById('quizCountAdverbial'); if (elAdv) elAdv.textContent = counts['副助詞'];
-            const elCmp = document.getElementById('quizCountCompound'); if (elCmp) elCmp.textContent = counts['複合助詞'];
-            const elSen = document.getElementById('quizCountSentence'); if (elSen) elSen.textContent = counts['文型'];
+            const elCase = document.getElementById('quizCountCase'); if (elCase) elCase.textContent = counts['case'];
+            const elAdv = document.getElementById('quizCountAdverbial'); if (elAdv) elAdv.textContent = counts['adverbial'];
+            const elCmp = document.getElementById('quizCountCompound'); if (elCmp) elCmp.textContent = counts['compound'];
+            const elSen = document.getElementById('quizCountSentence'); if (elSen) elSen.textContent = counts['sentence'];
         }
 
-        function setQuizCategoryFilter(cat) {
-            currentQuizCategoryFilter = cat;
+        function setQuizCategoryFilter(catCode) {
+            currentQuizCategoryFilter = catCode;
             const filterBtns = [
                 ['all', document.getElementById('btnQuizFilterAll')],
-                ['格助詞', document.getElementById('btnQuizFilterCase')],
-                ['副助詞', document.getElementById('btnQuizFilterAdverbial')],
-                ['複合助詞', document.getElementById('btnQuizFilterCompound')],
-                ['文型', document.getElementById('btnQuizFilterSentence')]
+                ['case', document.getElementById('btnQuizFilterCase')],
+                ['adverbial', document.getElementById('btnQuizFilterAdverbial')],
+                ['compound', document.getElementById('btnQuizFilterCompound')],
+                ['sentence', document.getElementById('btnQuizFilterSentence')]
             ];
             filterBtns.forEach(([c, btn]) => {
-                if (btn) btn.classList.toggle('active', cat === c);
+                if (btn) btn.classList.toggle('active', catCode === c);
             });
 
             if (!state.quiz || !state.quiz.allItems) return;
-            const filtered = cat === 'all' ? state.quiz.allItems : state.quiz.allItems.filter(it => it.category === cat);
+            const filtered = catCode === 'all' ? state.quiz.allItems : state.quiz.allItems.filter(it => it.categoryCode === catCode);
             if (filtered.length === 0) {
-                showToast(`所選類別【${cat}】在本文中無題目`);
+                showToast(`所選類別在本文中無題目`);
                 return;
             }
             state.quiz.items = filtered;
@@ -5854,7 +5641,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
             const filteredItems = currentQuizCategoryFilter === 'all' 
                 ? allItems 
-                : allItems.filter(it => it.category === currentQuizCategoryFilter);
+                : allItems.filter(it => it.categoryCode === currentQuizCategoryFilter);
 
             state.quiz = {
                 allItems: allItems,
@@ -5893,7 +5680,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
 
             const instructionEl = document.querySelector('.quiz-instruction');
             if (instructionEl) {
-                instructionEl.innerHTML = `請依句意、語境與結構，選出正確的 <span class="cat-badge cat-badge-${curItem.category}">${escapeHtml(curItem.category)}</span>：`;
+                instructionEl.innerHTML = `請依句意、語境與結構，選出正確的 <span class="cat-badge cat-badge-${curItem.categoryCode}">${escapeHtml(curItem.categoryName)}</span>：`;
             }
 
             const hasAnswered = quiz.answered.has(quiz.currentIdx);
