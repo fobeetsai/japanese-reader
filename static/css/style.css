@@ -797,13 +797,13 @@ ruby rt {
     color: #fb7185;
 }
 
-/* Furigana Hide Mode */
-body[data-ruby-mode="hide"] ruby rt {
+/* Furigana Hide Mode (只作用於文章閱讀區，不影響右側文法例句與抽屜詳解) */
+body[data-ruby-mode="hide"] .article-content-box ruby rt {
     display: none !important;
 }
 
-/* Furigana Mask Mode (獨家遮蔽測驗模式) */
-body[data-ruby-mode="mask"] ruby rt {
+/* Furigana Mask Mode (獨家遮蔽測驗模式：只作用於文章閱讀區) */
+body[data-ruby-mode="mask"] .article-content-box ruby rt {
     filter: blur(4px);
     opacity: 0.18;
     background: #94a3b8;
@@ -813,13 +813,33 @@ body[data-ruby-mode="mask"] ruby rt {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body[data-ruby-mode="mask"] .word-token:hover ruby rt,
-body[data-ruby-mode="mask"] ruby:hover rt,
-body[data-ruby-mode="mask"] .word-token.revealed ruby rt {
+body[data-ruby-mode="mask"] .article-content-box .word-token:hover ruby rt,
+body[data-ruby-mode="mask"] .article-content-box ruby:hover rt,
+body[data-ruby-mode="mask"] .article-content-box .word-token.revealed ruby rt {
     filter: none !important;
     opacity: 1 !important;
     background: transparent !important;
     color: #e11d48 !important;
+}
+
+/* 確保文法例句與深度分析欄振假名完整顯示，絕不被遮蔽或隱藏 */
+.analyzer-column ruby rt,
+.drawer-container ruby rt,
+.grammar-item-card ruby rt,
+.grammar-example-box ruby rt,
+body[data-ruby-mode="mask"] .analyzer-column ruby rt,
+body[data-ruby-mode="mask"] .drawer-container ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box ruby rt,
+body[data-ruby-mode="hide"] .analyzer-column ruby rt,
+body[data-ruby-mode="hide"] .drawer-container ruby rt,
+body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
+    filter: none !important;
+    opacity: 1 !important;
+    display: inline !important;
+    visibility: visible !important;
+    color: #e11d48 !important;
+    background: transparent !important;
+    user-select: text !important;
 }
 
 /* Word Token Interactive Span */
@@ -1254,11 +1274,47 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 
 .grammar-example-box {
     background: var(--bg-sub);
-    border-left: 3px solid #10b981;
-    padding: 0.55rem 0.75rem;
-    border-radius: 0 6px 6px 0;
-    font-size: 0.88rem;
+    border-left: 3.5px solid #10b981;
+    padding: 0.8rem 1rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.96rem;
     font-family: var(--font-jp);
+    line-height: 2.3;
+    overflow: visible;
+    word-break: break-word;
+}
+
+.grammar-example-box .example-jp-line {
+    font-size: 0.98rem;
+    font-weight: 500;
+    color: var(--text-main);
+    line-height: 2.3;
+    overflow: visible;
+}
+
+.grammar-example-box .example-trans-line {
+    display: block;
+    margin-top: 0.45rem;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.35rem;
+}
+
+.grammar-example-box ruby {
+    line-height: 1;
+    display: inline-block;
+    margin: 0 1px;
+}
+
+.grammar-example-box ruby rt {
+    font-size: 0.62em !important;
+    line-height: 1.1 !important;
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    display: block !important;
+    margin-bottom: 0.25em !important;
 }
 
 .grammar-card-actions {

@@ -378,6 +378,82 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     background: var(--primary-hover);
     color: white;
 }
+
+/* ==========================================================================
+   文法句型例句與振假名防遮擋、完整展開樣式
+   ========================================================================== */
+.grammar-example-box {
+    background: var(--bg-sub) !important;
+    border-left: 3.5px solid #10b981 !important;
+    padding: 0.8rem 1rem !important;
+    border-radius: 0 8px 8px 0 !important;
+    font-size: 0.96rem !important;
+    font-family: var(--font-jp) !important;
+    line-height: 2.3 !important;
+    overflow: visible !important;
+    word-break: break-word !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.grammar-example-box .example-jp-line {
+    font-size: 0.98rem !important;
+    font-weight: 500 !important;
+    color: var(--text-main) !important;
+    line-height: 2.3 !important;
+    overflow: visible !important;
+}
+
+.grammar-example-box .example-trans-line {
+    display: block !important;
+    margin-top: 0.45rem !important;
+    font-size: 0.86rem !important;
+    color: var(--text-muted) !important;
+    line-height: 1.55 !important;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.35rem;
+}
+
+.grammar-example-box ruby {
+    line-height: 1 !important;
+    display: inline-block !important;
+    margin: 0 1px !important;
+}
+
+.grammar-example-box ruby rt {
+    font-size: 0.62em !important;
+    line-height: 1.1 !important;
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    display: block !important;
+    margin-bottom: 0.25em !important;
+}
+
+/* 確保文章區的「遮蔽假名/隱藏假名」測驗模式絕不波及右側文法例句與抽屜詳解 */
+.analyzer-column ruby rt,
+.drawer-container ruby rt,
+.grammar-item-card ruby rt,
+.grammar-example-box ruby rt,
+body[data-ruby-mode="mask"] .analyzer-column ruby rt,
+body[data-ruby-mode="mask"] .drawer-container ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box ruby rt,
+body[data-ruby-mode="hide"] .analyzer-column ruby rt,
+body[data-ruby-mode="hide"] .drawer-container ruby rt,
+body[data-ruby-mode="hide"] .grammar-example-box ruby rt {
+    filter: none !important;
+    opacity: 1 !important;
+    display: block !important;
+    visibility: visible !important;
+    color: #dc2626 !important;
+    background: transparent !important;
+    user-select: text !important;
+}
+
+[data-theme="dark"] .analyzer-column ruby rt,
+[data-theme="dark"] .drawer-container ruby rt,
+[data-theme="dark"] .grammar-item-card ruby rt,
+[data-theme="dark"] .grammar-example-box ruby rt {
+    color: #fb7185 !important;
+}
 """
 
     html_template = f"""<!DOCTYPE html>
@@ -2039,7 +2115,12 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                     </div>
                     ${{g.form ? `<div class="grammar-form-box"><strong>接續：</strong>${{escapeHtml(g.form)}}</div>` : ''}}
                     <div class="grammar-meaning-box">${{escapeHtml(g.meaningZh || '暫無解析')}}</div>
-                    ${{g.exampleRuby ? `<div class="grammar-example-box"><strong>例句：</strong>${{g.exampleRuby}}<br><span style="color:var(--text-muted);font-size:0.84rem;">${{escapeHtml(g.translation || '')}}</span></div>` : ''}}
+                    ${{(g.exampleRuby || g.example) ? `
+                        <div class="grammar-example-box">
+                            <div class="example-jp-line"><strong>例句：</strong>${{g.exampleRuby || escapeHtml(g.example)}}</div>
+                            ${{g.translation ? `<div class="example-trans-line"><i class="fa-solid fa-language" style="margin-right:4px;"></i>${{escapeHtml(g.translation)}}</div>` : ''}}
+                        </div>
+                    ` : ''}}
                     <div class="grammar-card-actions">
                         <button class="btn-grammar-detail" onclick="openGrammarDrawerById(${{g.id}})">
                             <i class="fa-solid fa-book-open"></i> 查看完整詳解
@@ -2206,8 +2287,8 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 
                 <div class="drawer-box">
                     <div class="drawer-label"><i class="fa-solid fa-quote-left"></i> 精選例文與振假名 (Example Sentence)</div>
-                    <div style="font-size:1.25rem;font-weight:700;font-family:var(--font-jp);line-height:1.8;">${{g.exampleRuby || escapeHtml(g.example || '')}}</div>
-                    <div style="font-size:1.02rem;color:var(--text-muted);margin-top:0.65rem;border-top:1px dashed var(--border-color);padding-top:0.65rem;">
+                    <div style="font-size:1.25rem;font-weight:700;font-family:var(--font-jp);line-height:2.4;overflow:visible;word-break:break-word;">${{g.exampleRuby || escapeHtml(g.example || '')}}</div>
+                    <div style="font-size:1.02rem;color:var(--text-muted);margin-top:0.75rem;border-top:1px dashed var(--border-color);padding-top:0.75rem;line-height:1.6;">
                         <strong>例句翻譯：</strong>${{escapeHtml(g.translation || '暫無翻譯')}}
                     </div>
                 </div>
