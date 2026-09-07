@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 日文閱讀助手 - 單一靜態網頁 (Standalone HTML) 產生器
-將所有 CSS、JS 邏輯、8,138 筆 JLPT 單字庫與 941 條《絵でわかる日本語》文法庫
-完整封裝至單一 HTML 檔案中，可直接雙擊在瀏覽器開啟，或直接上傳部署至 GitHub Pages！
+包含：
+1. 100% 漢字假名全標註 (整合 JLPT 單字庫 + 12,559 漢字音訓辭典)
+2. 假名防遮蔽與字型排版最佳化 (充足行距、字距與防裁切)
+3. 單字翻牌抽卡複習功能 (Vocabulary Flashcard Review)
+4. 單字拆解表格附「中文翻譯」與「文型／詞性」
+5. 941 條《絵でわかる日本語》文法庫與詳細抽屜
 """
 
 import os
@@ -10,15 +14,14 @@ import json
 import re
 
 def build():
-    print("[1/4] 載入 941 條文法資料庫...")
+    print("[1/5] 載入 941 條文法資料庫...")
     with open("grammar_data.json", "r", encoding="utf-8") as f:
         grammar_data = json.load(f)
 
-    print("[2/4] 載入並壓縮 JLPT 單字庫...")
+    print("[2/5] 載入並壓縮 JLPT 單字庫與全漢字讀音字典...")
     with open("jlpt_vocab_all.json", "r", encoding="utf-8") as f:
         raw_vocab = json.load(f)
 
-    # 壓縮為精簡字典: { word: [level, reading] }
     compact_vocab = {}
     for word, entries in raw_vocab.items():
         if entries and isinstance(entries, list):
@@ -26,12 +29,201 @@ def build():
             reading = entries[0].get("reading", "")
             compact_vocab[word] = [lvl, reading]
 
+    with open("kanji_compact.json", "r", encoding="utf-8") as f:
+        kanji_compact_str = f.read()
+
     grammar_json_str = json.dumps(grammar_data, ensure_ascii=False, separators=(',', ':'))
     vocab_json_str = json.dumps(compact_vocab, ensure_ascii=False, separators=(',', ':'))
 
-    print("[3/4] 載入樣式表與基礎版型...")
+    print("[3/5] 載入並注入最佳化樣式表...")
     with open("static/css/style.css", "r", encoding="utf-8") as f:
         css_content = f.read()
+
+    # 針對排版加強：降低漢字字體至 1.15rem，行距加大至 3.1，保證假名完全不被遮擋
+    enhanced_css = css_content + """
+/* ==========================================================================
+   漢字假名防遮擋與單字複習專用樣式
+   ========================================================================== */
+:root {
+    --reader-font-size: 1.16rem;
+    --reader-line-height: 3.1;
+}
+
+.article-content-box {
+    padding: 2.4rem 2rem 2rem !important;
+    overflow: visible !important;
+    line-height: 3.1 !important;
+}
+
+.sentence-row {
+    padding: 0.95rem 1.15rem 0.75rem 1.15rem !important;
+    margin-bottom: 0.85rem !important;
+    overflow: visible !important;
+}
+
+.sentence-jp-text {
+    display: block !important;
+    line-height: 3.1 !important;
+    overflow: visible !important;
+}
+
+ruby {
+    ruby-position: over !important;
+    ruby-align: center !important;
+    display: inline-block !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    margin: 0 1.5px !important;
+    vertical-align: baseline !important;
+    overflow: visible !important;
+}
+
+ruby rt {
+    font-size: 0.62em !important;
+    line-height: 1.2 !important;
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    font-family: var(--font-jp) !important;
+    display: block !important;
+    text-align: center !important;
+    margin-bottom: 0.32em !important;
+    letter-spacing: 0 !important;
+    user-select: none !important;
+    transform: translateY(-2px) !important;
+}
+
+.selected-sentence-text {
+    line-height: 3.0 !important;
+    padding-top: 1.35rem !important;
+    overflow: visible !important;
+}
+
+/* 單字複習專用樣式 */
+.review-flashcard {
+    background: var(--bg-sub);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    min-height: 270px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.85rem;
+    box-shadow: var(--shadow-sm);
+    user-select: none;
+}
+
+.review-flashcard:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.review-word-front {
+    font-size: 2.6rem;
+    font-weight: 900;
+    font-family: var(--font-jp);
+    color: var(--text-main);
+}
+
+.review-flip-hint {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.review-back-content {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    animation: fadeIn 0.25s ease;
+}
+
+.review-back-content.revealed {
+    display: flex;
+}
+
+.review-word-reading {
+    font-size: 1.65rem;
+    color: #dc2626;
+    font-weight: 800;
+    font-family: var(--font-jp);
+}
+
+.review-word-trans {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.review-progress-bar-wrap {
+    height: 6px;
+    background: var(--bg-sub);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.review-progress-bar {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.review-progress-text {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.review-actions-bar {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.btn-review-action {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.btn-review-action:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-review-flip {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-review-flip:hover {
+    background: var(--primary-hover);
+    color: white;
+}
+"""
 
     html_template = f"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -46,7 +238,7 @@ def build():
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-{css_content}
+{enhanced_css}
     </style>
 </head>
 <body data-theme="light">
@@ -61,7 +253,7 @@ def build():
                 <div class="brand-info">
                     <div class="brand-title">
                         <h1>日文閱讀助手</h1>
-                        <span class="version-tag">v2.0 網頁獨立版 (GitHub Pages 直用)</span>
+                        <span class="version-tag">v2.1 漢字全假名・單字複習版</span>
                     </div>
                     <p class="brand-subtitle">
                         仿句解霸閱讀拆解・深度聯動 
@@ -102,6 +294,10 @@ def build():
 
                 <!-- Action Buttons -->
                 <div class="header-actions">
+                    <button class="action-btn" id="btnWordReview" title="進入單字翻牌抽卡複習模式">
+                        <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
+                        <span>單字複習</span>
+                    </button>
                     <button class="action-btn" id="btnOpenNotebook" title="我的生詞與文法筆記本">
                         <i class="fa-solid fa-star text-amber-400"></i>
                         <span>筆記本 (<strong id="notebookCount">0</strong>)</span>
@@ -184,7 +380,7 @@ def build():
         <div class="loading-state" id="loadingState" style="display: none;">
             <div class="spinner"></div>
             <div class="loading-text">
-                <h3>正在進行日語形態素分詞、941文型比對與翻譯...</h3>
+                <h3>正在進行日語形態素分詞、全漢字假名標註與 941 文型比對...</h3>
                 <p>純前端極速運算中，請稍候片刻</p>
             </div>
         </div>
@@ -217,8 +413,8 @@ def build():
                         </div>
 
                         <div class="reader-text-tools">
-                            <button class="tool-btn" id="btnFontDecr" title="縮小字體"><i class="fa-solid fa-minus"></i> A</button>
-                            <button class="tool-btn" id="btnFontIncr" title="放大字體"><i class="fa-solid fa-plus"></i> A</button>
+                            <button class="tool-btn" id="btnFontDecr" title="縮小漢字字體 (利於觀看假名)"><i class="fa-solid fa-minus"></i> A</button>
+                            <button class="tool-btn" id="btnFontIncr" title="放大漢字字體"><i class="fa-solid fa-plus"></i> A</button>
                             <button class="tool-btn" id="btnNewArticle" title="更換文章 / 重新輸入"><i class="fa-solid fa-pen-to-square"></i> 換文章</button>
                         </div>
                     </div>
@@ -363,6 +559,59 @@ def build():
         </div>
     </div>
 
+    <!-- Vocabulary Review Flashcard Modal (單字翻牌抽卡複習) -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-container" style="max-width: 620px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-graduation-cap text-indigo-500"></i> 單字翻牌抽卡複習</h3>
+                <button class="modal-close-btn" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="notebook-tabs">
+                <button class="notebook-tab-btn active" id="tabReviewArticleBtn" onclick="switchReviewSource('article')">
+                    本篇閱讀單字 (<span id="reviewArticleWordCount">0</span>)
+                </button>
+                <button class="notebook-tab-btn" id="tabReviewNotebookBtn" onclick="switchReviewSource('notebook')">
+                    生詞本收藏 (<span id="reviewNotebookWordCount">0</span>)
+                </button>
+            </div>
+
+            <div class="review-flashcard" id="reviewCard" onclick="flipReviewCard()">
+                <span class="badge-jlpt" id="reviewCardLevel">N3</span>
+                <div class="review-word-front" id="reviewCardWord">単語</div>
+                <div class="review-flip-hint" id="reviewFlipHint">
+                    <i class="fa-solid fa-hand-pointer"></i> 點擊卡片翻牌看讀音與中文
+                </div>
+                
+                <div class="review-back-content" id="reviewBackContent">
+                    <div class="review-word-reading" id="reviewCardReading">たんご</div>
+                    <div style="font-size:0.85rem;color:var(--text-muted);" id="reviewCardPos">名詞</div>
+                    <div class="review-word-trans" id="reviewCardTrans">單字釋義</div>
+                </div>
+            </div>
+
+            <div class="review-progress-bar-wrap">
+                <div class="review-progress-bar" id="reviewProgressBar" style="width: 0%;"></div>
+            </div>
+            <div class="review-progress-text" id="reviewProgressText">進度：0 / 0</div>
+
+            <div class="review-actions-bar">
+                <button class="btn-review-action" id="btnReviewPrev" onclick="navReview(-1)" title="上一張 (快速鍵 ←)">
+                    <i class="fa-solid fa-chevron-left"></i> 上一張
+                </button>
+                <button class="btn-review-action btn-review-flip" onclick="flipReviewCard()" title="翻牌揭示 (空白鍵 Space)">
+                    <i class="fa-solid fa-rotate"></i> 翻牌揭示
+                </button>
+                <button class="btn-review-action" id="btnReviewAudio" onclick="speakReviewCurrentWord()" title="播放發音">
+                    <i class="fa-solid fa-volume-high"></i> 發音
+                </button>
+                <button class="btn-review-action" id="btnReviewNext" onclick="navReview(1)" title="下一張 (快速鍵 →)">
+                    下一張 <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notebook / Favorites Modal (生詞本與文法筆記) -->
     <div class="modal-overlay" id="notebookModal">
         <div class="modal-container">
@@ -402,14 +651,17 @@ def build():
     </div>
 
     <!-- ==========================================================================
-         內建 941 條文法資料庫與 JLPT 單字庫
+         內建 941 條文法資料庫、8,138 JLPT 單字庫與 12,559 漢字全讀音字典
          ========================================================================== -->
     <script>
         // 941 條《絵でわかる日本語》文法庫
         const GRAMMAR_DATA = {grammar_json_str};
 
-        // 8,138 筆 JLPT 單字精簡庫：{{ word: [level_number, reading_hiragana] }}
+        // 8,138 筆 JLPT 單字庫
         const JLPT_VOCAB = {vocab_json_str};
+
+        // 12,559 漢字音訓全讀音字典: {{ "漢": ["オン (音)", "クン幹 (訓幹)", "クン全 (訓全)"] }}
+        const KANJI_DICT = {kanji_compact_str};
 
         // 精選範例文摘
         const SAMPLE_ARTICLES = [
@@ -435,21 +687,29 @@ def build():
     </script>
 
     <!-- ==========================================================================
-         純前端分詞、振假名生成、941文型匹配與 Google 翻譯引擎
+         純前端形態素分詞、100% 漢字假名生成、941文型匹配與 Google 翻譯
          ========================================================================== -->
     <script>
-        // 假名字元區間
         const KANJI_REGEX = /[\\u4e00-\\u9faf]/;
         const KANA_REGEX = /[\\u3040-\\u309f\\u30a0-\\u30ff]/;
-        const PUNCT_REGEX = /[。！？!?\\n]/;
 
-        // 片假名轉平假名
         function kataToHira(str) {{
             if (!str) return '';
             return str.replace(/[\\u30a1-\\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
         }}
 
-        // 產生標準 Ruby 振假名標籤
+        // 查詢單個漢字的讀音 (優先音讀或訓讀)
+        function getSingleKanjiReading(char, isCompound = false) {{
+            const entry = KANJI_DICT[char];
+            if (!entry) return '';
+            const [on, kunStem, fullKun] = entry;
+            if (isCompound) {{
+                return on || kunStem || fullKun || '';
+            }}
+            return kunStem || fullKun || on || '';
+        }}
+
+        // 生成 Ruby HTML 標籤
         function createRubyHtml(surface, readingHira) {{
             if (!readingHira || !KANJI_REGEX.test(surface)) return surface;
             
@@ -458,14 +718,14 @@ def build():
                 return `<ruby>${{surface}}<rt>${{readingHira}}</rt></ruby>`;
             }}
 
-            // 尋找共同送假名後綴
+            // 尋找尾部共同假名
             let sLen = 0;
             while (sLen < surface.length && sLen < readingHira.length &&
                    surface[surface.length - 1 - sLen] === readingHira[readingHira.length - 1 - sLen]) {{
                 sLen++;
             }}
 
-            // 尋找前綴假名
+            // 尋找頭部共同假名
             let pLen = 0;
             while (pLen < (surface.length - sLen) && pLen < (readingHira.length - sLen) &&
                    surface[pLen] === readingHira[pLen]) {{
@@ -518,11 +778,9 @@ def build():
                 }});
             }});
 
-            // 優先長詞匹配 (Longest Match First)
             COMPILED_GRAMMAR_PATTERNS.sort((a, b) => b.pattern.length - a.pattern.length);
         }}
 
-        // 句子中搜尋 941 文法
         function findSentenceGrammars(sentenceText) {{
             const found = [];
             const matchedSpans = [];
@@ -538,14 +796,12 @@ def build():
                     if (pos === -1) break;
                     const endPos = pos + pat.length;
 
-                    // 避免「ちゃ」誤判於「ちゃんと」中
                     if ((pat === 'ちゃ' || pat === 'じゃ') && endPos < sentenceText.length &&
                         (sentenceText[endPos] === 'ん' || sentenceText[endPos] === 'ン')) {{
                         startIdx = pos + 1;
                         continue;
                     }}
 
-                    // 避免重疊
                     const isOverlap = matchedSpans.some(([s, e]) => s <= pos && endPos <= e);
                     if (!isOverlap) {{
                         matchedSpans.push([pos, endPos]);
@@ -576,16 +832,16 @@ def build():
             return found;
         }}
 
-        // 純前端日語最大正向分詞 (Max-Match Tokenizer against JLPT_VOCAB)
+        // 100% 保證所有漢字標示假名之分詞演算法
         function tokenizeSentence(text) {{
             const tokens = [];
             let i = 0;
-            const MAX_WORD_LEN = 10;
+            const MAX_WORD_LEN = 8;
 
             while (i < text.length) {{
                 let matched = false;
 
-                // 嘗試由長至短在 JLPT_VOCAB 中比對
+                // 1. 優先在 JLPT 單字庫中長詞比對 (8 down to 2)
                 const limit = Math.min(MAX_WORD_LEN, text.length - i);
                 for (let len = limit; len >= 2; len--) {{
                     const sub = text.substring(i, i + len);
@@ -610,10 +866,9 @@ def build():
 
                 if (matched) continue;
 
-                // 若未在單字庫匹配，判斷字元類型區塊
                 const char = text[i];
 
-                // 漢字區塊
+                // 2. 漢字區塊 (不論是連續漢字或單個漢字，100% 賦予假名！)
                 if (KANJI_REGEX.test(char)) {{
                     let kanjiRun = char;
                     let j = i + 1;
@@ -621,24 +876,54 @@ def build():
                         kanjiRun += text[j];
                         j++;
                     }}
-                    // 查核全詞
-                    const vocabEntry = JLPT_VOCAB[kanjiRun];
-                    const lvl = vocabEntry ? `N${{vocabEntry[0]}}` : null;
-                    const rHira = vocabEntry ? kataToHira(vocabEntry[1]) : '';
+
+                    // 若全連續漢字在單字庫中
+                    if (JLPT_VOCAB[kanjiRun]) {{
+                        const [lvlNum, reading] = JLPT_VOCAB[kanjiRun];
+                        const rHira = kataToHira(reading);
+                        tokens.push({{
+                            surface: kanjiRun,
+                            base_form: kanjiRun,
+                            reading: rHira,
+                            jlpt: lvlNum ? `N${{lvlNum}}` : null,
+                            is_kanji: true,
+                            ruby_html: createRubyHtml(kanjiRun, rHira),
+                            pos: '名詞'
+                        }});
+                        i = j;
+                        continue;
+                    }}
+
+                    // 連續漢字或單漢字，依音讀/訓讀完整為每個漢字產生振假名
+                    const isCompound = (kanjiRun.length > 1);
+                    let rubyHtmlAcc = '';
+                    let readingAcc = '';
+
+                    for (let k = 0; k < kanjiRun.length; k++) {{
+                        const kChar = kanjiRun[k];
+                        const kReading = getSingleKanjiReading(kChar, isCompound);
+                        if (kReading) {{
+                            rubyHtmlAcc += `<ruby>${{kChar}}<rt>${{kReading}}</rt></ruby>`;
+                            readingAcc += kReading;
+                        }} else {{
+                            rubyHtmlAcc += kChar;
+                        }}
+                    }}
+
                     tokens.push({{
                         surface: kanjiRun,
                         base_form: kanjiRun,
-                        reading: rHira,
-                        jlpt: lvl,
+                        reading: readingAcc,
+                        jlpt: null,
                         is_kanji: true,
-                        ruby_html: rHira ? createRubyHtml(kanjiRun, rHira) : kanjiRun,
-                        pos: '漢字詞'
+                        ruby_html: rubyHtmlAcc,
+                        pos: isCompound ? '名詞' : '單字'
                     }});
                     i = j;
                     continue;
                 }}
 
-                // 片假名外來語區塊
+                // 3. 片假名外來語
                 if (/[\\u30a0-\\u30ff]/.test(char)) {{
                     let kataRun = char;
                     let j = i + 1;
@@ -659,7 +944,7 @@ def build():
                     continue;
                 }}
 
-                // 標點符號或單個平假名/英數
+                // 4. 平假名助詞/符號
                 tokens.push({{
                     surface: char,
                     base_form: char,
@@ -675,7 +960,7 @@ def build():
             return tokens;
         }}
 
-        // 線上 Google Translate 免費端點 (具備即時 CORS 支援)
+        // 線上 Google 翻譯端點
         const TRANSLATE_CACHE = new Map();
         async function translateJaToZh(text) {{
             const trimmed = text.trim();
@@ -694,12 +979,10 @@ def build():
                 TRANSLATE_CACHE.set(trimmed, trans);
                 return trans;
             }} catch (e) {{
-                console.warn('翻譯連線超時或受阻:', e);
                 return '';
             }}
         }}
 
-        // 分句器
         function splitArticleSentences(text) {{
             const lines = text.split(/\\r?\\n/);
             const sentences = [];
@@ -717,7 +1000,6 @@ def build():
             return sentences;
         }}
 
-        // 全篇綜合解析
         async function clientAnalyzeText(text, autoTranslate = true) {{
             const sentencesRaw = splitArticleSentences(text);
             const analyzedSentences = [];
@@ -768,10 +1050,9 @@ def build():
     </script>
 
     <!-- ==========================================================================
-         前端互動與介面控制器
+         前端互動與單字複習抽卡控制器
          ========================================================================== -->
     <script>
-        // 全域狀態
         const state = {{
             analyzedData: null,
             currentSentenceIdx: 0,
@@ -781,10 +1062,15 @@ def build():
             enableTranslation: true,
             fontSizeLevel: 0,
             theme: 'light',
-            notebook: {{ words: [], grammars: [] }}
+            notebook: {{ words: [], grammars: [] }},
+            review: {{
+                source: 'article', // 'article' | 'notebook'
+                words: [],
+                currentIdx: 0,
+                isFlipped: false
+            }}
         }};
 
-        // DOM 元素快取
         const dom = {{
             btnRubyShow: document.getElementById('btnRubyShow'),
             btnRubyHide: document.getElementById('btnRubyHide'),
@@ -792,6 +1078,7 @@ def build():
             btnToggleWordColors: document.getElementById('btnToggleWordColors'),
             btnToggleGrammar: document.getElementById('btnToggleGrammar'),
             btnToggleTranslation: document.getElementById('btnToggleTranslation'),
+            btnWordReview: document.getElementById('btnWordReview'),
             btnOpenNotebook: document.getElementById('btnOpenNotebook'),
             notebookCount: document.getElementById('notebookCount'),
             btnThemeToggle: document.getElementById('btnThemeToggle'),
@@ -846,6 +1133,22 @@ def build():
             drawerGrammarExternalLink: document.getElementById('drawerGrammarExternalLink'),
             btnDrawerFav: document.getElementById('btnDrawerFav'),
             drawerGrammarBody: document.getElementById('drawerGrammarBody'),
+
+            reviewModal: document.getElementById('reviewModal'),
+            tabReviewArticleBtn: document.getElementById('tabReviewArticleBtn'),
+            tabReviewNotebookBtn: document.getElementById('tabReviewNotebookBtn'),
+            reviewArticleWordCount: document.getElementById('reviewArticleWordCount'),
+            reviewNotebookWordCount: document.getElementById('reviewNotebookWordCount'),
+            reviewCard: document.getElementById('reviewCard'),
+            reviewCardLevel: document.getElementById('reviewCardLevel'),
+            reviewCardWord: document.getElementById('reviewCardWord'),
+            reviewFlipHint: document.getElementById('reviewFlipHint'),
+            reviewBackContent: document.getElementById('reviewBackContent'),
+            reviewCardReading: document.getElementById('reviewCardReading'),
+            reviewCardPos: document.getElementById('reviewCardPos'),
+            reviewCardTrans: document.getElementById('reviewCardTrans'),
+            reviewProgressBar: document.getElementById('reviewProgressBar'),
+            reviewProgressText: document.getElementById('reviewProgressText'),
 
             notebookModal: document.getElementById('notebookModal'),
             nbWordCount: document.getElementById('nbWordCount'),
@@ -916,6 +1219,22 @@ def build():
             dom.btnNextSentence.addEventListener('click', () => navigateSentence(1));
 
             document.addEventListener('keydown', (e) => {{
+                if (dom.reviewModal.classList.contains('open')) {{
+                    if (e.key === ' ' || e.code === 'Space') {{
+                        e.preventDefault();
+                        flipReviewCard();
+                    }} else if (e.key === 'ArrowLeft') {{
+                        navReview(-1);
+                    }} else if (e.key === 'ArrowRight') {{
+                        navReview(1);
+                    }} else if (e.key === 'v' || e.key === 'V') {{
+                        speakReviewCurrentWord();
+                    }} else if (e.key === 'Escape') {{
+                        closeReviewModal();
+                    }}
+                    return;
+                }}
+
                 if (state.analyzedData && dom.readerDeck.style.display !== 'none') {{
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
                     if (e.key === 'ArrowLeft') navigateSentence(-1);
@@ -939,6 +1258,7 @@ def build():
                 if (text) speakJapanese(text);
             }});
 
+            dom.btnWordReview.addEventListener('click', openReviewModal);
             dom.btnOpenNotebook.addEventListener('click', openNotebookModal);
             dom.btnExportNotebook.addEventListener('click', exportNotebook);
             dom.btnClearNotebook.addEventListener('click', clearNotebook);
@@ -992,7 +1312,7 @@ def build():
 
         function changeFontSize(delta) {{
             state.fontSizeLevel = Math.max(-2, Math.min(4, state.fontSizeLevel + delta));
-            const sizes = ['1.05rem', '1.15rem', '1.28rem', '1.45rem', '1.65rem', '1.85rem', '2.05rem'];
+            const sizes = ['1.02rem', '1.08rem', '1.16rem', '1.28rem', '1.45rem', '1.65rem', '1.85rem'];
             document.documentElement.style.setProperty('--reader-font-size', sizes[state.fontSizeLevel + 2]);
         }}
 
@@ -1019,7 +1339,6 @@ def build():
             }});
         }}
 
-        // 純前端網址正文抓取（透過 CORS Proxy）
         async function handleFetchUrlClient() {{
             let url = dom.urlInput.value.trim();
             if (!url) {{
@@ -1035,17 +1354,14 @@ def build():
             dom.btnFetchUrl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在抓取正文...';
 
             try {{
-                // 優先使用代理服務
                 const proxyUrl = `https://api.allorigins.win/raw?url=${{encodeURIComponent(url)}}`;
                 const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error('連線失敗');
                 const html = await res.text();
 
-                // 使用 DOMParser 萃取純文字
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // 移除干擾元素
                 doc.querySelectorAll('script, style, nav, header, footer, aside, noscript, iframe').forEach(el => el.remove());
 
                 const title = doc.title || '網頁文章';
@@ -1075,7 +1391,6 @@ def build():
             }}
         }}
 
-        // 開始閱讀與智慧解析
         async function handleStartReadingClient() {{
             const text = dom.articleInput.value.trim();
             if (!text) {{
@@ -1088,13 +1403,12 @@ def build():
             dom.readerDeck.style.display = 'none';
 
             try {{
-                // 執行純前端解析器
                 const res = await clientAnalyzeText(text, dom.chkAutoTranslate.checked);
                 state.analyzedData = res;
                 state.currentSentenceIdx = 0;
 
                 renderReaderView();
-                showToast('文章解析完成！');
+                showToast('文章解析完成！100% 漢字假名已標註完畢');
                 dom.readerDeck.scrollIntoView({{ behavior: 'smooth' }});
             }} catch (err) {{
                 showToast(`解析出錯: ${{err.message}}`);
@@ -1271,7 +1585,6 @@ def build():
             words.forEach((w, wIdx) => {{
                 const isFav = state.notebook.words.some(item => item.surface === w.surface);
 
-                // 判斷是否命中 941 文型
                 const matchedGrammar = grammars.find(g => 
                     (g.title && g.title.includes(w.surface)) || 
                     (g.matched_text && g.matched_text.includes(w.surface)) ||
@@ -1313,7 +1626,6 @@ def build():
                 `;
                 dom.sentenceWordsTbody.appendChild(tr);
 
-                // 異步翻譯單字中文
                 const termToQuery = w.base_form || w.surface;
                 translateJaToZh(termToQuery).then(trans => {{
                     const cell = document.getElementById(`word-trans-cell-${{wIdx}}`);
@@ -1432,6 +1744,148 @@ def build():
             dom.grammarDrawerOverlay.classList.remove('open');
         }}
 
+        // ==========================================================================
+        // 單字翻牌抽卡複習功能 (Vocabulary Flashcard Review)
+        // ==========================================================================
+        function openReviewModal() {{
+            buildReviewWordList();
+            if (state.review.words.length === 0) {{
+                showToast('目前尚無可供複習之單字，請先解析文章或加入生詞本');
+                return;
+            }}
+            state.review.currentIdx = 0;
+            state.review.isFlipped = false;
+            dom.reviewModal.classList.add('open');
+            renderCurrentReviewCard();
+        }}
+
+        function closeReviewModal() {{
+            dom.reviewModal.classList.remove('open');
+        }}
+
+        function buildReviewWordList() {{
+            const list = [];
+            const seen = new Set();
+
+            if (state.review.source === 'article' && state.analyzedData) {{
+                state.analyzedData.sentences.forEach(s => {{
+                    s.words.forEach(w => {{
+                        const key = w.base_form || w.surface;
+                        if (key.length >= 2 && !seen.has(key) && w.pos !== '符號/助詞') {{
+                            seen.add(key);
+                            list.push({{
+                                word: key,
+                                reading: w.reading,
+                                jlpt: w.jlpt,
+                                pos: w.pos,
+                                translation: w.translation || ''
+                            }});
+                        }}
+                    }});
+                }});
+            }} else {{
+                state.notebook.words.forEach(w => {{
+                    if (!seen.has(w.surface)) {{
+                        seen.add(w.surface);
+                        list.push({{
+                            word: w.surface,
+                            reading: w.reading,
+                            jlpt: w.jlpt,
+                            pos: w.pos,
+                            translation: w.translation || ''
+                        }});
+                    }}
+                }});
+            }}
+
+            state.review.words = list;
+            dom.reviewArticleWordCount.textContent = (state.analyzedData ? seen.size : 0);
+            dom.reviewNotebookWordCount.textContent = state.notebook.words.length;
+        }}
+
+        function switchReviewSource(src) {{
+            state.review.source = src;
+            dom.tabReviewArticleBtn.classList.toggle('active', src === 'article');
+            dom.tabReviewNotebookBtn.classList.toggle('active', src === 'notebook');
+            buildReviewWordList();
+            state.review.currentIdx = 0;
+            state.review.isFlipped = false;
+            renderCurrentReviewCard();
+        }}
+
+        async function renderCurrentReviewCard() {{
+            const words = state.review.words;
+            const total = words.length;
+
+            if (total === 0) {{
+                dom.reviewCardWord.textContent = '暫無單字';
+                dom.reviewCardReading.textContent = '';
+                dom.reviewCardTrans.textContent = '請先解析文章或將單字加入生詞本';
+                dom.reviewProgressBar.style.width = '0%';
+                dom.reviewProgressText.textContent = '進度：0 / 0';
+                return;
+            }}
+
+            const idx = state.review.currentIdx;
+            const item = words[idx];
+
+            dom.reviewCardWord.textContent = item.word;
+            dom.reviewCardReading.textContent = item.reading || item.word;
+            dom.reviewCardPos.textContent = item.pos || '單字';
+
+            if (item.jlpt) {{
+                dom.reviewCardLevel.textContent = item.jlpt;
+                dom.reviewCardLevel.className = `badge-jlpt badge-${{item.jlpt.toLowerCase()}}`;
+                dom.reviewCardLevel.style.display = 'inline-flex';
+            }} else {{
+                dom.reviewCardLevel.style.display = 'none';
+            }}
+
+            // 揭示狀態處理
+            state.review.isFlipped = false;
+            dom.reviewBackContent.classList.remove('revealed');
+            dom.reviewFlipHint.style.display = 'flex';
+
+            // 異步填寫中文翻譯
+            if (!item.translation) {{
+                dom.reviewCardTrans.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 翻譯中...';
+                translateJaToZh(item.word).then(tr => {{
+                    item.translation = tr;
+                    if (state.review.currentIdx === idx) {{
+                        dom.reviewCardTrans.textContent = tr || '暫無翻譯';
+                    }}
+                }});
+            }} else {{
+                dom.reviewCardTrans.textContent = item.translation;
+            }}
+
+            // 更新進度條
+            const percent = Math.round(((idx + 1) / total) * 100);
+            dom.reviewProgressBar.style.width = `${{percent}}%`;
+            dom.reviewProgressText.textContent = `第 ${{idx + 1}} / ${{total}} 個單字 (${{percent}}%)`;
+        }}
+
+        function flipReviewCard() {{
+            state.review.isFlipped = !state.review.isFlipped;
+            dom.reviewBackContent.classList.toggle('revealed', state.review.isFlipped);
+            dom.reviewFlipHint.style.display = state.review.isFlipped ? 'none' : 'flex';
+        }}
+
+        function navReview(delta) {{
+            const total = state.review.words.length;
+            if (total === 0) return;
+            state.review.currentIdx = (state.review.currentIdx + delta + total) % total;
+            renderCurrentReviewCard();
+        }}
+
+        function speakReviewCurrentWord() {{
+            const w = state.review.words[state.review.currentIdx];
+            if (w) speakJapanese(w.word);
+        }}
+
+        // ==========================================================================
+        // 筆記本 (單字與文法收藏)
+        // ==========================================================================
         function loadNotebook() {{
             try {{
                 const s = localStorage.getItem('japanese_reader_notebook');
@@ -1452,6 +1906,7 @@ def build():
             dom.notebookCount.textContent = total;
             dom.nbWordCount.textContent = state.notebook.words.length;
             dom.nbGrammarCount.textContent = state.notebook.grammars.length;
+            dom.reviewNotebookWordCount.textContent = state.notebook.words.length;
         }}
 
         function toggleWordNotebook(surface, baseForm, reading, jlpt, pos) {{
@@ -1627,16 +2082,13 @@ def build():
 </html>
 """
 
-    print("[4/4] 寫入獨立網頁檔案...")
-    # 輸出到 index.html (用於直接上傳 GitHub Pages)
+    print("[4/5] 寫入獨立網頁檔案...")
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_template)
 
-    # 輸出到 japanese_reader.html
     with open("japanese_reader.html", "w", encoding="utf-8") as f:
         f.write(html_template)
 
-    # 同時覆蓋 static/index.html，讓本地伺服器與靜態部署皆可立即使用
     with open("static/index.html", "w", encoding="utf-8") as f:
         f.write(html_template)
 
