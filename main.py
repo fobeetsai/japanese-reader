@@ -87,8 +87,14 @@ async def health_check():
     return {
         "status": "ok",
         "grammars_loaded": len(analyzer.grammars),
+        "particles_loaded": len(analyzer.particle_data),
         "jlpt_words_loaded": len(analyzer.jlpt_vocab)
     }
+
+@app.get("/api/particles")
+async def get_particles():
+    """獲取日文助詞運用與代用換句話說資料庫"""
+    return analyzer.particle_data
 
 @app.get("/api/examples")
 async def get_sample_articles():

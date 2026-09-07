@@ -81,21 +81,33 @@ def make_ruby(surface: str, reading_kata: str) -> str:
     return f'<ruby>{surface}<rt>{reading}</rt></ruby>'
 
 class JapaneseAnalyzer:
-    def __init__(self, grammar_path: str = "grammar_data.json", jlpt_path: str = "jlpt_vocab_all.json"):
+    def __init__(self, grammar_path: str = "grammar_data.json", jlpt_path: str = "jlpt_vocab_all.json", particle_path: str = "particle_data.json"):
         self.tokenizer = Tokenizer()
         self.grammars = []
         self.grammar_patterns = []
+        self.grammar_id_map = {}
         self.jlpt_vocab = {}
+        self.particle_data = {}
         
         # 載入 941 條文法資料庫
         if os.path.exists(grammar_path):
             try:
                 with open(grammar_path, "r", encoding="utf-8") as f:
                     self.grammars = json.load(f)
+                self.grammar_id_map = {g.get("id"): g for g in self.grammars if "id" in g}
                 self._build_grammar_patterns()
                 print(f"[JapaneseAnalyzer] 成功載入 {len(self.grammars)} 條文法資料庫")
             except Exception as e:
                 print(f"[JapaneseAnalyzer] 載入文法資料庫失敗: {e}")
+
+        # 載入助詞與代用文型知識庫
+        if os.path.exists(particle_path):
+            try:
+                with open(particle_path, "r", encoding="utf-8") as f:
+                    self.particle_data = json.load(f)
+                print(f"[JapaneseAnalyzer] 成功載入 {len(self.particle_data)} 組助詞代用與換句話說資料庫")
+            except Exception as e:
+                print(f"[JapaneseAnalyzer] 載入助詞資料庫失敗: {e}")
                 
         # 載入 JLPT 單字庫
         if os.path.exists(jlpt_path):
@@ -262,20 +274,80 @@ class JapaneseAnalyzer:
                     sentences.append(combined)
         return sentences
 
+    def analyze_sentence_particles(self, words: List[Dict[str, Any]], sentence_text: str) -> List[Dict[str, Any]]:
+        """識別句子中的所有助詞、分析語法角色、並推薦 941 文法庫之代用文型與換句話說"""
+        particles = []
+        for w_idx, w in enumerate(words):
+            if '助詞' not in w.get('pos', ''):
+                continue
+            p_surface = w.get('surface', '')
+            p_info = self.particle_data.get(p_surface)
+            if not p_info:
+                continue
+            
+            # 取得前後文語境切片
+            prev_word = words[w_idx - 1]['surface'] if w_idx > 0 else ''
+            next_word = words[w_idx + 1]['surface'] if w_idx + 1 < len(words) else ''
+            context_snippet = f"{prev_word}【{p_surface}】{next_word}"
+
+            # 依上下文特徵線索選定最匹配的用法
+            matched_usage = p_info['usages'][0] if p_info.get('usages') else None
+            for u in p_info.get('usages', []):
+                clues = u.get('context_clue', [])
+                if any(c in sentence_text for c in clues):
+                    matched_usage = u
+                    break
+            
+            # 格式化代用助詞與 941 文法庫推薦
+            substitutes_formatted = []
+            if matched_usage:
+                for sub in matched_usage.get('substitutes', []):
+                    gid = sub.get('grammarId')
+                    g_data = self.grammar_id_map.get(gid) if gid else None
+                    substitutes_formatted.append({
+                        "type": sub.get("type"),
+                        "title": sub.get("title"),
+                        "level": sub.get("level"),
+                        "desc": sub.get("desc"),
+                        "grammarId": gid,
+                        "paraphrase_demo": sub.get("paraphrase_demo"),
+                        "grammar_data": {
+                            "id": g_data.get("id"),
+                            "title": g_data.get("title"),
+                            "level": g_data.get("level"),
+                            "meaningZh": g_data.get("meaningZh"),
+                            "form": g_data.get("form"),
+                            "example": g_data.get("example"),
+                            "translation": g_data.get("translation")
+                        } if g_data else None
+                    })
+
+            particles.append({
+                "surface": p_surface,
+                "role": matched_usage.get("role") if matched_usage else p_info.get("default_role", "助詞"),
+                "desc": matched_usage.get("desc") if matched_usage else "",
+                "context_snippet": context_snippet,
+                "distractors": p_info.get("distractors", ['は', 'が', 'を', 'に', 'で']),
+                "substitutes": substitutes_formatted
+            })
+        return particles
+
     def analyze_text(self, text: str, auto_translate: bool = True) -> Dict[str, Any]:
         """
         對日文文章進行完整解析：
         1. 逐句形態素分詞與假名生成
         2. JLPT 級數著色分析
         3. 941 條文法規則標註
-        4. 逐句繁中翻譯
-        5. 全文統計數據
+        4. 助詞運用解析與代用換句話說
+        5. 逐句繁中翻譯
+        6. 全文統計數據
         """
         sentences_raw = self.split_sentences(text)
         analyzed_sentences = []
         
         jlpt_counts = {"N1": 0, "N2": 0, "N3": 0, "N4": 0, "N5": 0, "Other": 0}
         total_words = 0
+        total_particles = 0
         matched_grammar_set = set()
 
         for s_idx, s_text in enumerate(sentences_raw):
@@ -303,6 +375,7 @@ class JapaneseAnalyzer:
                 has_kanji = bool(re.search(r'[\u4e00-\u9faf]', surface))
                 
                 total_words += 1
+                is_particle = ('助詞' in primary_pos) or (surface in self.particle_data)
                 sentence_words.append({
                     "surface": surface,
                     "base_form": base_form,
@@ -312,13 +385,18 @@ class JapaneseAnalyzer:
                     "pos": f"{primary_pos}{'・' + sub_pos if sub_pos else ''}",
                     "pos_raw": pos_parts[0],
                     "jlpt": jlpt_lvl,
-                    "is_kanji": has_kanji
+                    "is_kanji": has_kanji,
+                    "is_particle": is_particle
                 })
                 
             # 搜尋本句命中的 941 文法
             grammars = self.find_grammars(s_text)
             for g in grammars:
                 matched_grammar_set.add(g["id"])
+
+            # 搜尋本句命中的助詞運用與代用文型換句話說
+            sentence_particles = self.analyze_sentence_particles(sentence_words, s_text)
+            total_particles += len(sentence_particles)
                 
             # 句子中文翻譯
             translation = ""
@@ -330,6 +408,7 @@ class JapaneseAnalyzer:
                 "text": s_text,
                 "words": sentence_words,
                 "grammars": grammars,
+                "particles": sentence_particles,
                 "translation": translation
             })
 
@@ -338,6 +417,7 @@ class JapaneseAnalyzer:
             "sentence_count": len(analyzed_sentences),
             "word_count": total_words,
             "grammar_count": len(matched_grammar_set),
+            "particle_count": total_particles,
             "jlpt_distribution": jlpt_counts
         }
 

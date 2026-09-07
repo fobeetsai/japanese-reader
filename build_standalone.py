@@ -32,8 +32,12 @@ def build():
     with open("kanji_compact.json", "r", encoding="utf-8") as f:
         kanji_compact_str = f.read()
 
+    with open("particle_data.json", "r", encoding="utf-8") as f:
+        particle_data = json.load(f)
+
     grammar_json_str = json.dumps(grammar_data, ensure_ascii=False, separators=(',', ':'))
     vocab_json_str = json.dumps(compact_vocab, ensure_ascii=False, separators=(',', ':'))
+    particle_json_str = json.dumps(particle_data, ensure_ascii=False, separators=(',', ':'))
 
     print("[3/5] 載入並注入最佳化樣式表...")
     with open("static/css/style.css", "r", encoding="utf-8") as f:
@@ -477,6 +481,441 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
 [data-theme="dark"] body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt {
     color: #fb7185 !important;
 }
+
+/* ==========================================================================
+   助詞遮蔽測驗 (Particle Masking & Cloze Test Mode) 專屬樣式
+   ========================================================================== */
+body[data-particle-mode="mask"] .particle-token {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 2.3rem !important;
+    height: 1.68rem !important;
+    margin: 0 3px !important;
+    padding: 0 0.4rem !important;
+    border-radius: 6px !important;
+    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+    border: 1.8px dashed #d97706 !important;
+    color: transparent !important;
+    font-size: 0.9em !important;
+    position: relative !important;
+    cursor: pointer !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-theme="dark"] body[data-particle-mode="mask"] .particle-token {
+    background: linear-gradient(135deg, #78350f, #92400e) !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+body[data-particle-mode="mask"] .particle-token::before {
+    content: "？助詞" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: #b45309 !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+}
+
+[data-theme="dark"] body[data-particle-mode="mask"] .particle-token::before {
+    color: #fde68a !important;
+}
+
+body[data-particle-mode="mask"] .particle-token:hover,
+body[data-particle-mode="mask"] .particle-token.revealed {
+    background: #dcfce7 !important;
+    border: 1.8px solid #16a34a !important;
+    color: #15803d !important;
+    font-weight: 800 !important;
+    transform: scale(1.04) !important;
+}
+
+[data-theme="dark"] body[data-particle-mode="mask"] .particle-token:hover,
+[data-theme="dark"] body[data-particle-mode="mask"] .particle-token.revealed {
+    background: #064e3b !important;
+    border-color: #34d399 !important;
+    color: #a7f3d0 !important;
+}
+
+body[data-particle-mode="mask"] .particle-token:hover::before,
+body[data-particle-mode="mask"] .particle-token.revealed::before {
+    display: none !important;
+}
+
+.particle-token {
+    transition: background 0.15s ease, color 0.15s ease;
+    border-radius: 3px;
+    padding: 0 2px;
+    cursor: pointer;
+}
+.particle-token:hover {
+    background: rgba(245, 158, 11, 0.18);
+    color: #d97706;
+}
+
+/* ==========================================================================
+   整句深度分析器：助詞運用與代用換句話說專用樣式
+   ========================================================================== */
+.sentence-particles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.particle-item-card {
+    background: var(--bg-sub);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 0.85rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.particle-item-card:hover {
+    border-color: #f59e0b;
+    box-shadow: var(--shadow-sm);
+}
+
+.particle-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.particle-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.particle-main-badge {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: 1.15rem;
+    font-weight: 800;
+    padding: 0.1rem 0.55rem;
+    border-radius: 6px;
+    font-family: var(--font-jp);
+}
+
+[data-theme="dark"] .particle-main-badge {
+    background: #78350f;
+    color: #fef3c7;
+    border-color: #92400e;
+}
+
+.particle-context-chip {
+    font-family: var(--font-jp);
+    font-size: 0.88rem;
+    color: var(--text-main);
+    background: var(--bg-card);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    border: 1px dashed var(--border-color);
+}
+
+.particle-context-chip strong {
+    color: #d97706;
+}
+
+.particle-role-badge {
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+[data-theme="dark"] .particle-role-badge {
+    background: #312e81;
+    color: #c7d2fe;
+}
+
+.particle-desc-text {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin-bottom: 0.55rem;
+}
+
+.particle-substitutes-area {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.65rem 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.substitute-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.45rem;
+}
+
+.substitute-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.substitute-item-card {
+    background: var(--bg-sub);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.55rem 0.75rem;
+}
+
+.substitute-tag {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    margin-right: 0.35rem;
+}
+
+[data-theme="dark"] .substitute-tag {
+    background: #064e3b;
+    color: #6ee7b7;
+    border-color: #047857;
+}
+
+.paraphrase-demo-box {
+    background: rgba(16, 185, 129, 0.08);
+    border-left: 3px solid #10b981;
+    padding: 0.4rem 0.65rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.84rem;
+    font-family: var(--font-jp);
+    margin-top: 0.4rem;
+    line-height: 1.5;
+}
+
+.paraphrase-demo-box strong {
+    color: #059669;
+}
+
+/* ==========================================================================
+   助詞隨堂快速測驗浮動卡 (Quick Particle Popover)
+   ========================================================================== */
+.particle-popover {
+    position: fixed;
+    z-index: 1050;
+    background: var(--bg-card);
+    border: 1.5px solid #f59e0b;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    padding: 1.2rem;
+    width: 320px;
+    max-width: 92vw;
+    animation: fadeIn 0.2s ease;
+}
+
+.popover-quiz-context {
+    background: var(--bg-sub);
+    padding: 0.65rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.98rem;
+    font-family: var(--font-jp);
+    text-align: center;
+    margin: 0.6rem 0;
+    line-height: 1.6;
+}
+
+.popover-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 0.6rem 0;
+}
+
+.btn-popover-opt {
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: var(--font-jp);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-popover-opt:hover {
+    border-color: #f59e0b;
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.btn-popover-opt.correct {
+    border-color: #10b981 !important;
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+.btn-popover-opt.wrong {
+    border-color: #ef4444 !important;
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+/* ==========================================================================
+   全篇助詞測驗挑戰彈窗樣式
+   ========================================================================== */
+.quiz-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.quiz-score-badge {
+    color: #d97706;
+    background: #fef3c7;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+}
+
+[data-theme="dark"] .quiz-score-badge {
+    background: #78350f;
+    color: #fde68a;
+}
+
+.quiz-sentence-box {
+    background: var(--bg-sub);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.3rem 1.15rem;
+    font-size: 1.2rem;
+    font-family: var(--font-jp);
+    line-height: 2.3;
+    text-align: center;
+    margin-bottom: 1rem;
+    word-break: break-word;
+}
+
+.quiz-blank-slot {
+    display: inline-block;
+    min-width: 3.2rem;
+    height: 2rem;
+    line-height: 2rem;
+    border-bottom: 3px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+    font-weight: 800;
+    text-align: center;
+    border-radius: 4px 4px 0 0;
+    padding: 0 0.5rem;
+    margin: 0 4px;
+    vertical-align: middle;
+}
+
+.quiz-instruction {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    text-align: center;
+}
+
+.quiz-options-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 500px) {
+    .quiz-options-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.btn-quiz-option {
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-family: var(--font-jp);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-quiz-option:hover {
+    border-color: #f59e0b;
+    background: #fef3c7;
+    color: #b45309;
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .btn-quiz-option:hover {
+    background: #78350f;
+    color: #fde68a;
+}
+
+.btn-quiz-option.correct {
+    border-color: #10b981 !important;
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+[data-theme="dark"] .btn-quiz-option.correct {
+    background: #064e3b !important;
+    color: #6ee7b7 !important;
+}
+
+.btn-quiz-option.wrong {
+    border-color: #ef4444 !important;
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.quiz-feedback-card {
+    background: var(--bg-sub);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.15rem;
+    margin-top: 1rem;
+    border-left: 4px solid #10b981;
+    animation: fadeIn 0.25s ease;
+}
+
+.btn-quiz-accent {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 700 !important;
+}
+.btn-quiz-accent:hover {
+    filter: brightness(1.1) !important;
+}
 """
 
     html_template = f"""<!DOCTYPE html>
@@ -547,6 +986,13 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                     <button class="pill-btn active" id="btnToggleGrammar" title="高亮標註文章中符合《絵でわかる日本語》之文法">文法標註</button>
                 </div>
 
+                <!-- Particle Mode Switch (助詞遮蔽測驗) -->
+                <div class="control-pill-group" title="助詞遮蔽自測模式 (隱藏日文助詞，點擊即可進行挖空填空自測，查看助詞語義與代用文型)">
+                    <span class="group-label"><i class="fa-solid fa-shapes"></i> 助詞:</span>
+                    <button class="pill-btn active" id="btnParticleShow" data-mode="show" title="正常顯示助詞">顯示</button>
+                    <button class="pill-btn" id="btnParticleMask" data-mode="mask" title="【助詞遮蔽測驗】將文章中的助詞自動挖空遮蔽，點擊即時答題或揭示">遮蔽自測</button>
+                </div>
+
                 <!-- Translation Mode Switch -->
                 <div class="control-pill-group" title="中文翻譯顯示模式">
                     <span class="group-label"><i class="fa-solid fa-language"></i> 翻譯:</span>
@@ -557,6 +1003,10 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
 
                 <!-- Action Buttons -->
                 <div class="header-actions">
+                    <button class="action-btn" id="btnOpenParticleQuizTop" title="開啟全篇日文助詞測驗挑戰與換句話說特訓">
+                        <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
+                        <span>助詞特訓</span>
+                    </button>
                     <button class="action-btn" id="btnWordReview" title="進入單字翻牌抽卡複習模式">
                         <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
                         <span>單字複習</span>
@@ -676,6 +1126,9 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                         </div>
 
                         <div class="reader-text-tools">
+                            <button class="tool-btn btn-quiz-accent" id="btnOpenParticleQuiz" title="針對當前文章/網頁，啟動全篇助詞測驗與換句話說挑戰">
+                                <i class="fa-solid fa-puzzle-piece"></i> 助詞挑戰
+                            </button>
                             <button class="tool-btn" id="btnFontDecr" title="縮小漢字字體 (利於觀看假名)"><i class="fa-solid fa-minus"></i> A</button>
                             <button class="tool-btn" id="btnFontIncr" title="放大漢字字體"><i class="fa-solid fa-plus"></i> A</button>
                             <button class="tool-btn" id="btnNewArticle" title="更換文章 / 重新輸入"><i class="fa-solid fa-pen-to-square"></i> 換文章</button>
@@ -724,6 +1177,19 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                             </div>
                             <div class="selected-sentence-trans" id="selectedSentenceZh" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
                                 暫無翻譯
+                            </div>
+                        </div>
+
+                        <!-- Particle Analysis & Paraphrase Lab (助詞運用與代用換句話說) -->
+                        <div class="analyzer-section particle-analyzer-section">
+                            <div class="section-label">
+                                <span><i class="fa-solid fa-shapes text-amber-500"></i> 本句助詞運用與代用換句話說 (<strong id="sentenceParticleCount">0</strong>)</span>
+                                <button class="btn-audio" id="btnMaskSentenceParticles" title="切換遮蔽本句所有助詞進行即時填空練習">
+                                    <i class="fa-solid fa-eye-slash"></i> 遮蔽本句助詞
+                                </button>
+                            </div>
+                            <div class="sentence-particles-list" id="sentenceParticlesList">
+                                <div class="empty-hint">本句未偵測到特殊格助詞或副助詞</div>
                             </div>
                         </div>
 
@@ -779,6 +1245,74 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
         </section>
 
     </main>
+
+    <!-- Floating Particle Quick Quiz Popover (點擊助詞隨堂測驗與代用換句話說) -->
+    <div class="particle-popover" id="particlePopover" style="display: none;">
+        <button class="popover-close-btn" onclick="closeParticlePopover()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="popover-header">
+            <div class="popover-word-title" id="popoverParticleTitle">助詞測驗</div>
+            <span class="particle-role-badge" id="popoverParticleRole">格助詞</span>
+        </div>
+        <div class="popover-quiz-context" id="popoverParticleContext">
+            <!-- 語境挖空 -->
+        </div>
+        <div class="popover-options-grid" id="popoverParticleOptions">
+            <!-- 4選項按鈕 -->
+        </div>
+        <div id="popoverParticleFeedback" style="display:none; margin-top:0.6rem;">
+            <!-- 回饋與解析 -->
+        </div>
+        <div id="popoverParticleSubstitutes" style="display:none; margin-top:0.6rem;">
+            <!-- 代用文型推薦 -->
+        </div>
+    </div>
+
+    <!-- Particle Quiz Challenge Modal (全篇助詞測驗挑戰與換句話說特訓) -->
+    <div class="modal-overlay" id="particleQuizModal">
+        <div class="modal-container" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-puzzle-piece text-amber-500"></i> 全篇日文助詞測驗挑戰</h3>
+                <button class="modal-close-btn" onclick="closeParticleQuizModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="quiz-status-bar">
+                <div class="quiz-counter" id="quizCounterText">第 1 / 10 題</div>
+                <div class="quiz-score-badge" id="quizScoreText"><i class="fa-solid fa-award"></i> 答對：0 題</div>
+            </div>
+
+            <div class="review-progress-bar-wrap">
+                <div class="review-progress-bar" id="quizProgressBar" style="width: 0%; background: #f59e0b;"></div>
+            </div>
+
+            <div class="quiz-question-card" id="quizQuestionCard">
+                <div class="quiz-sentence-box" id="quizSentenceDisplay">
+                    <!-- 挖空題目 -->
+                </div>
+                <div class="quiz-instruction">請依句意、語境與格關係，點選最適合的助詞：</div>
+                <div class="quiz-options-container" id="quizOptionsContainer">
+                    <!-- 選項 -->
+                </div>
+                <div class="quiz-feedback-card" id="quizFeedbackCard" style="display: none;">
+                    <!-- 詳解與換句話說推薦 -->
+                </div>
+            </div>
+
+            <div class="review-actions-bar">
+                <button class="btn-review-action" id="btnQuizPrev" onclick="navQuiz(-1)" title="上一題 (←)">
+                    <i class="fa-solid fa-chevron-left"></i> 上一題
+                </button>
+                <button class="btn-review-action" id="btnQuizReveal" onclick="revealCurrentQuizAnswer()" title="揭示答案與換句話說">
+                    <i class="fa-solid fa-lightbulb"></i> 揭示解析
+                </button>
+                <button class="btn-review-action" id="btnQuizAudio" onclick="speakQuizSentence()" title="朗讀本句">
+                    <i class="fa-solid fa-volume-high"></i> 發音
+                </button>
+                <button class="btn-review-action" id="btnQuizNext" onclick="navQuiz(1)" title="下一題 (→)">
+                    下一題 <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Floating Word Dictionary Popover (點擊單字浮出) -->
     <div class="word-popover" id="wordPopover" style="display: none;">
@@ -918,6 +1452,9 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
     <script>
         // 941 條《絵でわかる日本語》文法庫
         const GRAMMAR_DATA = {grammar_json_str};
+
+        // 24 組日文助詞代用與換句話說知識庫
+        const PARTICLE_DATA = {particle_json_str};
 
         // 8,138 筆 JLPT 單字庫
         const JLPT_VOCAB = {vocab_json_str};
@@ -1362,6 +1899,7 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
 
                     // A. 直接命中單字庫 (原型 / 專有名詞)
                     if (JLPT_VOCAB[sub]) {{
+                        const isParticleInDb = Boolean(PARTICLE_DATA[sub]);
                         const [lvlNum, reading] = JLPT_VOCAB[sub];
                         const readingHira = kataToHira(reading);
                         const hasKanji = KANJI_REGEX.test(sub);
@@ -1372,7 +1910,8 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                             jlpt: lvlNum ? `N${{lvlNum}}` : null,
                             is_kanji: hasKanji,
                             ruby_html: hasKanji ? createRubyHtml(sub, readingHira) : sub,
-                            pos: '單字'
+                            pos: isParticleInDb ? '助詞' : '單字',
+                            is_particle: isParticleInDb
                         }});
                         i += len;
                         matched = true;
@@ -1480,7 +2019,31 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                     continue;
                 }}
 
-                // 4. 平假名助詞/符號
+                // 4. 助詞優先識別 (多字符助詞如 について, として, から, まで, より, だけ, ほど, くらい...)
+                let particleMatched = false;
+                const multiParticles = ['について', 'として', 'から', 'まで', 'より', 'だけ', 'ほど', 'くらい', 'ぐらい', 'ばかり', 'さえ', 'こそ', 'しか', 'など', 'ので', 'のに'];
+                for (const mp of multiParticles) {{
+                    if (text.startsWith(mp, i)) {{
+                        tokens.push({{
+                            surface: mp,
+                            base_form: mp,
+                            reading: mp,
+                            jlpt: null,
+                            is_kanji: false,
+                            ruby_html: mp,
+                            pos: '助詞',
+                            is_particle: true
+                        }});
+                        i += mp.length;
+                        particleMatched = true;
+                        break;
+                    }}
+                }}
+                if (particleMatched) continue;
+
+                // 5. 單字元平假名助詞與一般符號
+                const singleParticles = new Set(['は', 'が', 'を', 'に', 'で', 'へ', 'と', 'も', 'の']);
+                const isSingleParticle = singleParticles.has(char);
                 tokens.push({{
                     surface: char,
                     base_form: char,
@@ -1488,7 +2051,8 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                     jlpt: null,
                     is_kanji: false,
                     ruby_html: char,
-                    pos: '符號/助詞'
+                    pos: isSingleParticle ? '助詞' : '符號',
+                    is_particle: isSingleParticle
                 }});
                 i++;
             }}
@@ -1595,22 +2159,38 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
             rubyMode: 'show',
             transMode: 'show',
             jpMode: 'show',
+            particleMode: 'show', // 'show' | 'mask'
             enableWordColors: true,
             enableGrammar: true,
             fontSizeLevel: 0,
             theme: 'light',
             notebook: {{ words: [], grammars: [] }},
             review: {{
-                source: 'article', // 'article' | 'notebook'
+                source: 'article',
                 words: [],
                 currentIdx: 0,
                 isFlipped: false
+            }},
+            quiz: {{
+                items: [],
+                currentIdx: 0,
+                score: 0,
+                answered: new Set()
             }}
         }};
 
         const dom = {{
             btnJpShow: document.getElementById('btnJpShow'),
             btnJpMask: document.getElementById('btnJpMask'),
+            btnParticleShow: document.getElementById('btnParticleShow'),
+            btnParticleMask: document.getElementById('btnParticleMask'),
+            btnOpenParticleQuiz: document.getElementById('btnOpenParticleQuiz'),
+            btnOpenParticleQuizTop: document.getElementById('btnOpenParticleQuizTop'),
+            sentenceParticleCount: document.getElementById('sentenceParticleCount'),
+            sentenceParticlesList: document.getElementById('sentenceParticlesList'),
+            btnMaskSentenceParticles: document.getElementById('btnMaskSentenceParticles'),
+            particlePopover: document.getElementById('particlePopover'),
+            particleQuizModal: document.getElementById('particleQuizModal'),
             btnRubyShow: document.getElementById('btnRubyShow'),
             btnRubyHide: document.getElementById('btnRubyHide'),
             btnRubyMask: document.getElementById('btnRubyMask'),
@@ -1724,11 +2304,19 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
             setTransMode(savedTransMode);
             const savedJpMode = localStorage.getItem('japanese_reader_jp_mode') || 'show';
             setJpMode(savedJpMode);
+            const savedParticleMode = localStorage.getItem('japanese_reader_particle_mode') || 'show';
+            setParticleMode(savedParticleMode);
         }}
 
         function setupEventListeners() {{
             dom.btnJpShow.addEventListener('click', () => setJpMode('show'));
             dom.btnJpMask.addEventListener('click', () => setJpMode('mask'));
+
+            dom.btnParticleShow.addEventListener('click', () => setParticleMode('show'));
+            dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
+            if (dom.btnOpenParticleQuiz) dom.btnOpenParticleQuiz.addEventListener('click', openParticleQuizModal);
+            if (dom.btnOpenParticleQuizTop) dom.btnOpenParticleQuizTop.addEventListener('click', openParticleQuizModal);
+            if (dom.btnMaskSentenceParticles) dom.btnMaskSentenceParticles.addEventListener('click', toggleMaskSentenceParticles);
 
             dom.btnRubyShow.addEventListener('click', () => setRubyMode('show'));
             dom.btnRubyHide.addEventListener('click', () => setRubyMode('hide'));
@@ -1832,6 +2420,19 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
             dom.btnJpMask.classList.toggle('active', mode === 'mask');
             if (mode === 'mask') {{
                 showToast('已開啟【中翻日自測模式】：日文原文已遮蔽，請看中文練習翻譯，滑鼠移過或點擊即可揭示！');
+            }}
+        }}
+
+        function setParticleMode(mode) {{
+            state.particleMode = mode;
+            localStorage.setItem('japanese_reader_particle_mode', mode);
+            document.body.setAttribute('data-particle-mode', mode);
+            if (dom.btnParticleShow) dom.btnParticleShow.classList.toggle('active', mode === 'show');
+            if (dom.btnParticleMask) dom.btnParticleMask.classList.toggle('active', mode === 'mask');
+            if (mode === 'mask') {{
+                showToast('已開啟【助詞遮蔽測驗模式】：全文所有助詞已自動挖空，點擊即可作答或揭示！');
+            }} else {{
+                showToast('已切換為【助詞正常顯示模式】');
             }}
         }}
 
@@ -2048,7 +2649,17 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
 
             words.forEach((w, wIdx) => {{
                 const tokenSpan = document.createElement('span');
-                tokenSpan.className = `word-token ${{w.jlpt ? `jlpt-${{w.jlpt}}` : ''}}`;
+                const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
+
+                if (isParticle) {{
+                    tokenSpan.className = `word-token particle-token`;
+                    tokenSpan.dataset.isParticle = 'true';
+                    tokenSpan.dataset.particle = w.surface;
+                    tokenSpan.title = `【日文助詞】${{w.surface}} (點擊進行測驗與查看代用換句話說)`;
+                }} else {{
+                    tokenSpan.className = `word-token ${{w.jlpt ? `jlpt-${{w.jlpt}}` : ''}}`;
+                }}
+
                 tokenSpan.innerHTML = w.ruby_html;
                 tokenSpan.dataset.surface = w.surface;
                 tokenSpan.dataset.baseForm = w.base_form;
@@ -2062,6 +2673,13 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
                     e.stopPropagation();
                     if (state.rubyMode === 'mask') {{
                         tokenSpan.classList.toggle('revealed');
+                    }}
+                    if (isParticle) {{
+                        if (state.particleMode === 'mask') {{
+                            tokenSpan.classList.add('revealed');
+                        }}
+                        showParticleQuickPopover(tokenSpan, w, sIdx, wIdx, e);
+                        return;
                     }}
                     showWordPopover(tokenSpan, w, e);
                 }});
@@ -2108,6 +2726,7 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
             dom.selectedSentenceJp.innerHTML = sentence.words.map(w => w.ruby_html).join('');
             dom.selectedSentenceZh.textContent = sentence.translation || '暫無翻譯';
 
+            renderSentenceParticles(sentence, idx);
             renderSentenceGrammars(sentence.grammars || []);
             renderSentenceWordsTable(sentence.words, sentence.grammars || []);
 
@@ -2656,6 +3275,556 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
             dom.toast.classList.add('show');
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 2800);
+        }}
+
+
+        // ==========================================================================
+        // 助詞深度解析、代用與換句話說核心引擎 (Particle & Paraphrase Engine)
+        // ==========================================================================
+
+        function getParticleData(pSurface) {{
+            if (!window.PARTICLE_DATA) return null;
+            return window.PARTICLE_DATA[pSurface] || null;
+        }}
+
+        function matchParticleUsage(pSurface, sentenceText) {{
+            const pData = getParticleData(pSurface);
+            if (!pData || !pData.usages || pData.usages.length === 0) return null;
+
+            for (const u of pData.usages) {{
+                if (u.context_clue && u.context_clue.some(c => sentenceText.includes(c))) {{
+                    return u;
+                }}
+            }}
+            return pData.usages[0];
+        }}
+
+        function generateParaphraseDemo(sentenceText, pSurface, subTitle) {{
+            if (!sentenceText) return '';
+            const s = sentenceText.trim();
+
+            if (pSurface === 'で') {{
+                if (s.includes('使って')) {{
+                    return s.replace(/([^、。]*?)を使って/g, '<strong>【$1によって】</strong>');
+                }}
+                if (s.includes('では')) {{
+                    return s.replace(/([^、。]*?)では/g, '<strong>【$1においては】</strong>');
+                }}
+                if (s.includes('で')) {{
+                    return s.replace(/([^、。]*?)で/g, '<strong>【$1によって】</strong>');
+                }}
+            }} else if (pSurface === 'が') {{
+                if (s.includes('が診察する時')) {{
+                    return s.replace('が診察する時', '<strong>【の診察する時】</strong>（連體修飾節主語交代）');
+                }}
+                if (s.includes('が読んだ')) {{
+                    return s.replace('が読んだ', '<strong>【の読んだ】</strong>（連體修飾節主語交代）');
+                }}
+                return s.replace(/([^\\s、。]{{1,6}})が([^\\s、。]{{2,8}}[する|した|る|た])/g, '<strong>$1【の】$2</strong>（連體修飾節「が」常代用為「の」）');
+            }} else if (pSurface === 'に') {{
+                if (s.includes('時に')) {{
+                    return s.replace('時に', '<strong>【にあたって】</strong>');
+                }}
+                if (s.includes('行く') || s.includes('行きまし')) {{
+                    return s.replace(/([^、。]*?)に(行[く|き])/g, '<strong>【$1へ$2】</strong>（方向助詞代用）');
+                }}
+            }} else if (pSurface === 'へ') {{
+                return s.replace(/([^、。]*?)へ(行[く|き])/g, '<strong>【$1に$2】</strong>（歸著點助詞代用）');
+            }} else if (pSurface === 'から') {{
+                if (s.includes('ため')) {{
+                    return s.replace('ため', '<strong>【によって】</strong>');
+                }}
+                return s.replace(/([^、。]*?)から/g, '<strong>【$1ので】</strong> 或 <strong>【$1ことから】</strong>');
+            }} else if (pSurface === 'について') {{
+                return s.replace(/([^、。]*?)について/g, '<strong>【$1に関して】</strong>');
+            }} else if (pSurface === 'と') {{
+                if (s.includes('一緒に') || s.includes('付き合っ')) {{
+                    return s.replace(/([^、。]*?)と/g, '<strong>【$1とともに】</strong>');
+                }}
+            }} else if (pSurface === 'より') {{
+                return s.replace(/([^、。]*?)より/g, '<strong>【$1に比べて】</strong>');
+            }} else if (pSurface === 'だけ') {{
+                return s.replace(/([^、。]*?)だけ/g, '<strong>【$1のみ】</strong>');
+            }}
+
+            return `可將句中「名詞＋${{pSurface}}」換句話說改寫為「名詞＋${{subTitle}}」！`;
+        }}
+
+        function renderSentenceParticles(sentence, sIdx) {{
+            const listEl = dom.sentenceParticlesList;
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            const words = sentence.words || [];
+            const sentenceText = sentence.text || '';
+
+            // 抓取本句中所有助詞
+            const detectedParticles = [];
+            words.forEach((w, wIdx) => {{
+                const s = w.surface;
+                const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
+                if (isParticle) {{
+                    const prev = wIdx > 0 ? words[wIdx - 1].surface : '';
+                    const next = wIdx + 1 < words.length ? words[wIdx + 1].surface : '';
+                    detectedParticles.push({{
+                        surface: s,
+                        wordIdx: wIdx,
+                        prevWord: prev,
+                        nextWord: next,
+                        pData: getParticleData(s)
+                    }});
+                }}
+            }});
+
+            if (dom.sentenceParticleCount) {{
+                dom.sentenceParticleCount.textContent = detectedParticles.length;
+            }}
+
+            if (detectedParticles.length === 0) {{
+                listEl.innerHTML = '<div class="empty-hint">本句未偵測到特殊格助詞或副助詞</div>';
+                return;
+            }}
+
+            detectedParticles.forEach((pItem, idx) => {{
+                const pSurface = pItem.surface;
+                const pData = pItem.pData;
+                const usage = matchParticleUsage(pSurface, sentenceText);
+
+                const card = document.createElement('div');
+                card.className = 'particle-item-card';
+
+                const roleText = usage ? usage.role : (pData ? pData.default_role : '日文助詞');
+                const descText = usage ? usage.desc : '助詞在句中承擔格關係、時間、空間、主題或接續功能。';
+                const contextDisplay = `${{escapeHtml(pItem.prevWord)}}<strong>【${{escapeHtml(pSurface)}}】</strong>${{escapeHtml(pItem.nextWord)}}`;
+
+                let substitutesHtml = '';
+                if (usage && usage.substitutes && usage.substitutes.length > 0) {{
+                    let subItemsHtml = '';
+                    usage.substitutes.forEach(sub => {{
+                        let gCardHtml = '';
+                        if (sub.grammarId) {{
+                            const gInfo = GRAMMAR_DATA.find(g => g.id === sub.grammarId);
+                            if (gInfo) {{
+                                gCardHtml = `
+                                    <div style="margin-top:0.35rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.4rem;">
+                                        <span style="font-size:0.82rem; color:var(--text-muted);">${{escapeHtml(gInfo.meaningZh || '')}}</span>
+                                        <button class="btn-grammar-detail" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="openGrammarDrawerById(${{gInfo.id}})">
+                                            <i class="fa-solid fa-book-open"></i> 查看 941 文法庫詳解
+                                        </button>
+                                    </div>
+                                `;
+                            }}
+                        }}
+
+                        const demoRewrite = generateParaphraseDemo(sentenceText, pSurface, sub.title);
+
+                        subItemsHtml += `
+                            <div class="substitute-item-card">
+                                <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                                    <span class="substitute-tag">${{escapeHtml(sub.type)}}</span>
+                                    <strong style="color:var(--text-main); font-size:0.92rem; font-family:var(--font-jp);">${{escapeHtml(sub.title)}}</strong>
+                                    <span class="badge-jlpt badge-${{(sub.level || 'n2').toLowerCase().replace('~','_')}}">${{escapeHtml(sub.level)}}</span>
+                                </div>
+                                <div style="font-size:0.83rem; color:var(--text-muted); margin-top:0.25rem;">
+                                    ${{escapeHtml(sub.desc || '')}}
+                                </div>
+                                ${{demoRewrite ? `
+                                    <div class="paraphrase-demo-box">
+                                        <strong><i class="fa-solid fa-pen-nib"></i> 換句話說改寫：</strong>
+                                        <span>${{demoRewrite}}</span>
+                                    </div>
+                                ` : ''}}
+                                ${{gCardHtml}}
+                            </div>
+                        `;
+                    }});
+
+                    substitutesHtml = `
+                        <div class="particle-substitutes-area">
+                            <div class="substitute-title">
+                                <i class="fa-solid fa-lightbulb"></i> 換句話說・代用助詞與 941 進階文型推薦：
+                            </div>
+                            <div class="substitute-items-list">
+                                ${{subItemsHtml}}
+                            </div>
+                        </div>
+                    `;
+                }}
+
+                card.innerHTML = `
+                    <div class="particle-item-header">
+                        <div class="particle-title-wrap">
+                            <span class="particle-main-badge">${{escapeHtml(pSurface)}}</span>
+                            <span class="particle-context-chip">${{contextDisplay}}</span>
+                        </div>
+                        <span class="particle-role-badge">${{escapeHtml(roleText)}}</span>
+                    </div>
+                    <div class="particle-desc-text">${{escapeHtml(descText)}}</div>
+                    ${{substitutesHtml}}
+                `;
+
+                listEl.appendChild(card);
+            }});
+        }}
+
+        function toggleMaskSentenceParticles() {{
+            const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${{state.currentSentenceIdx}}"]`);
+            if (!activeRow) return;
+            const particleTokens = activeRow.querySelectorAll('.particle-token');
+            if (particleTokens.length === 0) {{
+                showToast('本句無主要助詞');
+                return;
+            }}
+            const isAnyMasked = Array.from(particleTokens).some(el => !el.classList.contains('revealed'));
+            particleTokens.forEach(el => {{
+                if (isAnyMasked) {{
+                    el.classList.add('revealed');
+                }} else {{
+                    el.classList.remove('revealed');
+                }}
+            }});
+            showToast(isAnyMasked ? '已揭示本句所有助詞' : '已遮蔽本句所有助詞，請點擊自測！');
+        }}
+
+        // ==========================================================================
+        // 助詞隨堂快速測驗浮動卡 (Quick Popover)
+        // ==========================================================================
+
+        function showParticleQuickPopover(targetEl, token, sIdx, wIdx, event) {{
+            const popover = document.getElementById('particlePopover');
+            if (!popover) return;
+
+            const pSurface = token.surface;
+            const pData = getParticleData(pSurface);
+            const sentence = state.analyzedData ? state.analyzedData.sentences[sIdx] : null;
+            const sentenceText = sentence ? sentence.text : '';
+            const usage = matchParticleUsage(pSurface, sentenceText);
+
+            document.getElementById('popoverParticleTitle').textContent = `助詞隨堂測驗`;
+            document.getElementById('popoverParticleRole').textContent = usage ? usage.role : '格助詞';
+
+            // 語境預覽 (將助詞挖空)
+            const words = sentence ? sentence.words : [];
+            const prev = wIdx > 0 ? words[wIdx - 1].surface : '';
+            const next = wIdx + 1 < words.length ? words[wIdx + 1].surface : '';
+            document.getElementById('popoverParticleContext').innerHTML = `
+                ${{escapeHtml(prev)}}<span class="quiz-blank-slot" style="min-width:2rem;height:1.5rem;line-height:1.5rem;">？</span>${{escapeHtml(next)}}
+            `;
+
+            // 4 個選項：正確答案 + 3 個干擾項
+            const distractors = pData && pData.distractors ? pData.distractors : ['は', 'が', 'を', 'に', 'で'];
+            const wrongChoices = distractors.filter(d => d !== pSurface).sort(() => Math.random() - 0.5).slice(0, 3);
+            const allChoices = [pSurface, ...wrongChoices].sort(() => Math.random() - 0.5);
+
+            const optionsGrid = document.getElementById('popoverParticleOptions');
+            optionsGrid.innerHTML = '';
+            const feedbackBox = document.getElementById('popoverParticleFeedback');
+            const substitutesBox = document.getElementById('popoverParticleSubstitutes');
+            feedbackBox.style.display = 'none';
+            substitutesBox.style.display = 'none';
+
+            allChoices.forEach(opt => {{
+                const btn = document.createElement('button');
+                btn.className = 'btn-popover-opt';
+                btn.textContent = opt;
+                btn.onclick = () => {{
+                    optionsGrid.querySelectorAll('.btn-popover-opt').forEach(b => b.disabled = true);
+                    if (opt === pSurface) {{
+                        btn.classList.add('correct');
+                        btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${{opt}} (正確！)`;
+                        targetEl.classList.add('revealed');
+                    }} else {{
+                        btn.classList.add('wrong');
+                        btn.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${{opt}}`;
+                        optionsGrid.querySelectorAll('.btn-popover-opt').forEach(b => {{
+                            if (b.textContent === pSurface) b.classList.add('correct');
+                        }});
+                    }}
+
+                    feedbackBox.style.display = 'block';
+                    feedbackBox.innerHTML = `
+                        <div style="font-size:0.84rem; line-height:1.45; color:var(--text-main); background:var(--bg-sub); padding:0.5rem 0.7rem; border-radius:6px; border-left:3px solid #f59e0b;">
+                            <strong>【語法解析】</strong>${{escapeHtml(usage ? usage.desc : '日語常用助詞用法。')}}
+                        </div>
+                    `;
+
+                    if (usage && usage.substitutes && usage.substitutes.length > 0) {{
+                        substitutesBox.style.display = 'block';
+                        const firstSub = usage.substitutes[0];
+                        const demoRewrite = generateParaphraseDemo(sentenceText, pSurface, firstSub.title);
+                        substitutesBox.innerHTML = `
+                            <div style="font-size:0.83rem; background:rgba(16,185,129,0.1); border:1px solid #a7f3d0; padding:0.55rem 0.75rem; border-radius:6px; color:#047857;">
+                                <strong><i class="fa-solid fa-lightbulb"></i> 換句話說代用：</strong>
+                                <div>可換用 <strong>${{escapeHtml(firstSub.title)}}</strong> [${{escapeHtml(firstSub.level)}}]</div>
+                                ${{firstSub.grammarId ? `
+                                    <button class="btn-grammar-detail" style="margin-top:0.35rem; padding:0.2rem 0.5rem; font-size:0.76rem;" onclick="closeParticlePopover(); openGrammarDrawerById(${{firstSub.grammarId}})">
+                                        <i class="fa-solid fa-book-open"></i> 查看 941 文法詳解
+                                    </button>
+                                ` : ''}}
+                            </div>
+                        `;
+                    }}
+                }};
+                optionsGrid.appendChild(btn);
+            }});
+
+            // 計算定位
+            const rect = targetEl.getBoundingClientRect();
+            popover.style.display = 'block';
+            let left = rect.left;
+            let top = rect.bottom + 8;
+            if (left + 320 > window.innerWidth) left = window.innerWidth - 335;
+            if (left < 10) left = 10;
+            if (top + 280 > window.innerHeight) top = rect.top - 290;
+            popover.style.left = `${{left}}px`;
+            popover.style.top = `${{top}}px`;
+        }}
+
+        function closeParticlePopover() {{
+            const popover = document.getElementById('particlePopover');
+            if (popover) popover.style.display = 'none';
+        }}
+
+        // ==========================================================================
+        // 全篇助詞測驗挑戰彈窗 (Full-Article Particle Quiz Challenge)
+        // ==========================================================================
+
+        function collectArticleParticleQuizItems() {{
+            if (!state.analyzedData || !state.analyzedData.sentences) return [];
+            const items = [];
+
+            state.analyzedData.sentences.forEach((sentence, sIdx) => {{
+                const words = sentence.words || [];
+                const sText = sentence.text || '';
+
+                words.forEach((w, wIdx) => {{
+                    const s = w.surface;
+                    const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
+                    if (isParticle) {{
+                        const pData = getParticleData(s);
+                        const usage = matchParticleUsage(s, sText);
+                        const distractors = pData && pData.distractors ? pData.distractors : ['は', 'が', 'を', 'に', 'で'];
+                        const wrongChoices = distractors.filter(d => d !== s).sort(() => Math.random() - 0.5).slice(0, 3);
+                        const allChoices = [s, ...wrongChoices].sort(() => Math.random() - 0.5);
+
+                        // 建立挖空句子 HTML
+                        let maskedHtml = '';
+                        words.forEach((mw, mi) => {{
+                            if (mi === wIdx) {{
+                                maskedHtml += `<span class="quiz-blank-slot">？</span>`;
+                            }} else {{
+                                maskedHtml += escapeHtml(mw.surface);
+                            }}
+                        }});
+
+                        items.push({{
+                            particle: s,
+                            sentenceIdx: sIdx,
+                            wordIdx: wIdx,
+                            sentenceText: sText,
+                            maskedHtml: maskedHtml,
+                            options: allChoices,
+                            usage: usage,
+                            pData: pData
+                        }});
+                    }}
+                }});
+            }});
+
+            return items;
+        }}
+
+        function openParticleQuizModal() {{
+            closeParticlePopover();
+            const items = collectArticleParticleQuizItems();
+            if (items.length === 0) {{
+                showToast('當前文章未偵測到主要助詞，請先貼上文章或抓取網頁！');
+                return;
+            }}
+
+            state.quiz = {{
+                items: items,
+                currentIdx: 0,
+                score: 0,
+                answered: new Map()
+            }};
+
+            renderQuizQuestion();
+            dom.particleQuizModal.classList.add('open');
+        }}
+
+        function closeParticleQuizModal() {{
+            dom.particleQuizModal.classList.remove('open');
+        }}
+
+        function renderQuizQuestion() {{
+            const quiz = state.quiz;
+            const curItem = quiz.items[quiz.currentIdx];
+            if (!curItem) return;
+
+            document.getElementById('quizCounterText').textContent = `第 ${{quiz.currentIdx + 1}} / ${{quiz.items.length}} 題`;
+            document.getElementById('quizScoreText').innerHTML = `<i class="fa-solid fa-award"></i> 答對：${{quiz.score}} 題`;
+
+            const progressPct = ((quiz.currentIdx + 1) / quiz.items.length) * 100;
+            document.getElementById('quizProgressBar').style.width = `${{progressPct}}%`;
+
+            const sentenceDisplay = document.getElementById('quizSentenceDisplay');
+            const optionsContainer = document.getElementById('quizOptionsContainer');
+            const feedbackCard = document.getElementById('quizFeedbackCard');
+
+            sentenceDisplay.innerHTML = curItem.maskedHtml;
+            optionsContainer.innerHTML = '';
+            feedbackCard.style.display = 'none';
+
+            const hasAnswered = quiz.answered.has(quiz.currentIdx);
+            const prevAnswer = hasAnswered ? quiz.answered.get(quiz.currentIdx) : null;
+
+            curItem.options.forEach((opt, optIdx) => {{
+                const btn = document.createElement('button');
+                btn.className = 'btn-quiz-option';
+                btn.innerHTML = `<strong>${{String.fromCharCode(65 + optIdx)}}.</strong> ${{escapeHtml(opt)}}`;
+
+                if (hasAnswered) {{
+                    btn.disabled = true;
+                    if (opt === curItem.particle) {{
+                        btn.classList.add('correct');
+                        btn.innerHTML += ' <i class="fa-solid fa-check"></i>';
+                    }} else if (opt === prevAnswer) {{
+                        btn.classList.add('wrong');
+                        btn.innerHTML += ' <i class="fa-solid fa-xmark"></i>';
+                    }}
+                }} else {{
+                    btn.onclick = () => answerQuizOption(opt, btn);
+                }}
+
+                optionsContainer.appendChild(btn);
+            }});
+
+            if (hasAnswered) {{
+                showQuizFeedback(prevAnswer === curItem.particle);
+            }}
+
+            document.getElementById('btnQuizPrev').disabled = (quiz.currentIdx === 0);
+            document.getElementById('btnQuizNext').disabled = (quiz.currentIdx === quiz.items.length - 1);
+        }}
+
+        function answerQuizOption(chosenOpt, clickedBtn) {{
+            const quiz = state.quiz;
+            const curItem = quiz.items[quiz.currentIdx];
+            if (!curItem || quiz.answered.has(quiz.currentIdx)) return;
+
+            const isCorrect = (chosenOpt === curItem.particle);
+            quiz.answered.set(quiz.currentIdx, chosenOpt);
+
+            if (isCorrect) {{
+                quiz.score++;
+                document.getElementById('quizScoreText').innerHTML = `<i class="fa-solid fa-award"></i> 答對：${{quiz.score}} 題`;
+            }}
+
+            // 更新選項狀態
+            const container = document.getElementById('quizOptionsContainer');
+            container.querySelectorAll('.btn-quiz-option').forEach(btn => {{
+                btn.disabled = true;
+                if (btn.textContent.includes(curItem.particle)) {{
+                    btn.classList.add('correct');
+                }}
+            }});
+
+            if (!isCorrect && clickedBtn) {{
+                clickedBtn.classList.add('wrong');
+            }}
+
+            // 替換挖空處為答案
+            document.getElementById('quizSentenceDisplay').innerHTML = curItem.sentenceText.replace(
+                curItem.particle,
+                `<span class="quiz-blank-slot" style="background:#d1fae5;color:#065f46;border-color:#10b981;">${{curItem.particle}}</span>`
+            );
+
+            showQuizFeedback(isCorrect);
+        }}
+
+        function showQuizFeedback(isCorrect) {{
+            const quiz = state.quiz;
+            const curItem = quiz.items[quiz.currentIdx];
+            const feedbackCard = document.getElementById('quizFeedbackCard');
+            feedbackCard.style.display = 'block';
+
+            const usage = curItem.usage;
+            let substitutesHtml = '';
+
+            if (usage && usage.substitutes && usage.substitutes.length > 0) {{
+                let listHtml = '';
+                usage.substitutes.forEach(sub => {{
+                    const demoRewrite = generateParaphraseDemo(curItem.sentenceText, curItem.particle, sub.title);
+                    listHtml += `
+                        <div style="margin-top:0.45rem; background:var(--bg-card); padding:0.5rem 0.75rem; border-radius:6px; border:1px solid var(--border-color);">
+                            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <span class="substitute-tag">${{escapeHtml(sub.type)}}</span>
+                                <strong style="color:var(--text-main); font-family:var(--font-jp);">${{escapeHtml(sub.title)}}</strong>
+                                <span class="badge-jlpt badge-${{(sub.level || 'n2').toLowerCase().replace('~','_')}}">${{escapeHtml(sub.level)}}</span>
+                            </div>
+                            <div style="font-size:0.83rem; color:var(--text-muted); margin-top:0.2rem;">${{escapeHtml(sub.desc || '')}}</div>
+                            ${{demoRewrite ? `
+                                <div class="paraphrase-demo-box">
+                                    <strong><i class="fa-solid fa-pen-nib"></i> 換句話說：</strong>
+                                    <span>${{demoRewrite}}</span>
+                                </div>
+                            ` : ''}}
+                            ${{sub.grammarId ? `
+                                <div style="margin-top:0.35rem;">
+                                    <button class="btn-grammar-detail" style="padding:0.2rem 0.5rem; font-size:0.78rem;" onclick="openGrammarDrawerById(${{sub.grammarId}})">
+                                        <i class="fa-solid fa-book-open"></i> 查閱 941 語法庫完整抽屜
+                                    </button>
+                                </div>
+                            ` : ''}}
+                        </div>
+                    `;
+                }});
+
+                substitutesHtml = `
+                    <div style="margin-top:0.8rem; border-top:1px dashed var(--border-color); padding-top:0.6rem;">
+                        <strong style="color:#059669; font-size:0.88rem;"><i class="fa-solid fa-shuffle"></i> 有無代用的助詞及文型？換句話說解析：</strong>
+                        ${{listHtml}}
+                    </div>
+                `;
+            }}
+
+            feedbackCard.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                    <span style="font-size:1.1rem; font-weight:800; color:${{isCorrect ? '#10b981' : '#ef4444'}};">
+                        ${{isCorrect ? '<i class="fa-solid fa-circle-check"></i> 答對了！' : '<i class="fa-solid fa-circle-xmark"></i> 答錯了！正確助詞是「' + curItem.particle + '」'}}
+                    </span>
+                    <span class="particle-role-badge">${{escapeHtml(usage ? usage.role : '格助詞')}}</span>
+                </div>
+                <div style="font-size:0.88rem; color:var(--text-main); line-height:1.5;">
+                    <strong>【本句用法】</strong>${{escapeHtml(usage ? usage.desc : '助詞在日語中連接名詞與動詞，構成句子核心語意骨架。')}}
+                </div>
+                ${{substitutesHtml}}
+            `;
+        }}
+
+        function revealCurrentQuizAnswer() {{
+            const quiz = state.quiz;
+            const curItem = quiz.items[quiz.currentIdx];
+            if (!curItem) return;
+            answerQuizOption(curItem.particle, null);
+        }}
+
+        function navQuiz(delta) {{
+            const quiz = state.quiz;
+            const newIdx = quiz.currentIdx + delta;
+            if (newIdx >= 0 && newIdx < quiz.items.length) {{
+                quiz.currentIdx = newIdx;
+                renderQuizQuestion();
+            }}
+        }}
+
+        function speakQuizSentence() {{
+            const quiz = state.quiz;
+            const curItem = quiz.items[quiz.currentIdx];
+            if (curItem && curItem.sentenceText) {{
+                speakJapanese(curItem.sentenceText);
+            }}
         }}
 
         function escapeHtml(str) {{

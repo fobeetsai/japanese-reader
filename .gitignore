@@ -5,3 +5,6 @@ downloads/
 downloader.py
 .DS_Store
 Thumbs.db
+kanji_data.json
+kanji_single_map.json
+index *.html
