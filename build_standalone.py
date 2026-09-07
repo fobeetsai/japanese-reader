@@ -889,8 +889,8 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             kanjis.forEach(ch => {{
                 const entry = KANJI_DICT[ch];
                 if (entry) {{
-                    const onStr = entry[2] || '-';
-                    const kunStr = entry[3] || '-';
+                    const onStr = kataToHira(entry[2] || '-');
+                    const kunStr = kataToHira(entry[3] || '-');
                     html += `
                         <div class="kanji-reading-item">
                             <span class="kanji-char-badge">${{ch}}</span>
