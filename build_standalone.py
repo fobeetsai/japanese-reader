@@ -2243,6 +2243,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
          前端互動與單字複習抽卡控制器
          ========================================================================== -->
     <script>
+        var toastTimer = null;
         const state = {{
             analyzedData: null,
             currentSentenceIdx: 0,
@@ -2390,7 +2391,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
         function loadSavedSettings() {{
             const savedRuby = localStorage.getItem('japanese_reader_ruby_mode') || 'show';
-            setRubyMode(savedRuby);
+            setRubyMode(savedRuby, true);
             const savedTheme = localStorage.getItem('japanese_reader_theme') || 'light';
             setTheme(savedTheme);
             const savedWordColors = localStorage.getItem('japanese_reader_word_colors') !== 'false';
@@ -2401,8 +2402,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             setTransMode(savedTransMode);
             const savedJpMode = localStorage.getItem('japanese_reader_jp_mode') || 'show';
             setJpMode(savedJpMode);
-            const savedParticleMode = localStorage.getItem('japanese_reader_particle_mode') || 'show';
-            setParticleMode(savedParticleMode);
+            const savedGrammarMode = localStorage.getItem('japanese_reader_grammar_mode') || localStorage.getItem('japanese_reader_particle_mode') || 'show';
+            setGrammarMode(savedGrammarMode, true);
         }}
 
         function setupEventListeners() {{
@@ -2526,14 +2527,15 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             }}
         }}
 
-        function setParticleMode(mode) {{
-            setGrammarMode(mode === 'mask' ? 'mask-all' : 'show');
+        function setParticleMode(mode, silent = false) {{
+            setGrammarMode(mode === 'mask' ? 'mask-all' : 'show', silent);
         }}
 
-        function setGrammarMode(mode) {{
+        function setGrammarMode(mode, silent = false) {{
             state.grammarMode = mode;
             state.particleMode = (mode === 'show') ? 'show' : 'mask';
             localStorage.setItem('japanese_reader_grammar_mode', mode);
+            localStorage.setItem('japanese_reader_particle_mode', (mode === 'show') ? 'show' : 'mask');
             document.body.setAttribute('data-grammar-mode', mode);
             document.body.setAttribute('data-particle-mode', (mode === 'show') ? 'show' : 'mask');
 
@@ -2562,17 +2564,19 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 'mask-sentence': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
             }};
 
-            showToast(msgMap[mode] || `已切換自測模式: ${{mode}}`);
+            if (!silent) {{
+                showToast(msgMap[mode] || `已切換自測模式: ${{mode}}`);
+            }}
         }}
 
-        function setRubyMode(mode) {{
+        function setRubyMode(mode, silent = false) {{
             state.rubyMode = mode;
             localStorage.setItem('japanese_reader_ruby_mode', mode);
             document.body.setAttribute('data-ruby-mode', mode);
             dom.btnRubyShow.classList.toggle('active', mode === 'show');
             dom.btnRubyHide.classList.toggle('active', mode === 'hide');
             dom.btnRubyMask.classList.toggle('active', mode === 'mask');
-            if (mode === 'mask') showToast('已開啟【遮蔽自測模式】：假名已遮蔽，滑鼠移過或點擊即可揭示讀音！');
+            if (mode === 'mask' && !silent) showToast('已開啟【遮蔽自測模式】：假名已遮蔽，滑鼠移過或點擊即可揭示讀音！');
         }}
 
         function setWordColors(enable) {{
@@ -2821,7 +2825,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 const tokenEnd = wordOffsets[wIdx].end;
 
                 const hasGrammarMatch = grammars.some(g => {{
-                    return g.matches.some(m => tokenStart < m.end && tokenEnd > m.start);
+                    if (g.matches && Array.isArray(g.matches)) {{
+                        return g.matches.some(m => tokenStart < m.end && tokenEnd > m.start);
+                    }}
+                    if (typeof g.start === 'number' && typeof g.end === 'number') {{
+                        return tokenStart < g.end && tokenEnd > g.start;
+                    }}
+                    return false;
                 }});
 
                 if (hasGrammarMatch) {{
@@ -2830,6 +2840,37 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
                 container.appendChild(tokenSpan);
             }});
+        }}
+
+        function selectSentence(idx) {{
+            if (!state.analyzedData || !state.analyzedData.sentences[idx]) return;
+            state.currentSentenceIdx = idx;
+            const sentence = state.analyzedData.sentences[idx];
+            const total = state.analyzedData.sentences.length;
+
+            document.querySelectorAll('.sentence-row').forEach(r => r.classList.remove('active'));
+            const activeRow = document.querySelector(`.sentence-row[data-sentence-idx="${{idx}}"]`);
+            if (activeRow) activeRow.classList.add('active');
+
+            if (dom.currentSentenceBadge) dom.currentSentenceBadge.textContent = `第 ${{idx + 1}} 句 / 共 ${{total}} 句`;
+            if (dom.selectedSentenceJp) dom.selectedSentenceJp.innerHTML = sentence.words.map(w => w.ruby_html).join('');
+            if (dom.selectedSentenceZh) dom.selectedSentenceZh.textContent = sentence.translation || '暫無翻譯';
+
+            renderSentenceGrammars(sentence.grammars || []);
+            renderSentenceWordsTable(sentence.words, sentence.grammars || []);
+
+            if (dom.btnPrevSentence) dom.btnPrevSentence.disabled = (idx === 0);
+            if (dom.btnNextSentence) dom.btnNextSentence.disabled = (idx === total - 1);
+        }}
+
+        function navigateSentence(delta) {{
+            if (!state.analyzedData) return;
+            const newIdx = state.currentSentenceIdx + delta;
+            if (newIdx >= 0 && newIdx < state.analyzedData.sentences.length) {{
+                selectSentence(newIdx);
+                const target = document.querySelector(`.sentence-row[data-sentence-idx="${{newIdx}}"]`);
+                if (target) target.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+            }}
         }}
 
         function renderSentenceGrammars(grammars) {{
@@ -3357,7 +3398,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             window.speechSynthesis.speak(u);
         }}
 
-        let toastTimer = null;
+        // toastTimer is declared at the top of script
         function showToast(msg) {{
             dom.toastMsg.textContent = msg;
             dom.toast.classList.add('show');
