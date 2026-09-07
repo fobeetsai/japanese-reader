@@ -924,8 +924,48 @@ body:not(.enable-grammar) .grammar-mini-badge {
     white-space: nowrap;
 }
 
-body:not(.enable-translation) .sentence-trans-row {
+/* ==========================================================================
+   Translation Display Modes (顯示 / 隱藏 / 遮蔽自測)
+   ========================================================================== */
+body[data-trans-mode="hide"] .sentence-trans-row,
+body[data-trans-mode="hide"] #selectedSentenceZh,
+body[data-trans-mode="hide"] .word-trans-val {
     display: none !important;
+}
+
+body[data-trans-mode="mask"] .trans-text,
+body[data-trans-mode="mask"] #selectedSentenceZh,
+body[data-trans-mode="mask"] .word-trans-val {
+    filter: blur(5px) !important;
+    opacity: 0.22 !important;
+    background: #cbd5e1 !important;
+    color: transparent !important;
+    border-radius: 4px !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-block !important;
+    padding: 1px 6px !important;
+}
+
+[data-theme="dark"] body[data-trans-mode="mask"] .trans-text,
+[data-theme="dark"] body[data-trans-mode="mask"] #selectedSentenceZh,
+[data-theme="dark"] body[data-trans-mode="mask"] .word-trans-val {
+    background: #475569 !important;
+}
+
+body[data-trans-mode="mask"] .sentence-trans-row:hover .trans-text,
+body[data-trans-mode="mask"] .trans-text:hover,
+body[data-trans-mode="mask"] .trans-text.revealed,
+body[data-trans-mode="mask"] #selectedSentenceZh:hover,
+body[data-trans-mode="mask"] #selectedSentenceZh.revealed,
+body[data-trans-mode="mask"] .word-trans-val:hover,
+body[data-trans-mode="mask"] .word-trans-val.revealed {
+    filter: none !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    color: inherit !important;
+    user-select: text !important;
 }
 
 /* ==========================================================================

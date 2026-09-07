@@ -98,6 +98,50 @@ ruby rt {
     overflow: visible !important;
 }
 
+/* ==========================================================================
+   繁體中文翻譯顯示模式 (顯示 / 隱藏 / 遮蔽自測)
+   ========================================================================== */
+body[data-trans-mode="hide"] .sentence-trans-row,
+body[data-trans-mode="hide"] #selectedSentenceZh,
+body[data-trans-mode="hide"] .word-trans-val {
+    display: none !important;
+}
+
+body[data-trans-mode="mask"] .trans-text,
+body[data-trans-mode="mask"] #selectedSentenceZh,
+body[data-trans-mode="mask"] .word-trans-val {
+    filter: blur(5px) !important;
+    opacity: 0.22 !important;
+    background: #cbd5e1 !important;
+    color: transparent !important;
+    border-radius: 4px !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-block !important;
+    padding: 1px 6px !important;
+}
+
+[data-theme="dark"] body[data-trans-mode="mask"] .trans-text,
+[data-theme="dark"] body[data-trans-mode="mask"] #selectedSentenceZh,
+[data-theme="dark"] body[data-trans-mode="mask"] .word-trans-val {
+    background: #475569 !important;
+}
+
+body[data-trans-mode="mask"] .sentence-trans-row:hover .trans-text,
+body[data-trans-mode="mask"] .trans-text:hover,
+body[data-trans-mode="mask"] .trans-text.revealed,
+body[data-trans-mode="mask"] #selectedSentenceZh:hover,
+body[data-trans-mode="mask"] #selectedSentenceZh.revealed,
+body[data-trans-mode="mask"] .word-trans-val:hover,
+body[data-trans-mode="mask"] .word-trans-val.revealed {
+    filter: none !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    color: inherit !important;
+    user-select: text !important;
+}
+
 /* 單字複習專用樣式 */
 .review-flashcard {
     background: var(--bg-sub);
@@ -286,10 +330,12 @@ ruby rt {
                     <button class="pill-btn active" id="btnToggleGrammar" title="高亮標註文章中符合《絵でわかる日本語》之文法">文法標註</button>
                 </div>
 
-                <!-- Translation Switch -->
-                <div class="control-pill-group" title="中文對照翻譯開關">
+                <!-- Translation Mode Switch -->
+                <div class="control-pill-group" title="中文翻譯顯示模式">
                     <span class="group-label"><i class="fa-solid fa-language"></i> 翻譯:</span>
-                    <button class="pill-btn active" id="btnToggleTranslation" title="全文顯示逐句繁體中文翻譯對照">逐句對照</button>
+                    <button class="pill-btn active" id="btnTransShow" data-mode="show" title="全文顯示繁體中文翻譯對照">顯示</button>
+                    <button class="pill-btn" id="btnTransHide" data-mode="hide" title="完全隱藏中文翻譯，專注日文沉浸閱讀">隱藏</button>
+                    <button class="pill-btn" id="btnTransMask" data-mode="mask" title="【遮蔽測驗模式】中文預設遮蔽模糊，滑鼠懸浮或點擊即可揭示">遮蔽自測</button>
                 </div>
 
                 <!-- Action Buttons -->
@@ -459,7 +505,7 @@ ruby rt {
                             <div class="section-label">
                                 <span><i class="fa-solid fa-language"></i> 繁體中文翻譯</span>
                             </div>
-                            <div class="selected-sentence-trans" id="selectedSentenceZh">
+                            <div class="selected-sentence-trans" id="selectedSentenceZh" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
                                 暫無翻譯
                             </div>
                         </div>
@@ -477,17 +523,16 @@ ruby rt {
                         <!-- Word Token Breakdown in this sentence -->
                         <div class="analyzer-section">
                             <div class="section-label">
-                                <span><i class="fa-solid fa-table-list"></i> 本句單字與詞性拆解 (<strong id="sentenceWordCount">0</strong>)</span>
+                                <span><i class="fa-solid fa-table-list"></i> 本句單字拆解 (<strong id="sentenceWordCount">0</strong>)</span>
                             </div>
                             <div class="words-table-wrap">
                                 <table class="words-breakdown-table">
                                     <thead>
                                         <tr>
-                                            <th style="min-width:75px;">單字 (辭書形)</th>
-                                            <th style="min-width:65px;">讀音</th>
-                                            <th style="min-width:85px;">文型／詞性</th>
-                                            <th style="min-width:55px;">級數</th>
-                                            <th style="min-width:90px;">中文翻譯</th>
+                                            <th style="min-width:85px;">單字 (辭書形)</th>
+                                            <th style="min-width:75px;">讀音</th>
+                                            <th style="min-width:60px;">級數</th>
+                                            <th style="min-width:110px;">中文翻譯</th>
                                             <th style="text-align:center;width:40px;">收藏</th>
                                         </tr>
                                     </thead>
@@ -585,7 +630,6 @@ ruby rt {
                 
                 <div class="review-back-content" id="reviewBackContent">
                     <div class="review-word-reading" id="reviewCardReading">たんご</div>
-                    <div style="font-size:0.85rem;color:var(--text-muted);" id="reviewCardPos">名詞</div>
                     <div class="review-word-trans" id="reviewCardTrans">單字釋義</div>
                 </div>
             </div>
@@ -1057,9 +1101,9 @@ ruby rt {
             analyzedData: null,
             currentSentenceIdx: 0,
             rubyMode: 'show',
+            transMode: 'show',
             enableWordColors: true,
             enableGrammar: true,
-            enableTranslation: true,
             fontSizeLevel: 0,
             theme: 'light',
             notebook: {{ words: [], grammars: [] }},
@@ -1075,9 +1119,11 @@ ruby rt {
             btnRubyShow: document.getElementById('btnRubyShow'),
             btnRubyHide: document.getElementById('btnRubyHide'),
             btnRubyMask: document.getElementById('btnRubyMask'),
+            btnTransShow: document.getElementById('btnTransShow'),
+            btnTransHide: document.getElementById('btnTransHide'),
+            btnTransMask: document.getElementById('btnTransMask'),
             btnToggleWordColors: document.getElementById('btnToggleWordColors'),
             btnToggleGrammar: document.getElementById('btnToggleGrammar'),
-            btnToggleTranslation: document.getElementById('btnToggleTranslation'),
             btnWordReview: document.getElementById('btnWordReview'),
             btnOpenNotebook: document.getElementById('btnOpenNotebook'),
             notebookCount: document.getElementById('notebookCount'),
@@ -1145,7 +1191,6 @@ ruby rt {
             reviewFlipHint: document.getElementById('reviewFlipHint'),
             reviewBackContent: document.getElementById('reviewBackContent'),
             reviewCardReading: document.getElementById('reviewCardReading'),
-            reviewCardPos: document.getElementById('reviewCardPos'),
             reviewCardTrans: document.getElementById('reviewCardTrans'),
             reviewProgressBar: document.getElementById('reviewProgressBar'),
             reviewProgressText: document.getElementById('reviewProgressText'),
@@ -1180,8 +1225,8 @@ ruby rt {
             setWordColors(savedWordColors);
             const savedGrammar = localStorage.getItem('japanese_reader_grammar') !== 'false';
             setGrammarHighlight(savedGrammar);
-            const savedTrans = localStorage.getItem('japanese_reader_trans') !== 'false';
-            setTranslationDisplay(savedTrans);
+            const savedTransMode = localStorage.getItem('japanese_reader_trans_mode') || 'show';
+            setTransMode(savedTransMode);
         }}
 
         function setupEventListeners() {{
@@ -1189,9 +1234,12 @@ ruby rt {
             dom.btnRubyHide.addEventListener('click', () => setRubyMode('hide'));
             dom.btnRubyMask.addEventListener('click', () => setRubyMode('mask'));
 
+            dom.btnTransShow.addEventListener('click', () => setTransMode('show'));
+            dom.btnTransHide.addEventListener('click', () => setTransMode('hide'));
+            dom.btnTransMask.addEventListener('click', () => setTransMode('mask'));
+
             dom.btnToggleWordColors.addEventListener('click', () => setWordColors(!state.enableWordColors));
             dom.btnToggleGrammar.addEventListener('click', () => setGrammarHighlight(!state.enableGrammar));
-            dom.btnToggleTranslation.addEventListener('click', () => setTranslationDisplay(!state.enableTranslation));
             dom.btnThemeToggle.addEventListener('click', () => setTheme(state.theme === 'light' ? 'dark' : 'light'));
 
             dom.articleInput.addEventListener('input', () => {{
@@ -1296,11 +1344,16 @@ ruby rt {
             dom.btnToggleGrammar.classList.toggle('active', enable);
         }}
 
-        function setTranslationDisplay(enable) {{
-            state.enableTranslation = enable;
-            localStorage.setItem('japanese_reader_trans', enable);
-            document.body.classList.toggle('enable-translation', enable);
-            dom.btnToggleTranslation.classList.toggle('active', enable);
+        function setTransMode(mode) {{
+            state.transMode = mode;
+            localStorage.setItem('japanese_reader_trans_mode', mode);
+            document.body.setAttribute('data-trans-mode', mode);
+            dom.btnTransShow.classList.toggle('active', mode === 'show');
+            dom.btnTransHide.classList.toggle('active', mode === 'hide');
+            dom.btnTransMask.classList.toggle('active', mode === 'mask');
+            if (mode === 'mask') {{
+                showToast('已開啟【中文遮蔽自測模式】：中文翻譯已遮蔽，滑鼠移過或點擊即可揭示！');
+            }}
         }}
 
         function setTheme(theme) {{
@@ -1447,7 +1500,7 @@ ruby rt {
                     transRow.className = 'sentence-trans-row';
                     transRow.innerHTML = `
                         <span class="trans-tag">繁中</span>
-                        <span class="trans-text">${{s.translation}}</span>
+                        <span class="trans-text" onclick="event.stopPropagation(); this.classList.toggle('revealed');" title="點擊切換揭示/遮蔽">${{s.translation}}</span>
                     `;
                     row.appendChild(transRow);
                 }}
@@ -1585,41 +1638,18 @@ ruby rt {
             words.forEach((w, wIdx) => {{
                 const isFav = state.notebook.words.some(item => item.surface === w.surface);
 
-                const matchedGrammar = grammars.find(g => 
-                    (g.title && g.title.includes(w.surface)) || 
-                    (g.matched_text && g.matched_text.includes(w.surface)) ||
-                    (w.base_form && g.title && g.title.includes(w.base_form))
-                );
-
-                let posBadge = '';
-                if (matchedGrammar) {{
-                    posBadge = `<span class="badge-grammar-legend" style="font-size:0.75rem;"><i class="fa-solid fa-bookmark"></i> 文型 [${{matchedGrammar.level || '句型'}}]</span>`;
-                }} else {{
-                    let posName = w.pos || '單字';
-                    if (posName.includes('動詞')) posName = '動詞';
-                    else if (posName.includes('形容詞')) posName = '形容詞';
-                    else if (posName.includes('副詞')) posName = '副詞';
-                    else if (posName.includes('名詞')) posName = '名詞';
-                    else if (posName.includes('助詞')) posName = '助詞';
-                    else if (posName.includes('助動詞')) posName = '助動詞';
-                    else if (posName.includes('接續') || posName.includes('接続')) posName = '接續詞';
-                    else if (posName.includes('外來') || posName.includes('カタカナ')) posName = '外來語';
-                    else if (posName.includes('連體') || posName.includes('連体')) posName = '連體詞';
-                    else if (posName.includes('記號') || posName.includes('符號')) posName = '符號';
-                    posBadge = `<span style="font-size:0.82rem;color:var(--text-muted);font-weight:600;">${{posName}}</span>`;
-                }}
-
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${{escapeHtml(w.base_form || w.surface)}}</strong></td>
                     <td style="color:#e11d48;font-weight:700;">${{escapeHtml(w.reading || '-')}}</td>
-                    <td>${{posBadge}}</td>
                     <td>${{w.jlpt ? `<span class="badge-jlpt badge-${{w.jlpt.toLowerCase()}}">${{w.jlpt}}</span>` : '<span style="color:var(--text-muted);">-</span>'}}</td>
                     <td style="color:var(--text-main);font-size:0.88rem;" id="word-trans-cell-${{wIdx}}">
-                        <span style="color:var(--text-muted);font-size:0.78rem;"><i class="fa-solid fa-spinner fa-spin"></i> 翻譯中</span>
+                        <span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
+                            <span style="color:var(--text-muted);font-size:0.78rem;"><i class="fa-solid fa-spinner fa-spin"></i> 翻譯中</span>
+                        </span>
                     </td>
                     <td style="text-align:center;">
-                        <button class="btn-fav-word ${{isFav ? 'active' : ''}}" title="加入生詞本" onclick="toggleWordNotebook('${{escapeHtml(w.surface)}}', '${{escapeHtml(w.base_form)}}', '${{escapeHtml(w.reading)}}', '${{escapeHtml(w.jlpt || '')}}', '${{escapeHtml(w.pos || '')}}')">
+                        <button class="btn-fav-word ${{isFav ? 'active' : ''}}" title="加入生詞本" onclick="toggleWordNotebook('${{escapeHtml(w.surface)}}', '${{escapeHtml(w.base_form)}}', '${{escapeHtml(w.reading)}}', '${{escapeHtml(w.jlpt || '')}}', '')">
                             <i class="fa-solid fa-star"></i>
                         </button>
                     </td>
@@ -1630,12 +1660,12 @@ ruby rt {
                 translateJaToZh(termToQuery).then(trans => {{
                     const cell = document.getElementById(`word-trans-cell-${{wIdx}}`);
                     if (cell) {{
-                        cell.innerHTML = `<strong>${{escapeHtml(trans || '-')}}</strong>`;
+                        cell.innerHTML = `<span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽"><strong>${{escapeHtml(trans || '-')}}</strong></span>`;
                         w.translation = trans;
                     }}
                 }}).catch(() => {{
                     const cell = document.getElementById(`word-trans-cell-${{wIdx}}`);
-                    if (cell) cell.textContent = '-';
+                    if (cell) cell.innerHTML = `<span class="word-trans-val">-</span>`;
                 }});
             }});
         }}
@@ -1831,7 +1861,6 @@ ruby rt {
 
             dom.reviewCardWord.textContent = item.word;
             dom.reviewCardReading.textContent = item.reading || item.word;
-            dom.reviewCardPos.textContent = item.pos || '單字';
 
             if (item.jlpt) {{
                 dom.reviewCardLevel.textContent = item.jlpt;
