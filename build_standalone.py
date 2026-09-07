@@ -35,9 +35,16 @@ def build():
     with open("particle_data.json", "r", encoding="utf-8") as f:
         particle_data = json.load(f)
 
+    from analyzer import SPECIAL_GRAMMAR_PATTERNS, COMPOUND_PARTICLES, ADVERBIAL_PARTICLES, CONJUNCTIVE_PARTICLES, CASE_PARTICLES
+
     grammar_json_str = json.dumps(grammar_data, ensure_ascii=False, separators=(',', ':'))
     vocab_json_str = json.dumps(compact_vocab, ensure_ascii=False, separators=(',', ':'))
     particle_json_str = json.dumps(particle_data, ensure_ascii=False, separators=(',', ':'))
+    special_grammar_json = json.dumps(SPECIAL_GRAMMAR_PATTERNS, ensure_ascii=False, separators=(',', ':'))
+    compound_particles_json = json.dumps(COMPOUND_PARTICLES, ensure_ascii=False, separators=(',', ':'))
+    adverbial_particles_json = json.dumps(ADVERBIAL_PARTICLES, ensure_ascii=False, separators=(',', ':'))
+    conjunctive_particles_json = json.dumps(CONJUNCTIVE_PARTICLES, ensure_ascii=False, separators=(',', ':'))
+    case_particles_json = json.dumps(CASE_PARTICLES, ensure_ascii=False, separators=(',', ':'))
 
     print("[3/5] 載入並注入最佳化樣式表...")
     with open("static/css/style.css", "r", encoding="utf-8") as f:
@@ -483,82 +490,161 @@ body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt {
 }
 
 /* ==========================================================================
-   助詞遮蔽測驗 (Particle Masking & Cloze Test Mode) 專屬樣式
+   助詞與文型階層遮蔽自測 (Hierarchical Grammar Masking Mode) 專屬樣式
    ========================================================================== */
-body[data-particle-mode="mask"] .particle-token {
+.grammar-elem-token {
+    transition: background 0.15s ease, color 0.15s ease;
+    border-radius: 4px;
+    padding: 0 3px;
+    cursor: pointer;
+    position: relative;
+}
+.grammar-elem-token:hover {
+    background: rgba(245, 158, 11, 0.18);
+    color: #d97706;
+}
+
+/* 多分類遮蔽自測狀態 (全部遮蔽 / 格助詞 / 副助詞 / 複合助詞 / 文型句型) */
+body[data-grammar-mode="mask-all"] .grammar-elem-token,
+body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"],
+body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"],
+body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"],
+body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"],
+body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"] {{
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 2.3rem !important;
-    height: 1.68rem !important;
+    min-width: 2.4rem !important;
+    height: 1.7rem !important;
     margin: 0 3px !important;
-    padding: 0 0.4rem !important;
+    padding: 0 0.45rem !important;
     border-radius: 6px !important;
-    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
-    border: 1.8px dashed #d97706 !important;
     color: transparent !important;
-    font-size: 0.9em !important;
+    font-size: 0.88em !important;
     position: relative !important;
     cursor: pointer !important;
     vertical-align: middle !important;
     user-select: none !important;
-    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
+}}
 
-[data-theme="dark"] body[data-particle-mode="mask"] .particle-token {
+/* 各分類色彩風格 (遮蔽狀態) */
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
+    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+    border: 1.8px dashed #d97706 !important;
+}}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe) !important;
+    border: 1.8px dashed #7c3aed !important;
+}}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+    border: 1.8px dashed #059669 !important;
+}}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
+    background: linear-gradient(135deg, #ffe4e6, #fecdd3) !important;
+    border: 1.8px dashed #e11d48 !important;
+}}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd) !important;
+    border: 1.8px dashed #0284c7 !important;
+}}
+
+/* 暗色主題適配 */
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"] {{
     background: linear-gradient(135deg, #78350f, #92400e) !important;
     border-color: #f59e0b !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
-}
+}}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"] {{
+    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
+    border-color: #a78bfa !important;
+}}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"] {{
+    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+    border-color: #34d399 !important;
+}}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"] {{
+    background: linear-gradient(135deg, #881337, #9f1239) !important;
+    border-color: #fb7185 !important;
+}}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"] {{
+    background: linear-gradient(135deg, #0c4a6e, #075985) !important;
+    border-color: #38bdf8 !important;
+}}
 
-body[data-particle-mode="mask"] .particle-token::before {
-    content: "？助詞" !important;
+/* 遮蔽提示文字 (透過 data-mask-placeholder 動態設置) */
+body[data-grammar-mode="mask-all"] .grammar-elem-token::before,
+body[data-grammar-mode="mask-格助詞"] .grammar-elem-token[data-category="格助詞"]::before,
+body[data-grammar-mode="mask-副助詞"] .grammar-elem-token[data-category="副助詞"]::before,
+body[data-grammar-mode="mask-複合助詞"] .grammar-elem-token[data-category="複合助詞"]::before,
+body[data-grammar-mode="mask-文型"] .grammar-elem-token[data-category="文型"]::before,
+body[data-grammar-mode="mask-接續助詞"] .grammar-elem-token[data-category="接續助詞"]::before {{
+    content: attr(data-mask-placeholder) !important;
     position: absolute !important;
     left: 50% !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
-    color: #b45309 !important;
     font-size: 0.72rem !important;
     font-weight: 800 !important;
     letter-spacing: 0.5px !important;
-}
+    white-space: nowrap !important;
+}}
 
-[data-theme="dark"] body[data-particle-mode="mask"] .particle-token::before {
-    color: #fde68a !important;
-}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #b45309 !important; }}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #6d28d9 !important; }}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #047857 !important; }}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #be123c !important; }}
+body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #0369a1 !important; }}
 
-body[data-particle-mode="mask"] .particle-token:hover,
-body[data-particle-mode="mask"] .particle-token.revealed {
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="格助詞"]::before {{ color: #fde68a !important; }}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="副助詞"]::before {{ color: #ddd6fe !important; }}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="複合助詞"]::before {{ color: #a7f3d0 !important; }}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="文型"]::before {{ color: #fecdd3 !important; }}
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token[data-category="接續助詞"]::before {{ color: #bae6fd !important; }}
+
+/* 懸浮揭示或點擊解開狀態 */
+body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
     background: #dcfce7 !important;
     border: 1.8px solid #16a34a !important;
     color: #15803d !important;
     font-weight: 800 !important;
     transform: scale(1.04) !important;
-}
+}}
 
-[data-theme="dark"] body[data-particle-mode="mask"] .particle-token:hover,
-[data-theme="dark"] body[data-particle-mode="mask"] .particle-token.revealed {
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
+[data-theme="dark"] body[data-grammar-mode^="mask"] .grammar-elem-token.revealed {{
     background: #064e3b !important;
     border-color: #34d399 !important;
     color: #a7f3d0 !important;
-}
+}}
 
-body[data-particle-mode="mask"] .particle-token:hover::before,
-body[data-particle-mode="mask"] .particle-token.revealed::before {
+body[data-grammar-mode^="mask"] .grammar-elem-token:hover::before,
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before {{
     display: none !important;
-}
+}}
 
-.particle-token {
-    transition: background 0.15s ease, color 0.15s ease;
-    border-radius: 3px;
-    padding: 0 2px;
-    cursor: pointer;
-}
-.particle-token:hover {
-    background: rgba(245, 158, 11, 0.18);
-    color: #d97706;
-}
+.cat-badge {{
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    margin-left: 0.25rem;
+}}
+.cat-badge-格助詞 {{ background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }}
+.cat-badge-副助詞 {{ background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }}
+.cat-badge-複合助詞 {{ background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }}
+.cat-badge-文型 {{ background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }}
+.cat-badge-接續助詞 {{ background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }}
+
+[data-theme="dark"] .cat-badge-格助詞 {{ background: #78350f; color: #fde68a; border-color: #92400e; }}
+[data-theme="dark"] .cat-badge-副助詞 {{ background: #4c1d95; color: #ddd6fe; border-color: #5b21b6; }}
+[data-theme="dark"] .cat-badge-複合助詞 {{ background: #064e3b; color: #a7f3d0; border-color: #065f46; }}
+[data-theme="dark"] .cat-badge-文型 {{ background: #881337; color: #fecdd3; border-color: #9f1239; }}
+[data-theme="dark"] .cat-badge-接續助詞 {{ background: #0c4a6e; color: #bae6fd; border-color: #075985; }}
 
 /* ==========================================================================
    整句深度分析器：助詞運用與代用換句話說專用樣式
@@ -987,10 +1073,17 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                 </div>
 
                 <!-- Particle Mode Switch (助詞遮蔽測驗) -->
-                <div class="control-pill-group" title="助詞遮蔽自測模式 (隱藏日文助詞，點擊即可進行挖空填空自測，查看助詞語義與代用文型)">
-                    <span class="group-label"><i class="fa-solid fa-shapes"></i> 助詞:</span>
-                    <button class="pill-btn active" id="btnParticleShow" data-mode="show" title="正常顯示助詞">顯示</button>
-                    <button class="pill-btn" id="btnParticleMask" data-mode="mask" title="【助詞遮蔽測驗】將文章中的助詞自動挖空遮蔽，點擊即時答題或揭示">遮蔽自測</button>
+                <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
+                <div class="control-pill-group" title="助詞與文型階層遮蔽自測模式：可按格助詞、副助詞、複合助詞、文型句型進行單項或全文挖空自測">
+                    <span class="group-label"><i class="fa-solid fa-shapes"></i> 語法自測:</span>
+                    <button class="pill-btn active" id="btnGrammarShow" data-mode="show" title="正常顯示所有助詞與文型">顯示</button>
+                    <button class="pill-btn" id="btnGrammarMaskAll" data-mode="mask-all" title="【全部遮蔽】遮蔽全文所有格助詞、副助詞、複合助詞與文型">全部遮蔽</button>
+                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-格助詞" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-副助詞" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-複合助詞" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-文型" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
+                    <button id="btnParticleShow" style="display:none;"></button>
+                    <button id="btnParticleMask" style="display:none;"></button>
                 </div>
 
                 <!-- Translation Mode Switch -->
@@ -1268,11 +1361,21 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
     </div>
 
     <!-- Particle Quiz Challenge Modal (全篇助詞測驗挑戰與換句話說特訓) -->
+    <!-- Particle & Grammar Quiz Challenge Modal (全篇助詞與文型階層特訓挑戰) -->
     <div class="modal-overlay" id="particleQuizModal">
         <div class="modal-container" style="max-width: 680px;">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-puzzle-piece text-amber-500"></i> 全篇日文助詞測驗挑戰</h3>
+                <h3><i class="fa-solid fa-puzzle-piece text-amber-500"></i> 全篇助詞與文型階層特訓挑戰</h3>
                 <button class="modal-close-btn" onclick="closeParticleQuizModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- 分類篩選頁籤 (格助詞 / 副助詞 / 複合助詞 / 文型句型) -->
+            <div class="notebook-tabs" style="margin-bottom:0.75rem;">
+                <button class="notebook-tab-btn active" id="btnQuizFilterAll" onclick="setQuizCategoryFilter('all')">全部 (<span id="quizCountAll">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCase" onclick="setQuizCategoryFilter('格助詞')">格助詞 (<span id="quizCountCase">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterAdverbial" onclick="setQuizCategoryFilter('副助詞')">副助詞 (<span id="quizCountAdverbial">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterCompound" onclick="setQuizCategoryFilter('複合助詞')">複合助詞 (<span id="quizCountCompound">0</span>)</button>
+                <button class="notebook-tab-btn" id="btnQuizFilterSentence" onclick="setQuizCategoryFilter('文型')">文型句型 (<span id="quizCountSentence">0</span>)</button>
             </div>
 
             <div class="quiz-status-bar">
@@ -1288,7 +1391,7 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                 <div class="quiz-sentence-box" id="quizSentenceDisplay">
                     <!-- 挖空題目 -->
                 </div>
-                <div class="quiz-instruction">請依句意、語境與格關係，點選最適合的助詞：</div>
+                <div class="quiz-instruction">請依句意、語境與結構，點選最適合的語法：</div>
                 <div class="quiz-options-container" id="quizOptionsContainer">
                     <!-- 選項 -->
                 </div>
@@ -1455,6 +1558,11 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
         // 24 組日文助詞代用與換句話說知識庫
         const PARTICLE_DATA = {particle_json_str};
+        const SPECIAL_GRAMMAR_PATTERNS = {special_grammar_json};
+        const COMPOUND_PARTICLES = {compound_particles_json};
+        const ADVERBIAL_PARTICLES = {adverbial_particles_json};
+        const CONJUNCTIVE_PARTICLES = {conjunctive_particles_json};
+        const CASE_PARTICLES = {case_particles_json};
 
         // 8,138 筆 JLPT 單字庫
         const JLPT_VOCAB = {vocab_json_str};
@@ -1885,21 +1993,117 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
         // 100% 保證所有漢字標示假名與動詞還原原型之分詞演算法
         function tokenizeSentence(text) {{
+            // 階層分詞演算法：文型 -> 複合助詞 -> JLPT詞彙/動詞還原 -> 連續漢字 -> 片假名 -> 接續助詞/副助詞 -> 格助詞
+            const spans = [];
+            const textLen = text.length;
+
+            function hasOverlap(start, end) {{
+                return spans.some(s => !(end <= s.start || start >= s.end));
+            }}
+
+            // 1. 優先比對：941 特殊文型庫與單純句型 (Array of objects)
+            if (typeof SPECIAL_GRAMMAR_PATTERNS !== 'undefined' && Array.isArray(SPECIAL_GRAMMAR_PATTERNS)) {{
+                const specList = [...SPECIAL_GRAMMAR_PATTERNS].sort((a, b) => b.pattern.length - a.pattern.length);
+                for (const item of specList) {{
+                    const pat = item.pattern;
+                    let idx = 0;
+                    while (idx < textLen) {{
+                        const pos = text.indexOf(pat, idx);
+                        if (pos === -1) break;
+                        const end = pos + pat.length;
+                        if (!hasOverlap(pos, end)) {{
+                            spans.push({{
+                                start: pos,
+                                end: end,
+                                surface: pat,
+                                type: '文型',
+                                category: '文型',
+                                meta: item,
+                                grammar_id: item.grammar_id
+                            }});
+                        }}
+                        idx = pos + 1;
+                    }}
+                }}
+            }}
+
+            // 2. 次優先比對：複合助詞 (Array of objects)
+            if (typeof COMPOUND_PARTICLES !== 'undefined' && Array.isArray(COMPOUND_PARTICLES)) {{
+                const compList = [...COMPOUND_PARTICLES].sort((a, b) => b.pattern.length - a.pattern.length);
+                for (const item of compList) {{
+                    const pat = item.pattern;
+                    let idx = 0;
+                    while (idx < textLen) {{
+                        const pos = text.indexOf(pat, idx);
+                        if (pos === -1) break;
+                        const end = pos + pat.length;
+                        if (!hasOverlap(pos, end)) {{
+                            spans.push({{
+                                start: pos,
+                                end: end,
+                                surface: pat,
+                                type: '複合助詞',
+                                category: '複合助詞',
+                                meta: item,
+                                grammar_id: item.grammar_id
+                            }});
+                        }}
+                        idx = pos + 1;
+                    }}
+                }}
+            }}
+
+            // 排序保護區段
+            spans.sort((a, b) => a.start - b.start);
+
+            // 進行分詞組裝
             const tokens = [];
             let i = 0;
             const MAX_WORD_LEN = 8;
 
-            while (i < text.length) {{
-                let matched = false;
+            while (i < textLen) {{
+                // 檢查是否落在保護區間 (文型 / 複合助詞)
+                const protectedSpan = spans.find(s => s.start === i);
+                if (protectedSpan) {{
+                    const s = protectedSpan.surface;
+                    const cat = protectedSpan.category;
+                    const meta = protectedSpan.meta || {{}};
+                    const pData = (typeof PARTICLE_DATA !== 'undefined' && PARTICLE_DATA[s]) || {{}};
+                    const placeholder = '？' + (cat === '複合助詞' ? '複合助' : cat);
+                    tokens.push({{
+                        surface: s,
+                        base_form: s,
+                        reading: s,
+                        jlpt: meta.level || null,
+                        is_kanji: false,
+                        ruby_html: s,
+                        pos: cat,
+                        is_particle: true,
+                        is_grammar_elem: true,
+                        grammar_elem_info: {{
+                            type: protectedSpan.type,
+                            category: cat,
+                            title: meta.title || pData.default_role || s,
+                            role: meta.role || pData.default_role || cat,
+                            desc: meta.desc || (pData.usages && pData.usages[0] && pData.usages[0].desc) || '',
+                            grammar_id: protectedSpan.grammar_id,
+                            mask_placeholder: placeholder,
+                            distractors: meta.distractors || pData.distractors || ['は', 'が', 'を', 'に', 'で'],
+                            pData: pData
+                        }}
+                    }});
+                    i = protectedSpan.end;
+                    continue;
+                }}
 
-                // 1. 優先在 JLPT 單字庫長詞比對或動詞/形容詞原型還原 (8 down to 2)
-                const limit = Math.min(MAX_WORD_LEN, text.length - i);
+                // 1. JLPT 單字庫長詞比對或動詞原型還原 (8 down to 2)
+                let matched = false;
+                const limit = Math.min(MAX_WORD_LEN, textLen - i);
                 for (let len = limit; len >= 2; len--) {{
                     const sub = text.substring(i, i + len);
 
-                    // A. 直接命中單字庫 (原型 / 專有名詞)
-                    if (JLPT_VOCAB[sub]) {{
-                        const isParticleInDb = Boolean(PARTICLE_DATA[sub]);
+                    // A. 直接命中單字庫
+                    if (JLPT_VOCAB && JLPT_VOCAB[sub]) {{
                         const [lvlNum, reading] = JLPT_VOCAB[sub];
                         const readingHira = kataToHira(reading);
                         const hasKanji = KANJI_REGEX.test(sub);
@@ -1910,28 +2114,29 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                             jlpt: lvlNum ? `N${{lvlNum}}` : null,
                             is_kanji: hasKanji,
                             ruby_html: hasKanji ? createRubyHtml(sub, readingHira) : sub,
-                            pos: isParticleInDb ? '助詞' : '單字',
-                            is_particle: isParticleInDb
+                            pos: '單字',
+                            is_particle: false
                         }});
                         i += len;
                         matched = true;
                         break;
                     }}
 
-                    // B. 動詞或形容詞活用形還原至原型 (辭書形)！
+                    // B. 動詞或形容詞活用形還原至原型
                     const baseWord = deinflectWord(sub);
-                    if (baseWord && JLPT_VOCAB[baseWord]) {{
+                    if (baseWord && JLPT_VOCAB && JLPT_VOCAB[baseWord]) {{
                         const [lvlNum, baseReading] = JLPT_VOCAB[baseWord];
                         const baseReadingHira = kataToHira(baseReading);
                         const hasKanji = KANJI_REGEX.test(sub);
                         tokens.push({{
                             surface: sub,
-                            base_form: baseWord, // 辭書形原型！
+                            base_form: baseWord,
                             reading: baseReadingHira,
                             jlpt: lvlNum ? `N${{lvlNum}}` : null,
                             is_kanji: hasKanji,
                             ruby_html: makeRubyHtmlForInflected(sub, baseWord, baseReading),
-                            pos: baseWord.endsWith('い') ? '形容詞' : '動詞'
+                            pos: baseWord.endsWith('い') ? '形容詞' : '動詞',
+                            is_particle: false
                         }});
                         i += len;
                         matched = true;
@@ -1943,17 +2148,16 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
                 const char = text[i];
 
-                // 2. 漢字區塊 (不論是連續漢字或單個漢字，100% 賦予假名！)
+                // 2. 漢字區塊
                 if (KANJI_REGEX.test(char)) {{
                     let kanjiRun = char;
                     let j = i + 1;
-                    while (j < text.length && KANJI_REGEX.test(text[j])) {{
+                    while (j < textLen && KANJI_REGEX.test(text[j])) {{
                         kanjiRun += text[j];
                         j++;
                     }}
 
-                    // 若全連續漢字在單字庫中
-                    if (JLPT_VOCAB[kanjiRun]) {{
+                    if (JLPT_VOCAB && JLPT_VOCAB[kanjiRun]) {{
                         const [lvlNum, reading] = JLPT_VOCAB[kanjiRun];
                         const rHira = kataToHira(reading);
                         tokens.push({{
@@ -1969,11 +2173,9 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                         continue;
                     }}
 
-                    // 連續漢字或單漢字，依音讀/訓讀完整為每個漢字產生振假名
                     const isCompound = (kanjiRun.length > 1);
                     let rubyHtmlAcc = '';
                     let readingAcc = '';
-
                     for (let k = 0; k < kanjiRun.length; k++) {{
                         const kChar = kanjiRun[k];
                         const kReading = getSingleKanjiReading(kChar, isCompound);
@@ -1999,10 +2201,10 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                 }}
 
                 // 3. 片假名外來語
-                if (/[\\u30a0-\\u30ff]/.test(char)) {{
+                if (/[\u30a0-\u30ff]/.test(char)) {{
                     let kataRun = char;
                     let j = i + 1;
-                    while (j < text.length && /[\\u30a0-\\u30ffー]/.test(text[j])) {{
+                    while (j < textLen && /[\u30a0-\u30ffー]/.test(text[j])) {{
                         kataRun += text[j];
                         j++;
                     }}
@@ -2010,7 +2212,7 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                         surface: kataRun,
                         base_form: kataRun,
                         reading: kataToHira(kataRun),
-                        jlpt: JLPT_VOCAB[kataRun] ? `N${{JLPT_VOCAB[kataRun][0]}}` : null,
+                        jlpt: (JLPT_VOCAB && JLPT_VOCAB[kataRun]) ? `N${{JLPT_VOCAB[kataRun][0]}}` : null,
                         is_kanji: false,
                         ruby_html: kataRun,
                         pos: '外來語'
@@ -2019,31 +2221,109 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                     continue;
                 }}
 
-                // 4. 助詞優先識別 (多字符助詞如 について, として, から, まで, より, だけ, ほど, くらい...)
-                let particleMatched = false;
-                const multiParticles = ['について', 'として', 'から', 'まで', 'より', 'だけ', 'ほど', 'くらい', 'ぐらい', 'ばかり', 'さえ', 'こそ', 'しか', 'など', 'ので', 'のに'];
-                for (const mp of multiParticles) {{
-                    if (text.startsWith(mp, i)) {{
+                // 3.5 常見助動詞與敬體詞尾 (避免 です、でした、である、ました 等被誤拆為助詞 で)
+                const auxEndings = ['ではありません', 'ではない', 'ませんでした', 'でした', 'である', 'だった', 'ました', 'ません', 'です', 'ます'];
+                let auxMatched = false;
+                for (const aux of auxEndings) {{
+                    if (text.startsWith(aux, i)) {{
                         tokens.push({{
-                            surface: mp,
-                            base_form: mp,
-                            reading: mp,
+                            surface: aux,
+                            base_form: aux,
+                            reading: aux,
                             jlpt: null,
                             is_kanji: false,
-                            ruby_html: mp,
-                            pos: '助詞',
-                            is_particle: true
+                            ruby_html: aux,
+                            pos: '助動詞',
+                            is_particle: false
                         }});
-                        i += mp.length;
-                        particleMatched = true;
+                        i += aux.length;
+                        auxMatched = true;
                         break;
                     }}
                 }}
-                if (particleMatched) continue;
+                if (auxMatched) continue;
 
-                // 5. 單字元平假名助詞與一般符號
-                const singleParticles = new Set(['は', 'が', 'を', 'に', 'で', 'へ', 'と', 'も', 'の']);
-                const isSingleParticle = singleParticles.has(char);
+                // 4. 接續助詞 / 副助詞比對 (Array of objects)
+                let pMatched = false;
+                const checkGroups = [
+                    [typeof CONJUNCTIVE_PARTICLES !== 'undefined' ? CONJUNCTIVE_PARTICLES : [], '接續助詞'],
+                    [typeof ADVERBIAL_PARTICLES !== 'undefined' ? ADVERBIAL_PARTICLES : [], '副助詞']
+                ];
+                for (const [pList, catName] of checkGroups) {{
+                    const sortedList = [...pList].sort((a, b) => b.pattern.length - a.pattern.length);
+                    for (const item of sortedList) {{
+                        const pk = item.pattern;
+                        if (text.startsWith(pk, i)) {{
+                            const pData = (typeof PARTICLE_DATA !== 'undefined' && PARTICLE_DATA[pk]) || {{}};
+                            const placeholder = '？' + (catName === '接續助詞' ? '接續' : catName);
+                            tokens.push({{
+                                surface: pk,
+                                base_form: pk,
+                                reading: pk,
+                                jlpt: item.level || null,
+                                is_kanji: false,
+                                ruby_html: pk,
+                                pos: catName,
+                                is_particle: true,
+                                is_grammar_elem: true,
+                                grammar_elem_info: {{
+                                    type: catName,
+                                    category: catName,
+                                    title: item.title || pData.default_role || pk,
+                                    role: item.role || pData.default_role || catName,
+                                    desc: item.desc || (pData.usages && pData.usages[0] && pData.usages[0].desc) || '',
+                                    grammar_id: item.grammar_id,
+                                    mask_placeholder: placeholder,
+                                    distractors: item.distractors || pData.distractors || ['は', 'が', 'を', 'に', 'で'],
+                                    pData: pData
+                                }}
+                            }});
+                            i += pk.length;
+                            pMatched = true;
+                            break;
+                        }}
+                    }}
+                    if (pMatched) break;
+                }}
+                if (pMatched) continue;
+
+                // 5. 格助詞比對 (が、を、に、で、へ、と、から、より、まで、の)
+                const caseList = typeof CASE_PARTICLES !== 'undefined' ? [...CASE_PARTICLES].sort((a, b) => b.pattern.length - a.pattern.length) : [];
+                let cMatched = false;
+                for (const item of caseList) {{
+                    const ck = item.pattern;
+                    if (text.startsWith(ck, i)) {{
+                        const pData = (typeof PARTICLE_DATA !== 'undefined' && PARTICLE_DATA[ck]) || {{}};
+                        tokens.push({{
+                            surface: ck,
+                            base_form: ck,
+                            reading: ck,
+                            jlpt: null,
+                            is_kanji: false,
+                            ruby_html: ck,
+                            pos: '格助詞',
+                            is_particle: true,
+                            is_grammar_elem: true,
+                            grammar_elem_info: {{
+                                type: '格助詞',
+                                category: '格助詞',
+                                title: item.title || pData.default_role || ck,
+                                role: item.role || pData.default_role || '格助詞',
+                                desc: item.desc || (pData.usages && pData.usages[0] && pData.usages[0].desc) || '',
+                                grammar_id: null,
+                                mask_placeholder: '？格助',
+                                distractors: item.distractors || pData.distractors || ['は', 'が', 'を', 'に', 'で'],
+                                pData: pData
+                            }}
+                        }});
+                        i += ck.length;
+                        cMatched = true;
+                        break;
+                    }}
+                }}
+                if (cMatched) continue;
+
+                // 6. 一般標點與未知字元
                 tokens.push({{
                     surface: char,
                     base_form: char,
@@ -2051,8 +2331,8 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                     jlpt: null,
                     is_kanji: false,
                     ruby_html: char,
-                    pos: isSingleParticle ? '助詞' : '符號',
-                    is_particle: isSingleParticle
+                    pos: '符號',
+                    is_particle: false
                 }});
                 i++;
             }}
@@ -2060,7 +2340,6 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             return tokens;
         }}
 
-        // 線上 Google 翻譯端點
         const TRANSLATE_CACHE = new Map();
         async function translateJaToZh(text) {{
             const trimmed = text.trim();
@@ -2159,7 +2438,8 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             rubyMode: 'show',
             transMode: 'show',
             jpMode: 'show',
-            particleMode: 'show', // 'show' | 'mask'
+            particleMode: 'show',
+            grammarMode: 'show', // 'show' | 'mask-all' | 'mask-格助詞' | 'mask-副助詞' | 'mask-複合助詞' | 'mask-文型'
             enableWordColors: true,
             enableGrammar: true,
             fontSizeLevel: 0,
@@ -2184,6 +2464,12 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             btnJpMask: document.getElementById('btnJpMask'),
             btnParticleShow: document.getElementById('btnParticleShow'),
             btnParticleMask: document.getElementById('btnParticleMask'),
+            btnGrammarShow: document.getElementById('btnGrammarShow'),
+            btnGrammarMaskAll: document.getElementById('btnGrammarMaskAll'),
+            btnGrammarMaskCase: document.getElementById('btnGrammarMaskCase'),
+            btnGrammarMaskAdverbial: document.getElementById('btnGrammarMaskAdverbial'),
+            btnGrammarMaskCompound: document.getElementById('btnGrammarMaskCompound'),
+            btnGrammarMaskSentence: document.getElementById('btnGrammarMaskSentence'),
             btnOpenParticleQuiz: document.getElementById('btnOpenParticleQuiz'),
             btnOpenParticleQuizTop: document.getElementById('btnOpenParticleQuizTop'),
             sentenceParticleCount: document.getElementById('sentenceParticleCount'),
@@ -2312,8 +2598,14 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             dom.btnJpShow.addEventListener('click', () => setJpMode('show'));
             dom.btnJpMask.addEventListener('click', () => setJpMode('mask'));
 
-            dom.btnParticleShow.addEventListener('click', () => setParticleMode('show'));
-            dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
+            if (dom.btnParticleShow) dom.btnParticleShow.addEventListener('click', () => setParticleMode('show'));
+            if (dom.btnParticleMask) dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
+            if (dom.btnGrammarShow) dom.btnGrammarShow.addEventListener('click', () => setGrammarMode('show'));
+            if (dom.btnGrammarMaskAll) dom.btnGrammarMaskAll.addEventListener('click', () => setGrammarMode('mask-all'));
+            if (dom.btnGrammarMaskCase) dom.btnGrammarMaskCase.addEventListener('click', () => setGrammarMode('mask-格助詞'));
+            if (dom.btnGrammarMaskAdverbial) dom.btnGrammarMaskAdverbial.addEventListener('click', () => setGrammarMode('mask-副助詞'));
+            if (dom.btnGrammarMaskCompound) dom.btnGrammarMaskCompound.addEventListener('click', () => setGrammarMode('mask-複合助詞'));
+            if (dom.btnGrammarMaskSentence) dom.btnGrammarMaskSentence.addEventListener('click', () => setGrammarMode('mask-文型'));
             if (dom.btnOpenParticleQuiz) dom.btnOpenParticleQuiz.addEventListener('click', openParticleQuizModal);
             if (dom.btnOpenParticleQuizTop) dom.btnOpenParticleQuizTop.addEventListener('click', openParticleQuizModal);
             if (dom.btnMaskSentenceParticles) dom.btnMaskSentenceParticles.addEventListener('click', toggleMaskSentenceParticles);
@@ -2424,16 +2716,39 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
         }}
 
         function setParticleMode(mode) {{
-            state.particleMode = mode;
-            localStorage.setItem('japanese_reader_particle_mode', mode);
-            document.body.setAttribute('data-particle-mode', mode);
-            if (dom.btnParticleShow) dom.btnParticleShow.classList.toggle('active', mode === 'show');
-            if (dom.btnParticleMask) dom.btnParticleMask.classList.toggle('active', mode === 'mask');
-            if (mode === 'mask') {{
-                showToast('已開啟【助詞遮蔽測驗模式】：全文所有助詞已自動挖空，點擊即可作答或揭示！');
-            }} else {{
-                showToast('已切換為【助詞正常顯示模式】');
-            }}
+            setGrammarMode(mode === 'mask' ? 'mask-all' : 'show');
+        }}
+
+        function setGrammarMode(mode) {{
+            state.grammarMode = mode;
+            state.particleMode = (mode === 'show') ? 'show' : 'mask';
+            localStorage.setItem('japanese_reader_grammar_mode', mode);
+            document.body.setAttribute('data-grammar-mode', mode);
+            document.body.setAttribute('data-particle-mode', (mode === 'show') ? 'show' : 'mask');
+
+            const btns = [
+                ['show', dom.btnGrammarShow],
+                ['mask-all', dom.btnGrammarMaskAll],
+                ['mask-格助詞', dom.btnGrammarMaskCase],
+                ['mask-副助詞', dom.btnGrammarMaskAdverbial],
+                ['mask-複合助詞', dom.btnGrammarMaskCompound],
+                ['mask-文型', dom.btnGrammarMaskSentence]
+            ];
+
+            btns.forEach(([m, btn]) => {{
+                if (btn) btn.classList.toggle('active', mode === m);
+            }});
+
+            const msgMap = {{
+                'show': '已切換為助詞與文型【正常顯示】模式',
+                'mask-all': '已開啟【全部遮蔽】自測：遮蔽全文所有格助詞、副助詞、複合助詞與文型！',
+                'mask-格助詞': '已開啟【格助詞遮蔽】自測：僅遮蔽全文格助詞 (が、を、に、で、へ、と等)！',
+                'mask-副助詞': '已開啟【副助詞遮蔽】自測：僅遮蔽副助詞／係助詞 (は、も、ばかり、だけ、さえ等)！',
+                'mask-複合助詞': '已開啟【複合助詞遮蔽】自測：僅遮蔽複合助詞 (について、に対して、として等)！',
+                'mask-文型': '已開啟【文型句型遮蔽】自測：僅遮蔽單純文型句型 (ながらも、に伴い、あげく等)！'
+            }};
+
+            showToast(msgMap[mode] || `已切換自測模式: ${{mode}}`);
         }}
 
         function setRubyMode(mode) {{
@@ -2649,13 +2964,17 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
             words.forEach((w, wIdx) => {{
                 const tokenSpan = document.createElement('span');
-                const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
+                const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
+                const elCategory = (w.grammar_elem_info && w.grammar_elem_info.category) || (PARTICLE_DATA && PARTICLE_DATA[w.surface] && PARTICLE_DATA[w.surface].category) || '格助詞';
 
-                if (isParticle) {{
-                    tokenSpan.className = `word-token particle-token`;
-                    tokenSpan.dataset.isParticle = 'true';
-                    tokenSpan.dataset.particle = w.surface;
-                    tokenSpan.title = `【日文助詞】${{w.surface}} (點擊進行測驗與查看代用換句話說)`;
+                if (isGrammarElem) {{
+                    tokenSpan.className = `word-token grammar-elem-token particle-token`;
+                    tokenSpan.dataset.isGrammarElem = 'true';
+                    tokenSpan.dataset.category = elCategory;
+                    const placeholderText = '？' + (elCategory === '接續助詞' ? '接續' : (elCategory === '複合助詞' ? '複合助' : elCategory));
+                    tokenSpan.dataset.maskPlaceholder = placeholderText;
+                    tokenSpan.dataset.surface = w.surface;
+                    tokenSpan.title = `【${{elCategory}}】${{w.surface}} (點擊進行自測與查看換句話說)`;
                 }} else {{
                     tokenSpan.className = `word-token ${{w.jlpt ? `jlpt-${{w.jlpt}}` : ''}}`;
                 }}
@@ -2674,10 +2993,8 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                     if (state.rubyMode === 'mask') {{
                         tokenSpan.classList.toggle('revealed');
                     }}
-                    if (isParticle) {{
-                        if (state.particleMode === 'mask') {{
-                            tokenSpan.classList.add('revealed');
-                        }}
+                    if (isGrammarElem) {{
+                        tokenSpan.classList.add('revealed');
                         showParticleQuickPopover(tokenSpan, w, sIdx, wIdx, e);
                         return;
                     }}
@@ -3358,20 +3675,26 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             const words = sentence.words || [];
             const sentenceText = sentence.text || '';
 
-            // 抓取本句中所有助詞
+            // 抓取本句中所有語法單位（文型、複合助詞、副助詞、格助詞、接續助詞）
             const detectedParticles = [];
             words.forEach((w, wIdx) => {{
                 const s = w.surface;
-                const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
-                if (isParticle) {{
+                const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
+                if (isGrammarElem) {{
                     const prev = wIdx > 0 ? words[wIdx - 1].surface : '';
                     const next = wIdx + 1 < words.length ? words[wIdx + 1].surface : '';
+                    const elInfo = w.grammar_elem_info || {{}};
+                    const pData = getParticleData(s) || (elInfo.pData) || {{}};
                     detectedParticles.push({{
                         surface: s,
+                        category: elInfo.category || pData.category || '助詞',
+                        title: elInfo.title || pData.default_role || s,
+                        grammar_id: elInfo.grammar_id || (pData.usages && pData.usages[0] && pData.usages[0].substitutes && pData.usages[0].substitutes[0] && pData.usages[0].substitutes[0].grammarId),
                         wordIdx: wIdx,
                         prevWord: prev,
                         nextWord: next,
-                        pData: getParticleData(s)
+                        pData: pData,
+                        elInfo: elInfo
                     }});
                 }}
             }});
@@ -3381,7 +3704,7 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             }}
 
             if (detectedParticles.length === 0) {{
-                listEl.innerHTML = '<div class="empty-hint">本句未偵測到特殊格助詞或副助詞</div>';
+                listEl.innerHTML = '<div class="empty-hint">本句未偵測到特殊助詞或文型</div>';
                 return;
             }}
 
@@ -3393,8 +3716,9 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                 const card = document.createElement('div');
                 card.className = 'particle-item-card';
 
-                const roleText = usage ? usage.role : (pData ? pData.default_role : '日文助詞');
-                const descText = usage ? usage.desc : '助詞在句中承擔格關係、時間、空間、主題或接續功能。';
+                const catName = pItem.category || (usage ? usage.role : '語法');
+                const roleText = usage ? usage.role : (pItem.elInfo && pItem.elInfo.role ? pItem.elInfo.role : (pData ? pData.default_role : '語法功能'));
+                const descText = usage ? usage.desc : (pItem.elInfo && pItem.elInfo.desc ? pItem.elInfo.desc : '在句中具有關鍵的語法聯繫與修飾功能。');
                 const contextDisplay = `${{escapeHtml(pItem.prevWord)}}<strong>【${{escapeHtml(pSurface)}}】</strong>${{escapeHtml(pItem.nextWord)}}`;
 
                 let substitutesHtml = '';
@@ -3430,7 +3754,7 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                                 </div>
                                 ${{demoRewrite ? `
                                     <div class="paraphrase-demo-box">
-                                        <strong><i class="fa-solid fa-pen-nib"></i> 換句話說改寫：</strong>
+                                        <strong><i class="fa-solid fa-pen-nib"></i> 換句話說：</strong>
                                         <span>${{demoRewrite}}</span>
                                     </div>
                                 ` : ''}}
@@ -3440,24 +3764,34 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                     }});
 
                     substitutesHtml = `
-                        <div class="particle-substitutes-area">
-                            <div class="substitute-title">
-                                <i class="fa-solid fa-lightbulb"></i> 換句話說・代用助詞與 941 進階文型推薦：
+                        <div class="particle-substitutes-wrap">
+                            <div class="substitutes-title">
+                                <i class="fa-solid fa-shuffle"></i> <strong>代用推薦與換句話說</strong>
+                                <span style="font-size:0.78rem; font-weight:normal; color:var(--text-muted);">（可置換表達方式）</span>
                             </div>
-                            <div class="substitute-items-list">
-                                ${{subItemsHtml}}
-                            </div>
+                            ${{subItemsHtml}}
                         </div>
                     `;
+                }}
+
+                let grammarDrawerBtn = '';
+                if (pItem.grammar_id) {{
+                    grammarDrawerBtn = `<button class="btn-grammar-detail" style="padding:0.2rem 0.5rem;font-size:0.75rem;" onclick="openGrammarDrawerById(${{pItem.grammar_id}})">
+                        <i class="fa-solid fa-book-open"></i> 941文型庫
+                    </button>`;
                 }}
 
                 card.innerHTML = `
                     <div class="particle-item-header">
                         <div class="particle-title-wrap">
                             <span class="particle-main-badge">${{escapeHtml(pSurface)}}</span>
+                            <span class="cat-badge cat-badge-${{catName}}">${{escapeHtml(catName)}}</span>
                             <span class="particle-context-chip">${{contextDisplay}}</span>
                         </div>
-                        <span class="particle-role-badge">${{escapeHtml(roleText)}}</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;">
+                            <span class="particle-role-badge">${{escapeHtml(roleText)}}</span>
+                            ${{grammarDrawerBtn}}
+                        </div>
                     </div>
                     <div class="particle-desc-text">${{escapeHtml(descText)}}</div>
                     ${{substitutesHtml}}
@@ -3589,6 +3923,8 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
         // 全篇助詞測驗挑戰彈窗 (Full-Article Particle Quiz Challenge)
         // ==========================================================================
 
+        let currentQuizCategoryFilter = 'all';
+
         function collectArticleParticleQuizItems() {{
             if (!state.analyzedData || !state.analyzedData.sentences) return [];
             const items = [];
@@ -3599,11 +3935,13 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
                 words.forEach((w, wIdx) => {{
                     const s = w.surface;
-                    const isParticle = Boolean(w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
-                    if (isParticle) {{
-                        const pData = getParticleData(s);
+                    const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[s]));
+                    if (isGrammarElem) {{
+                        const elInfo = w.grammar_elem_info || {{}};
+                        const pData = getParticleData(s) || (elInfo.pData) || {{}};
+                        const cat = elInfo.category || pData.category || '格助詞';
                         const usage = matchParticleUsage(s, sText);
-                        const distractors = pData && pData.distractors ? pData.distractors : ['は', 'が', 'を', 'に', 'で'];
+                        const distractors = pData && pData.distractors ? pData.distractors : (elInfo.distractors || ['は', 'が', 'を', 'に', 'で']);
                         const wrongChoices = distractors.filter(d => d !== s).sort(() => Math.random() - 0.5).slice(0, 3);
                         const allChoices = [s, ...wrongChoices].sort(() => Math.random() - 0.5);
 
@@ -3611,7 +3949,7 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
                         let maskedHtml = '';
                         words.forEach((mw, mi) => {{
                             if (mi === wIdx) {{
-                                maskedHtml += `<span class="quiz-blank-slot">？</span>`;
+                                maskedHtml += `<span class="quiz-blank-slot" title="【${{cat}}】">？</span>`;
                             }} else {{
                                 maskedHtml += escapeHtml(mw.surface);
                             }}
@@ -3619,13 +3957,17 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
 
                         items.push({{
                             particle: s,
+                            category: cat,
+                            title: elInfo.title || pData.default_role || s,
+                            grammar_id: elInfo.grammar_id,
                             sentenceIdx: sIdx,
                             wordIdx: wIdx,
                             sentenceText: sText,
                             maskedHtml: maskedHtml,
                             options: allChoices,
                             usage: usage,
-                            pData: pData
+                            pData: pData,
+                            elInfo: elInfo
                         }});
                     }}
                 }});
@@ -3634,16 +3976,61 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             return items;
         }}
 
+        function updateQuizCategoryCounts(allItems) {{
+            const counts = {{ 'all': allItems.length, '格助詞': 0, '副助詞': 0, '複合助詞': 0, '文型': 0 }};
+            allItems.forEach(it => {{
+                if (counts[it.category] !== undefined) counts[it.category]++;
+            }});
+            const elAll = document.getElementById('quizCountAll'); if (elAll) elAll.textContent = counts['all'];
+            const elCase = document.getElementById('quizCountCase'); if (elCase) elCase.textContent = counts['格助詞'];
+            const elAdv = document.getElementById('quizCountAdverbial'); if (elAdv) elAdv.textContent = counts['副助詞'];
+            const elCmp = document.getElementById('quizCountCompound'); if (elCmp) elCmp.textContent = counts['複合助詞'];
+            const elSen = document.getElementById('quizCountSentence'); if (elSen) elSen.textContent = counts['文型'];
+        }}
+
+        function setQuizCategoryFilter(cat) {{
+            currentQuizCategoryFilter = cat;
+            const filterBtns = [
+                ['all', document.getElementById('btnQuizFilterAll')],
+                ['格助詞', document.getElementById('btnQuizFilterCase')],
+                ['副助詞', document.getElementById('btnQuizFilterAdverbial')],
+                ['複合助詞', document.getElementById('btnQuizFilterCompound')],
+                ['文型', document.getElementById('btnQuizFilterSentence')]
+            ];
+            filterBtns.forEach(([c, btn]) => {{
+                if (btn) btn.classList.toggle('active', cat === c);
+            }});
+
+            if (!state.quiz || !state.quiz.allItems) return;
+            const filtered = cat === 'all' ? state.quiz.allItems : state.quiz.allItems.filter(it => it.category === cat);
+            if (filtered.length === 0) {{
+                showToast(`所選類別【${{cat}}】在本文中無題目`);
+                return;
+            }}
+            state.quiz.items = filtered;
+            state.quiz.currentIdx = 0;
+            state.quiz.score = 0;
+            state.quiz.answered = new Map();
+            renderQuizQuestion();
+        }}
+
         function openParticleQuizModal() {{
             closeParticlePopover();
-            const items = collectArticleParticleQuizItems();
-            if (items.length === 0) {{
-                showToast('當前文章未偵測到主要助詞，請先貼上文章或抓取網頁！');
+            const allItems = collectArticleParticleQuizItems();
+            if (allItems.length === 0) {{
+                showToast('當前文章未偵測到助詞或文型，請先貼上文章或抓取網頁！');
                 return;
             }}
 
+            updateQuizCategoryCounts(allItems);
+
+            const filteredItems = currentQuizCategoryFilter === 'all' 
+                ? allItems 
+                : allItems.filter(it => it.category === currentQuizCategoryFilter);
+
             state.quiz = {{
-                items: items,
+                allItems: allItems,
+                items: filteredItems.length > 0 ? filteredItems : allItems,
                 currentIdx: 0,
                 score: 0,
                 answered: new Map()
@@ -3675,6 +4062,11 @@ body[data-particle-mode="mask"] .particle-token.revealed::before {
             sentenceDisplay.innerHTML = curItem.maskedHtml;
             optionsContainer.innerHTML = '';
             feedbackCard.style.display = 'none';
+
+            const instructionEl = document.querySelector('.quiz-instruction');
+            if (instructionEl) {{
+                instructionEl.innerHTML = `請依句意、語境與結構，選出正確的 <span class="cat-badge cat-badge-${{curItem.category}}">${{escapeHtml(curItem.category)}}</span>：`;
+            }}
 
             const hasAnswered = quiz.answered.has(quiz.currentIdx);
             const prevAnswer = hasAnswered ? quiz.answered.get(quiz.currentIdx) : null;
