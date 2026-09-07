@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+downloads/
+downloader.py
+.DS_Store
+Thumbs.db
