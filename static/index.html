@@ -938,6 +938,37 @@ body:not(.enable-grammar) .grammar-mini-badge {
 }
 
 /* ==========================================================================
+   Japanese Original Text Modes (原文顯示 / 遮蔽自測 - 中日雙向翻譯練習)
+   ========================================================================== */
+body[data-jp-mode="mask"] .sentence-jp-text,
+body[data-jp-mode="mask"] #selectedSentenceJp {
+    filter: blur(7px) !important;
+    opacity: 0.22 !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 0.2rem 0.5rem !important;
+}
+
+[data-theme="dark"] body[data-jp-mode="mask"] .sentence-jp-text,
+[data-theme="dark"] body[data-jp-mode="mask"] #selectedSentenceJp {
+    background: #334155 !important;
+}
+
+body[data-jp-mode="mask"] .sentence-row:hover .sentence-jp-text,
+body[data-jp-mode="mask"] .sentence-jp-text:hover,
+body[data-jp-mode="mask"] .sentence-jp-text.revealed,
+body[data-jp-mode="mask"] #selectedSentenceJp:hover,
+body[data-jp-mode="mask"] #selectedSentenceJp.revealed {
+    filter: none !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    user-select: text !important;
+}
+
+/* ==========================================================================
    Translation Display Modes (顯示 / 隱藏 / 遮蔽自測)
    ========================================================================== */
 body[data-trans-mode="hide"] .sentence-trans-row,
@@ -1777,6 +1808,37 @@ ruby rt {
 }
 
 /* ==========================================================================
+   日文原文顯示模式 (顯示 / 遮蔽自測 - 中日雙向翻譯練習)
+   ========================================================================== */
+body[data-jp-mode="mask"] .sentence-jp-text,
+body[data-jp-mode="mask"] #selectedSentenceJp {
+    filter: blur(7px) !important;
+    opacity: 0.22 !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 0.2rem 0.5rem !important;
+}
+
+[data-theme="dark"] body[data-jp-mode="mask"] .sentence-jp-text,
+[data-theme="dark"] body[data-jp-mode="mask"] #selectedSentenceJp {
+    background: #334155 !important;
+}
+
+body[data-jp-mode="mask"] .sentence-row:hover .sentence-jp-text,
+body[data-jp-mode="mask"] .sentence-jp-text:hover,
+body[data-jp-mode="mask"] .sentence-jp-text.revealed,
+body[data-jp-mode="mask"] #selectedSentenceJp:hover,
+body[data-jp-mode="mask"] #selectedSentenceJp.revealed {
+    filter: none !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    user-select: text !important;
+}
+
+/* ==========================================================================
    繁體中文翻譯顯示模式 (顯示 / 隱藏 / 遮蔽自測)
    ========================================================================== */
 body[data-trans-mode="hide"] .sentence-trans-row,
@@ -1973,6 +2035,13 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 
             <!-- Reading Control Toolbar in Header -->
             <div class="header-toolbar">
+                <!-- Japanese Original Mode Switch (中日雙向翻譯練習) -->
+                <div class="control-pill-group" title="日文原文顯示模式 (中日雙向翻譯自測練習)">
+                    <span class="group-label"><i class="fa-solid fa-file-lines"></i> 原文:</span>
+                    <button class="pill-btn active" id="btnJpShow" data-mode="show" title="正常顯示日文原文">顯示</button>
+                    <button class="pill-btn" id="btnJpMask" data-mode="mask" title="【中翻日練習模式】日文原文預設遮蔽模糊，看中文練習翻譯，游標移過或點擊揭示">遮蔽自測</button>
+                </div>
+
                 <!-- Furigana Mode Switch -->
                 <div class="control-pill-group" title="振假名讀音顯示模式">
                     <span class="group-label"><i class="fa-solid fa-font"></i> 假名:</span>
@@ -2158,8 +2227,8 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                                     <i class="fa-solid fa-volume-high"></i> 播放發音
                                 </button>
                             </div>
-                            <div class="selected-sentence-text" id="selectedSentenceJp">
-                                點擊左側文章中任意句子，此處將即時展開整句結構、單字詞性與 941 文法精解！
+                            <div class="selected-sentence-text" id="selectedSentenceJp" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
+                                點擊左側文章中任意句子，此處將即時展開整句結構、單字辭書形與 941 文法精解！
                             </div>
                         </div>
 
@@ -2539,7 +2608,220 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             return found;
         }
 
-        // 100% 保證所有漢字標示假名之分詞演算法
+        // 動詞與形容詞活用還原到原型 (辭書形) 演算法
+        function deinflectWord(word) {
+            if (!word || word.length < 2) return null;
+            if (JLPT_VOCAB[word]) return word;
+
+            const candidates = [];
+
+            // 1. たい / たくない / たかった / たくなかった
+            const taiForms = [
+                ['たくなかった', 6], ['たかった', 4], ['たくない', 4], ['たい', 2]
+            ];
+            for (const [sfx, len] of taiForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    candidates.push(stem + 'る');
+                    const iToU = {'い':'う', 'き':'く', 'ぎ':'ぐ', 'し':'す', 'ち':'つ', 'に':'ぬ', 'び':'ぶ', 'み':'む', 'り':'る'};
+                    if (stem && iToU[stem.slice(-1)]) {
+                        candidates.push(stem.slice(0, -1) + iToU[stem.slice(-1)]);
+                    }
+                    if (stem.endsWith('し')) {
+                        candidates.push(stem.slice(0, -1) + 'する');
+                    }
+                    if (stem === '来' || stem === 'き') {
+                        candidates.push('来る');
+                    }
+                }
+            }
+
+            // 2. ました / ません / ませんでした / ます
+            const masuForms = [
+                ['ませんでした', 6], ['ました', 3], ['ません', 3], ['ます', 2]
+            ];
+            for (const [sfx, len] of masuForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    candidates.push(stem + 'る');
+                    const iToU = {'い':'う', 'き':'く', 'ぎ':'ぐ', 'し':'す', 'ち':'つ', 'に':'ぬ', 'び':'ぶ', 'み':'む', 'り':'る'};
+                    if (stem && iToU[stem.slice(-1)]) {
+                        candidates.push(stem.slice(0, -1) + iToU[stem.slice(-1)]);
+                    }
+                    if (stem.endsWith('し')) {
+                        candidates.push(stem.slice(0, -1) + 'する');
+                    }
+                    if (stem === '来' || stem === 'き') {
+                        candidates.push('来る');
+                    }
+                }
+            }
+
+            // 3. ている / ていた / ています / ていました / てる / てた
+            const teiruForms = [
+                ['ていました', 5], ['ています', 4], ['ていた', 3], ['ている', 3], ['てた', 2], ['てる', 2],
+                ['でいました', 5], ['でいます', 4], ['でいた', 3], ['でいる', 3], ['でた', 2], ['でる', 2]
+            ];
+            for (const [sfx, len] of teiruForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    const aux = sfx.startsWith('て') ? 'て' : 'で';
+                    const subRes = deinflectWord(stem + aux);
+                    if (subRes) candidates.push(subRes);
+                }
+            }
+
+            // 4. 促音便・イ音便・撥音便 (た / て / だ / で)
+            if (word.endsWith('った') || word.endsWith('って')) {
+                const stem = word.slice(0, -2);
+                candidates.push(stem + 'う', stem + 'つ', stem + 'る', stem + 'く');
+            }
+            if (word.endsWith('いた') || word.endsWith('いて')) {
+                const stem = word.slice(0, -2);
+                candidates.push(stem + 'く');
+            }
+            if (word.endsWith('いだ') || word.endsWith('いで')) {
+                const stem = word.slice(0, -2);
+                candidates.push(stem + 'ぐ');
+            }
+            if (word.endsWith('した') || word.endsWith('して')) {
+                const stem = word.slice(0, -2);
+                candidates.push(stem + 'す', stem + 'する');
+            }
+            if (word.endsWith('んだ') || word.endsWith('んで')) {
+                const stem = word.slice(0, -2);
+                candidates.push(stem + 'む', stem + 'ぶ', stem + 'ぬ');
+            }
+            if (word.endsWith('た') || word.endsWith('て')) {
+                const stem = word.slice(0, -1);
+                candidates.push(stem + 'る');
+            }
+
+            // 5. 否定形 ない / なかった / なくて / ず
+            const naiForms = [
+                ['なかった', 4], ['なくて', 3], ['ない', 2], ['ず', 1]
+            ];
+            for (const [sfx, len] of naiForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    candidates.push(stem + 'る');
+                    const aToU = {'わ':'う', 'か':'く', 'が':'ぐ', 'さ':'す', 'た':'つ', 'な':'ぬ', 'ば':'ぶ', 'ま':'む', 'ら':'る'};
+                    if (stem && aToU[stem.slice(-1)]) {
+                        candidates.push(stem.slice(0, -1) + aToU[stem.slice(-1)]);
+                    }
+                    if (stem.endsWith('し')) {
+                        candidates.push(stem.slice(0, -1) + 'する');
+                    }
+                    if (stem === 'こ' || stem === '來' || stem === '来') {
+                        candidates.push('来る');
+                    }
+                }
+            }
+
+            // 6. 受身・使役・可能形 (られる / させる / れる / せる)
+            const passiveForms = [
+                ['させられる', 5], ['される', 3], ['られる', 3], ['させる', 3], ['れる', 2], ['せる', 2]
+            ];
+            for (const [sfx, len] of passiveForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    candidates.push(stem + 'る');
+                    const aToU = {'わ':'う', 'か':'く', 'が':'ぐ', 'さ':'す', 'た':'つ', 'な':'ぬ', 'ば':'ぶ', 'ま':'む', 'ら':'る'};
+                    if (stem && aToU[stem.slice(-1)]) {
+                        candidates.push(stem.slice(0, -1) + aToU[stem.slice(-1)]);
+                    }
+                    if (stem.endsWith('さ') || stem.endsWith('し')) {
+                        candidates.push(stem.slice(0, -1) + 'する');
+                    }
+                }
+            }
+
+            // 7. 假定形 (ば)
+            if (word.endsWith('ば')) {
+                const stem = word.slice(0, -1);
+                if (stem.endsWith('れ')) {
+                    candidates.push(stem.slice(0, -1) + 'る');
+                }
+                const eToU = {'え':'う', 'け':'く', 'げ':'ぐ', 'せ':'す', 'て':'つ', 'ね':'ぬ', 'べ':'ぶ', 'め':'む', 'れ':'る'};
+                if (stem && eToU[stem.slice(-1)]) {
+                    candidates.push(stem.slice(0, -1) + eToU[stem.slice(-1)]);
+                }
+                if (stem.endsWith('すれ')) {
+                    candidates.push(stem.slice(0, -2) + 'する');
+                }
+            }
+
+            // 8. 意向形 (よう / おう)
+            if (word.endsWith('よう')) {
+                candidates.push(word.slice(0, -2) + 'る');
+            }
+            if (word.endsWith('う') && word.length >= 2) {
+                const stem = word.slice(0, -1);
+                const oToU = {'お':'う', 'こ':'く', 'ご':'ぐ', 'そ':'す', 'と':'つ', 'の':'ぬ', 'ぼ':'ぶ', 'も':'む', 'ろ':'る'};
+                if (stem && oToU[stem.slice(-1)]) {
+                    candidates.push(stem.slice(0, -1) + oToU[stem.slice(-1)]);
+                }
+            }
+
+            // 9. 形容詞 (かった / くて / くない / くなかった / ければ)
+            const adjForms = [
+                ['くなかった', 5], ['ければ', 3], ['かった', 3], ['くない', 3], ['くて', 2]
+            ];
+            for (const [sfx, len] of adjForms) {
+                if (word.endsWith(sfx)) {
+                    const stem = word.slice(0, -len);
+                    candidates.push(stem + 'い');
+                }
+            }
+
+            // 10. 比對 JLPT 單字庫，命中即回傳原型！
+            for (const c of candidates) {
+                if (JLPT_VOCAB[c]) {
+                    return c;
+                }
+            }
+
+            return null;
+        }
+
+        // 為動詞/形容詞活用形生成精準振假名
+        function makeRubyHtmlForInflected(surface, baseWord, baseReading) {
+            if (!surface) return '';
+            const hasKanji = KANJI_REGEX.test(surface);
+            if (!hasKanji) return surface;
+
+            let kanjiPrefixLen = 0;
+            while (kanjiPrefixLen < surface.length && kanjiPrefixLen < baseWord.length &&
+                   KANJI_REGEX.test(surface[kanjiPrefixLen]) && surface[kanjiPrefixLen] === baseWord[kanjiPrefixLen]) {
+                kanjiPrefixLen++;
+            }
+
+            if (kanjiPrefixLen > 0) {
+                const kanjiPart = surface.slice(0, kanjiPrefixLen);
+                const baseKanaSuffix = baseWord.slice(kanjiPrefixLen);
+                const readingHira = kataToHira(baseReading);
+                
+                if (readingHira.endsWith(baseKanaSuffix)) {
+                    const kanjiReading = readingHira.slice(0, -baseKanaSuffix.length);
+                    const surfaceSuffix = surface.slice(kanjiPrefixLen);
+                    return `<ruby>${kanjiPart}<rt>${kanjiReading}</rt></ruby>${surfaceSuffix}`;
+                }
+            }
+
+            let res = '';
+            for (let k = 0; k < surface.length; k++) {
+                const ch = surface[k];
+                if (KANJI_REGEX.test(ch)) {
+                    const r = getSingleKanjiReading(ch, false);
+                    res += `<ruby>${ch}<rt>${r || ''}</rt></ruby>`;
+                } else {
+                    res += ch;
+                }
+            }
+            return res;
+        }
+
+        // 100% 保證所有漢字標示假名與動詞還原原型之分詞演算法
         function tokenizeSentence(text) {
             const tokens = [];
             let i = 0;
@@ -2548,10 +2830,12 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             while (i < text.length) {
                 let matched = false;
 
-                // 1. 優先在 JLPT 單字庫中長詞比對 (8 down to 2)
+                // 1. 優先在 JLPT 單字庫長詞比對或動詞/形容詞原型還原 (8 down to 2)
                 const limit = Math.min(MAX_WORD_LEN, text.length - i);
                 for (let len = limit; len >= 2; len--) {
                     const sub = text.substring(i, i + len);
+
+                    // A. 直接命中單字庫 (原型 / 專有名詞)
                     if (JLPT_VOCAB[sub]) {
                         const [lvlNum, reading] = JLPT_VOCAB[sub];
                         const readingHira = kataToHira(reading);
@@ -2564,6 +2848,26 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                             is_kanji: hasKanji,
                             ruby_html: hasKanji ? createRubyHtml(sub, readingHira) : sub,
                             pos: '單字'
+                        });
+                        i += len;
+                        matched = true;
+                        break;
+                    }
+
+                    // B. 動詞或形容詞活用形還原至原型 (辭書形)！
+                    const baseWord = deinflectWord(sub);
+                    if (baseWord && JLPT_VOCAB[baseWord]) {
+                        const [lvlNum, baseReading] = JLPT_VOCAB[baseWord];
+                        const baseReadingHira = kataToHira(baseReading);
+                        const hasKanji = KANJI_REGEX.test(sub);
+                        tokens.push({
+                            surface: sub,
+                            base_form: baseWord, // 辭書形原型！
+                            reading: baseReadingHira,
+                            jlpt: lvlNum ? `N${lvlNum}` : null,
+                            is_kanji: hasKanji,
+                            ruby_html: makeRubyHtmlForInflected(sub, baseWord, baseReading),
+                            pos: baseWord.endsWith('い') ? '形容詞' : '動詞'
                         });
                         i += len;
                         matched = true;
@@ -2765,6 +3069,7 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             currentSentenceIdx: 0,
             rubyMode: 'show',
             transMode: 'show',
+            jpMode: 'show',
             enableWordColors: true,
             enableGrammar: true,
             fontSizeLevel: 0,
@@ -2779,6 +3084,8 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
         };
 
         const dom = {
+            btnJpShow: document.getElementById('btnJpShow'),
+            btnJpMask: document.getElementById('btnJpMask'),
             btnRubyShow: document.getElementById('btnRubyShow'),
             btnRubyHide: document.getElementById('btnRubyHide'),
             btnRubyMask: document.getElementById('btnRubyMask'),
@@ -2890,9 +3197,14 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
             setGrammarHighlight(savedGrammar);
             const savedTransMode = localStorage.getItem('japanese_reader_trans_mode') || 'show';
             setTransMode(savedTransMode);
+            const savedJpMode = localStorage.getItem('japanese_reader_jp_mode') || 'show';
+            setJpMode(savedJpMode);
         }
 
         function setupEventListeners() {
+            dom.btnJpShow.addEventListener('click', () => setJpMode('show'));
+            dom.btnJpMask.addEventListener('click', () => setJpMode('mask'));
+
             dom.btnRubyShow.addEventListener('click', () => setRubyMode('show'));
             dom.btnRubyHide.addEventListener('click', () => setRubyMode('hide'));
             dom.btnRubyMask.addEventListener('click', () => setRubyMode('mask'));
@@ -2981,6 +3293,17 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
                     closeWordPopover();
                 }
             });
+        }
+
+        function setJpMode(mode) {
+            state.jpMode = mode;
+            localStorage.setItem('japanese_reader_jp_mode', mode);
+            document.body.setAttribute('data-jp-mode', mode);
+            dom.btnJpShow.classList.toggle('active', mode === 'show');
+            dom.btnJpMask.classList.toggle('active', mode === 'mask');
+            if (mode === 'mask') {
+                showToast('已開啟【中翻日自測模式】：日文原文已遮蔽，請看中文練習翻譯，滑鼠移過或點擊即可揭示！');
+            }
         }
 
         function setRubyMode(mode) {
@@ -3155,6 +3478,13 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 
                 const jpWrap = document.createElement('div');
                 jpWrap.className = 'sentence-jp-text';
+                jpWrap.title = '點擊切換揭示/遮蔽';
+                jpWrap.addEventListener('click', (e) => {
+                    if (state.jpMode === 'mask') {
+                        e.stopPropagation();
+                        jpWrap.classList.toggle('revealed');
+                    }
+                });
                 renderSentenceTokens(jpWrap, s, sIdx);
                 row.appendChild(jpWrap);
 
@@ -3295,32 +3625,51 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
         }
 
         function renderSentenceWordsTable(words, grammars = []) {
-            dom.sentenceWordCount.textContent = words.length;
+            // 1. 過濾純符號、純標點與空白
+            const validWords = words.filter(w => {
+                const s = (w.surface || '').trim();
+                if (!s) return false;
+                if (/^[、。！？「」『』（）…—\s.,!?]+$/.test(s)) return false;
+                return true;
+            });
+
+            dom.sentenceWordCount.textContent = validWords.length;
             dom.sentenceWordsTbody.innerHTML = '';
 
-            words.forEach((w, wIdx) => {
-                const isFav = state.notebook.words.some(item => item.surface === w.surface);
+            validWords.forEach((w, wIdx) => {
+                // 2. 動詞與形容詞還原為原型 (辭書形)
+                const baseForm = deinflectWord(w.surface) || w.base_form || w.surface;
+                let displayReading = w.reading || '-';
+                let displayLevel = w.jlpt;
+
+                if (JLPT_VOCAB[baseForm]) {
+                    const [lvlNum, r] = JLPT_VOCAB[baseForm];
+                    displayReading = kataToHira(r);
+                    if (lvlNum) displayLevel = `N${lvlNum}`;
+                }
+
+                const isFav = state.notebook.words.some(item => item.surface === baseForm || item.surface === w.surface);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${escapeHtml(w.base_form || w.surface)}</strong></td>
-                    <td style="color:#e11d48;font-weight:700;">${escapeHtml(w.reading || '-')}</td>
-                    <td>${w.jlpt ? `<span class="badge-jlpt badge-${w.jlpt.toLowerCase()}">${w.jlpt}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
+                    <td><strong>${escapeHtml(baseForm)}</strong></td>
+                    <td style="color:#e11d48;font-weight:700;">${escapeHtml(displayReading)}</td>
+                    <td>${displayLevel ? `<span class="badge-jlpt badge-${displayLevel.toLowerCase()}">${displayLevel}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
                     <td style="color:var(--text-main);font-size:0.88rem;" id="word-trans-cell-${wIdx}">
                         <span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
                             <span style="color:var(--text-muted);font-size:0.78rem;"><i class="fa-solid fa-spinner fa-spin"></i> 翻譯中</span>
                         </span>
                     </td>
                     <td style="text-align:center;">
-                        <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(w.surface)}', '${escapeHtml(w.base_form)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt || '')}', '')">
+                        <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(baseForm)}', '${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '')">
                             <i class="fa-solid fa-star"></i>
                         </button>
                     </td>
                 `;
                 dom.sentenceWordsTbody.appendChild(tr);
 
-                const termToQuery = w.base_form || w.surface;
-                translateJaToZh(termToQuery).then(trans => {
+                // 3. 確保使用原型查詢中文翻譯，取得精確字典釋義
+                translateJaToZh(baseForm).then(trans => {
                     const cell = document.getElementById(`word-trans-cell-${wIdx}`);
                     if (cell) {
                         cell.innerHTML = `<span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽"><strong>${escapeHtml(trans || '-')}</strong></span>`;

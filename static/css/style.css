@@ -925,6 +925,37 @@ body:not(.enable-grammar) .grammar-mini-badge {
 }
 
 /* ==========================================================================
+   Japanese Original Text Modes (原文顯示 / 遮蔽自測 - 中日雙向翻譯練習)
+   ========================================================================== */
+body[data-jp-mode="mask"] .sentence-jp-text,
+body[data-jp-mode="mask"] #selectedSentenceJp {
+    filter: blur(7px) !important;
+    opacity: 0.22 !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 0.2rem 0.5rem !important;
+}
+
+[data-theme="dark"] body[data-jp-mode="mask"] .sentence-jp-text,
+[data-theme="dark"] body[data-jp-mode="mask"] #selectedSentenceJp {
+    background: #334155 !important;
+}
+
+body[data-jp-mode="mask"] .sentence-row:hover .sentence-jp-text,
+body[data-jp-mode="mask"] .sentence-jp-text:hover,
+body[data-jp-mode="mask"] .sentence-jp-text.revealed,
+body[data-jp-mode="mask"] #selectedSentenceJp:hover,
+body[data-jp-mode="mask"] #selectedSentenceJp.revealed {
+    filter: none !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    user-select: text !important;
+}
+
+/* ==========================================================================
    Translation Display Modes (顯示 / 隱藏 / 遮蔽自測)
    ========================================================================== */
 body[data-trans-mode="hide"] .sentence-trans-row,
