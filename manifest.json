@@ -1,0 +1,19 @@
+{
+  "name": "AnkiFlash 互動單字抽認卡",
+  "short_name": "AnkiFlash",
+  "description": "跨平台 (Web / iOS / iPad / Android) 智慧單字抽認卡與 Anki 間隔重複複習系統",
+  "start_url": "flashcard.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "static/flashcards/icons/icon-192.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"]
+}

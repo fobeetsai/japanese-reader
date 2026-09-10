@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AnkiFlash 互動單字抽認卡 - 跨平台背單字與間隔複習系統</title>
+  
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AnkiFlash">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="static/flashcards/icons/icon-192.svg">
+  <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="static/flashcards/css/app.css">
+</head>
+<body>
+
+  <!-- iOS PWA 導引橫幅 -->
+  <div id="ios-pwa-banner" class="pwa-banner" style="display: none;">
+    <div>
+      📱 <strong>在 iPhone / iPad 上享受原生 App 體驗</strong>：點擊 Safari 下方「<strong>分享 ⬆️</strong>」再選「<strong>加入主畫面 ➕</strong>」即可離線全螢幕背單字！
+    </div>
+    <button id="close-pwa-banner" class="pwa-banner-close">&times;</button>
+  </div>
+
+  <!-- 頂部通用導覽列 -->
+  <header class="app-header">
+    <div class="brand" id="nav-brand">
+      <span class="brand-icon">🎴</span>
+      <span>AnkiFlash</span>
+    </div>
+
+    <!-- 狀態徽章 (新/學/複) -->
+    <div class="header-badges">
+      <span class="badge badge-new" id="header-badge-new">新 0</span>
+      <span class="badge badge-learn" id="header-badge-learn">學 0</span>
+      <span class="badge badge-due" id="header-badge-due">複 0</span>
+    </div>
+
+    <!-- 操作按鈕群 -->
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-open-sync" title="雲端跨裝置同步">🔄</button>
+      <button class="btn-icon" id="btn-open-stats" title="學習統計與熱圖">📊</button>
+      <button class="btn-icon" id="btn-open-settings" title="系統與發音設定">⚙️</button>
+      <a href="index.html" class="btn-icon" style="text-decoration: none;" title="返回日文閱讀助手">📖</a>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="app-main">
+
+    <!-- 視圖 1: 牌組總覽清單 (View: Decks) -->
+    <section id="view-decks" class="view-section active">
+      <div class="deck-header-row">
+        <h2 class="section-title">📚 我的單字牌組</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-secondary" onclick="window.app.importFromReaderNotes()">
+            ⭐ 匯入閱讀助手生詞
+          </button>
+          <button class="btn-secondary" id="btn-batch-import">
+            📥 批次匯入
+          </button>
+          <button class="btn-primary" id="btn-open-add-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+            ➕ 新增單字
+          </button>
+          <button class="btn-secondary" id="btn-new-deck">
+            📁 新建牌組
+          </button>
+        </div>
+      </div>
+
+      <!-- 分類篩選標籤列 (支援：日常、工程、商務、JLPT檢定等) -->
+      <div class="category-filter-bar" id="category-filter-bar">
+        <!-- 由 JavaScript 動態渲染分類切換標籤 -->
+      </div>
+
+      <!-- 牌組卡片網格 -->
+      <div class="decks-grid" id="decks-grid-container">
+        <!-- 由 JavaScript 動態渲染 -->
+      </div>
+    </section>
+
+    <!-- 視圖 2: 抽認卡複習畫面 (View: Study) -->
+    <section id="view-study" class="view-section">
+      <!-- 頂部資訊列 -->
+      <div class="study-top-bar">
+        <button class="btn-secondary" id="btn-back-decks" style="padding: 6px 12px; font-size: 0.85rem;">
+          👈 返回牌組
+        </button>
+        <div class="study-deck-title" id="study-deck-name">牌組名稱</div>
+        <div id="study-count-indicator" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary);">
+          1 / 20
+        </div>
+      </div>
+
+      <!-- 今日複習進度條 -->
+      <div class="progress-container">
+        <div class="progress-bar-bg">
+          <div class="progress-fill reviewed" id="study-progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- 3D 抽認卡場景 -->
+      <div class="card-scene" id="card-scene-container">
+        <div class="flashcard" id="active-flashcard">
+          
+          <!-- 卡片正面 (題目) -->
+          <div class="card-face card-front">
+            <div class="card-tag-row">
+              <span class="tag-badge" id="card-front-tag">JLPT N5</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="moji-btn" id="btn-open-moji-front" title="在 MOJi 辭書 APP 中查詢此單字">
+                  <span>📖 MOJi 辭書</span>
+                </button>
+                <button class="audio-btn" id="btn-speak-front" title="朗讀發音">🔊</button>
+                <button class="delete-card-btn" id="btn-delete-card-front" title="從牌組中刪除此單字">🗑️</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <h1 class="word-title" id="card-front-word">單字</h1>
+            </div>
+            <div class="card-footer-tip">
+              👆 點擊卡片、上滑或按空白鍵 Space 翻開答案
+            </div>
+          </div>
+
+          <!-- 卡片背面 (答案與詳解) -->
+          <div class="card-face card-back">
+            <div class="card-tag-row">
+              <span class="tag-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">答案詳解</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="moji-btn" id="btn-open-moji-back" title="在 MOJi 辭書 APP 中查詢此單字">
+                  <span>📖 MOJi 辭書</span>
+                </button>
+                <button class="audio-btn" id="btn-speak-back" title="朗讀發音">🔊</button>
+                <button class="delete-card-btn" id="btn-delete-card-back" title="從牌組中刪除此單字">🗑️</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="word-title" id="card-back-word" style="font-size: 2rem;">單字</div>
+              <div class="word-reading" id="card-back-reading">[平假名/讀音]</div>
+              <div class="word-meaning" id="card-back-meaning">繁體中文釋義</div>
+              <div class="word-example-box" id="card-back-example-box">
+                <div style="font-weight: 600; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">例句與用法：</div>
+                <div id="card-back-example">例文</div>
+              </div>
+            </div>
+            <div class="card-footer-tip">
+              👈 左滑重來 ｜ 右滑良好 👉
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 底部評分控制列 -->
+      <div class="study-action-bar" id="study-actions-container">
+        <!-- 未翻面時：顯示答案按鈕 -->
+        <button class="show-answer-btn" id="show-answer-btn">
+          <span>👀 顯示答案 (Space)</span>
+        </button>
+
+        <!-- 已翻面時：Anki 4 段評分按鈕群 -->
+        <div class="anki-buttons-row" id="anki-buttons-row">
+          <!-- 1: Again (重來) -->
+          <button class="anki-btn again" id="btn-anki-again">
+            <span class="anki-interval" id="interval-again">&lt; 1分</span>
+            <span class="anki-label">重來</span>
+            <span class="anki-key">1</span>
+          </button>
+          
+          <!-- 2: Hard (困難) -->
+          <button class="anki-btn hard" id="btn-anki-hard">
+            <span class="anki-interval" id="interval-hard">&lt; 6分</span>
+            <span class="anki-label">困難</span>
+            <span class="anki-key">2</span>
+          </button>
+
+          <!-- 3: Good (良好) -->
+          <button class="anki-btn good" id="btn-anki-good">
+            <span class="anki-interval" id="interval-good">1天</span>
+            <span class="anki-label">良好</span>
+            <span class="anki-key">3</span>
+          </button>
+
+          <!-- 4: Easy (簡單) -->
+          <button class="anki-btn easy" id="btn-anki-easy">
+            <span class="anki-interval" id="interval-easy">4天</span>
+            <span class="anki-label">簡單</span>
+            <span class="anki-key">4</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       彈窗 1: 雲端同步與備份 (Sync Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-sync">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">🔄 跨裝置雲端同步 (GitHub Gist)</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="help-text">
+          只需輸入您的 GitHub Token，即可在電腦、iPhone、iPad、Android 之間無縫同步所有牌組與背單字排程進度！完全私密且永久免費。
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">GitHub Personal Access Token (需勾選 gist 權限)</label>
+          <input type="password" id="sync-github-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxx">
+          <div class="help-text">
+            👉 還沒有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=AnkiFlash_Sync_Token" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">點此一鍵前往 GitHub 快速產生 Token</a>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gist ID (初次上傳會自動生成，手機端貼上即可同步)</label>
+          <input type="text" id="sync-gist-id" class="form-input" placeholder="留空時將於初次上傳自動建立新 Gist">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <button class="btn-primary" style="flex: 1;" onclick="window.app.uploadToCloud()">
+            ☁️ 上傳至雲端 (備份)
+          </button>
+          <button class="btn-secondary" style="flex: 1;" onclick="window.app.downloadFromCloud()">
+            📥 從雲端下載 (覆蓋同步)
+          </button>
+        </div>
+
+        <div id="sync-status-msg" style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 4px;"></div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+
+        <!-- 檔案手動匯出與還原 -->
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">💾 本機檔案手動備份</div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" style="flex: 1;" onclick="window.app.exportBackupFile()">
+              匯出 JSON 備份檔
+            </button>
+            <label class="btn-secondary" style="flex: 1; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+              還原 JSON 備份
+              <input type="file" accept=".json" style="display: none;" onchange="window.app.importBackupFile(this.files[0])">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 2: 學習統計 (Stats Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-stats">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">📊 學習統計與複習預測</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-today-reviews">0</div>
+            <div class="stat-caption">今日已複習卡片</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-mastered-cards" style="color: var(--anki-easy);">0</div>
+            <div class="stat-caption">已精通單字 (間隔&gt;21天)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-learning-cards" style="color: var(--anki-hard);">0</div>
+            <div class="stat-caption">學習中單字</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-total-cards" style="color: var(--text-primary);">0</div>
+            <div class="stat-caption">字庫單字總數</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px;">📈 未來 7 天待複習卡片預測</div>
+          <div class="forecast-chart" id="stats-forecast-chart">
+            <!-- 由 JS 動態渲染長條圖 -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 3: 批次匯入單字 (Batch Import Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-batch-import">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">📥 批次匯入單字</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">選擇匯入目標牌組</label>
+          <select id="batch-import-deck-select" class="form-select"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">貼上單字文字 (每行一個)</label>
+          <textarea id="batch-import-text" class="form-textarea" style="height: 140px;" placeholder="支援格式範例：
+1. 若只輸入單字（如「施工」、「養生」、「妥協」、「Inspector」），勾選下方按鈕即可全自動生成讀音、繁中翻譯與例句！
+2. 亦支援直接貼上既有格式：單字 [讀音] 釋義｜例句"></textarea>
+        </div>
+
+        <!-- 自動生成讀音/翻譯/例句開關 -->
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; background: rgba(99, 102, 241, 0.12); padding: 12px; border-radius: 12px; border: 1.5px dashed var(--accent-primary);">
+          <input type="checkbox" id="batch-import-auto-enrich" checked style="width: 20px; height: 20px; cursor: pointer;">
+          <label for="batch-import-auto-enrich" style="font-size: 0.9rem; font-weight: 700; cursor: pointer; color: var(--text-primary);">
+            ✨ 優先自 MOJi 辭書直接導入缺失的「讀音、釋義與權威例句」
+          </label>
+        </div>
+
+        <div id="batch-enrich-progress-wrap" style="display: none; background: var(--bg-tertiary); padding: 10px 14px; border-radius: 10px;">
+          <div id="batch-enrich-progress-text" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-primary);">
+            正在自動生成單字中...
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close" id="btn-batch-cancel">取消</button>
+        <button class="btn-primary" id="btn-batch-submit" onclick="window.app.executeBatchImport()">🚀 確認匯入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 3.5: 新增單字卡 (Add Single Card Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-add-card">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ 新增單字卡片</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">目標牌組</label>
+          <select id="add-card-deck-select" class="form-select"></select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+            <label class="form-label" style="margin-bottom: 0;">單字 (Front / 漢字或外文)</label>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-magic btn-moji-direct" id="btn-moji-import-single" type="button" onclick="window.app.importFromMojiDirect(true)" title="自 MOJi 辭書直接獲取官方讀音、繁中釋義與權威例句">
+                📖 MOJi 辭書直接導入
+              </button>
+              <button class="btn-magic" id="btn-auto-enrich-single" type="button" onclick="window.app.autoEnrichSingleCard()" title="通用智慧補全">
+                ✨ 智慧生成
+              </button>
+            </div>
+          </div>
+          <input type="text" id="add-card-front" class="form-input" placeholder="輸入單字，例如：施工、養生、足場、配筋（輸入後自動自 MOJi 導入）">
+        </div>
+
+        <div id="add-card-loading-msg" style="display: none; font-size: 0.85rem; color: var(--accent-primary); font-weight: 600; text-align: right; padding: 4px 0;">
+          ⚡ 正在自動查詢讀音、繁中翻譯與實用語境例句...
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">讀音 (Reading / 平假名或音標)</label>
+          <input type="text" id="add-card-reading" class="form-input" placeholder="例如：せこう 或 [sɪˈkoʊ]">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">繁體中文釋義 (Back / 意思與詞性)</label>
+          <textarea id="add-card-back" class="form-textarea" style="min-height: 70px;" placeholder="例如：施工、工程進行 (名詞/する動詞)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">實用例句 (Example / 原文與中文翻譯)</label>
+          <textarea id="add-card-example" class="form-textarea" style="min-height: 70px;" placeholder="例如：施工図面に従って正確に施工を進める。(依照施工圖說正確推進施工。)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">標籤 (Tags / 選填，以空白分隔)</label>
+          <input type="text" id="add-card-tags" class="form-input" placeholder="例如：工程 施工 現場">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">取消</button>
+        <button class="btn-primary" onclick="window.app.executeAddSingleCard()">💾 儲存卡片</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 3.8: 牌組卡片管理與刪除 (Deck Cards Manager Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-deck-cards">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deck-cards-title">📋 牌組單字列表與管理</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="deck-cards-search-input" class="form-input card-manager-search" placeholder="🔍 搜尋此牌組內的單字、讀音或中文釋義...">
+        
+        <!-- 多選與全選刪除操作列 -->
+        <div class="card-manager-toolbar" id="card-manager-toolbar">
+          <label class="select-all-wrap">
+            <input type="checkbox" id="deck-cards-select-all" class="card-checkbox">
+            <span id="select-all-text">全選</span>
+          </label>
+          <div class="toolbar-actions">
+            <span id="selected-count-badge" class="selected-count-badge" style="display: none;">已選 0 張</span>
+            <button class="btn-batch-delete-danger" id="btn-delete-selected-cards" disabled onclick="window.app.deleteSelectedCards()">
+              🗑️ 刪除選取 (<span id="delete-selected-num">0</span>)
+            </button>
+            <button class="btn-batch-delete-all" id="btn-delete-all-deck-cards" onclick="window.app.deleteAllCardsInCurrentDeck()" title="清空此牌組內的所有單字">
+              ⚠️ 全選清空
+            </button>
+          </div>
+        </div>
+
+        <div class="card-manager-list" id="deck-cards-list-container">
+          <!-- 由 JS 動態注入卡片列表 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="deck-cards-count-label" style="margin-right: auto; font-size: 0.85rem; color: var(--text-secondary); align-self: center;">共 0 個單字</span>
+        <button class="btn-secondary modal-close">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 4: 新建自訂牌組 (New Deck Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-new-deck">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ 建立新牌組</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">牌組名稱</label>
+          <input type="text" id="new-deck-name" class="form-input" placeholder="例如：營造工程日語專門名詞、日常旅遊會話">
+        </div>
+        <div class="form-group">
+          <label class="form-label">所屬分類 (Category)</label>
+          <select id="new-deck-category" class="form-select">
+            <option value="engineering">🏗️ 工程營造 (Engineering & Construction)</option>
+            <option value="daily">🍵 日常生活 (Daily Life & Living)</option>
+            <option value="business">💼 商務職場 (Business & Office)</option>
+            <option value="jlpt">🇯🇵 JLPT 檢定 (N1~N5)</option>
+            <option value="custom">✨ 自訂其他分類...</option>
+          </select>
+        </div>
+        <div class="form-group" id="custom-category-group" style="display: none;">
+          <label class="form-label">輸入自訂分類名稱</label>
+          <input type="text" id="new-deck-custom-cat" class="form-input" placeholder="例如：法規條款、建築機電、醫療醫學">
+        </div>
+        <div class="form-group">
+          <label class="form-label">牌組簡介 (選填)</label>
+          <input type="text" id="new-deck-desc" class="form-input" placeholder="簡述此牌組用途">
+        </div>
+        <div class="form-group">
+          <label class="form-label">圖示 Emoji (選填)</label>
+          <input type="text" id="new-deck-icon" class="form-input" placeholder="例如：🎯, 🚀, 📚" value="📚">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">取消</button>
+        <button class="btn-primary" onclick="window.app.executeCreateDeck()">建立牌組</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       彈窗 5: 系統設定 (Settings Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-settings">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ 偏好與發音設定</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
+          <label class="form-label" style="margin-bottom: 0;">自動語音朗讀 (翻卡時自動發音)</label>
+          <input type="checkbox" id="setting-auto-audio" style="width: 20px; height: 20px;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">發音語系</label>
+          <select id="setting-audio-lang" class="form-select">
+            <option value="ja-JP">日語 (Japanese - ja-JP)</option>
+            <option value="en-US">英語 (English US - en-US)</option>
+            <option value="zh-TW">國語 (Taiwanese Mandarin - zh-TW)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">色彩主題風格</label>
+          <select id="setting-theme-select" class="form-select">
+            <option value="dark">🌙 暗黑極客深色 (Dark Mode)</option>
+            <option value="light">☀️ 清新明亮淺色 (Light Mode)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">每日新卡上限 (New Cards Limit)</label>
+          <input type="number" id="setting-new-limit" class="form-input" min="5" max="100" value="20">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">每日複習上限 (Review Cards Limit)</label>
+          <input type="number" id="setting-review-limit" class="form-input" min="20" max="500" value="100">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Google Gemini API Key (選填，啟用高階 AI 例句生成)</label>
+          <input type="password" id="setting-gemini-key" class="form-input" placeholder="AIzaSy...">
+          <div class="help-text">
+            💡 未填寫亦可使用內建免金鑰之讀音、繁中翻譯與實用語境例句引擎。若填寫則升級為 Gemini 深度情境生成。
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">取消</button>
+        <button class="btn-primary" onclick="window.app.saveSettingsFromModal()">儲存設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript 核心程式庫 -->
+  <script src="static/flashcards/js/anki_engine.js"></script>
+  <script src="static/flashcards/js/sync_manager.js"></script>
+  <script src="static/flashcards/js/builtin_data.js"></script>
+  <script src="static/flashcards/js/word_enricher.js"></script>
+  <script src="static/flashcards/js/app.js"></script>
+</body>
+</html>

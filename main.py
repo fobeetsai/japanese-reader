@@ -146,6 +146,26 @@ async def get_grammar_detail(grammar_id: int):
             return g
     raise HTTPException(status_code=404, detail="找不到此文法項目")
 
+# MOJi 辭書直連查詢 API
+from moji_client import search_moji
+
+@app.get("/api/moji/search")
+async def moji_search_get(word: str):
+    """自 MOJi 辭書查詢日語單字讀音、釋義與權威例句"""
+    if not word.strip():
+        raise HTTPException(status_code=400, detail="請提供欲查詢的單字")
+    result = search_moji(word)
+    return result
+
+@app.post("/api/moji/search")
+async def moji_search_post(req: TranslateWordRequest):
+    """自 MOJi 辭書查詢日語單字讀音、釋義與權威例句 (POST)"""
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="請提供欲查詢的單字")
+    result = search_moji(req.text)
+    return result
+
+
 # 掛載靜態網頁前端
 os.makedirs("static", exist_ok=True)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
