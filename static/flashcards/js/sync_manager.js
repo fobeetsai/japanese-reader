@@ -60,7 +60,7 @@ class SyncManager {
       dailyReviewLimit: 100,
       vibration: true,
       githubToken: '',
-      gistId: '28eb3735f777c44032bd0b92b4db8869',
+      gistId: '',
       lastSyncTime: null,
       autoSyncOnStart: false
     };
