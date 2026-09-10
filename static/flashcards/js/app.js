@@ -34,20 +34,26 @@ class FlashcardApp {
   }
 
   async init() {
-    this.loadData();
-    this.enricher = new WordEnricher({ settings: this.settings });
-    this.applyTheme();
-    this.initPwaBanner();
-    this.setupEventListeners();
-    this.setupKeyboardShortcuts();
-    this.setupGestures();
-    this.renderCategoryTabs();
-    this.renderDeckList();
-    this.updateHeaderStats();
+    try {
+      this.loadData();
+      if (typeof WordEnricher !== 'undefined') {
+        this.enricher = new WordEnricher({ settings: this.settings });
+      }
+      this.applyTheme();
+      this.initPwaBanner();
+      this.setupEventListeners();
+      this.setupKeyboardShortcuts();
+      this.setupGestures();
+      this.renderCategoryTabs();
+      this.renderDeckList();
+      this.updateHeaderStats();
 
-    // 若設定開啟自動同步且有 Token 與 GistID，則在啟動時自動拉取
-    if (this.settings.autoSyncOnStart && this.settings.githubToken && this.settings.gistId) {
-      this.autoSyncCloud();
+      // 若設定開啟自動同步且有 Token 與 GistID，則在啟動時自動拉取
+      if (this.settings.autoSyncOnStart && this.settings.githubToken && this.settings.gistId) {
+        this.autoSyncCloud();
+      }
+    } catch (err) {
+      console.error('[AnkiFlash] init 初始化異常:', err);
     }
   }
 
@@ -55,19 +61,28 @@ class FlashcardApp {
   // 資料載入與持久化
   // ==========================================
 
+  getFallbackBuiltinData() {
+    const defaultDecks = (typeof BUILTIN_DECKS !== 'undefined' ? BUILTIN_DECKS : (window.BUILTIN_DECKS || []));
+    const defaultCards = (typeof BUILTIN_CARDS !== 'undefined' ? BUILTIN_CARDS : (window.BUILTIN_CARDS || []));
+    return {
+      decks: JSON.parse(JSON.stringify(defaultDecks)),
+      cards: JSON.parse(JSON.stringify(defaultCards))
+    };
+  }
+
   loadData() {
     const data = this.sync.loadLocalData();
-    this.settings = data.settings;
+    this.settings = data.settings || this.sync.getDefaultSettings();
     this.logs = data.logs || {};
 
-    if (data.decks && data.decks.length > 0) {
+    if (data.decks && Array.isArray(data.decks) && data.decks.length > 0) {
       this.decks = data.decks;
-      this.cards = data.cards || [];
+      this.cards = (data.cards && Array.isArray(data.cards)) ? data.cards : [];
     } else {
-      // 首次啟動：載入內建高頻字庫
-      this.decks = JSON.parse(JSON.stringify(window.BUILTIN_DECKS || []));
-      const starterCards = JSON.parse(JSON.stringify(window.BUILTIN_CARDS || []));
-      this.cards = starterCards.map(c => this.anki.createCard(c));
+      // 首次啟動或無牌組：載入內建精選高頻字庫
+      const fallback = this.getFallbackBuiltinData();
+      this.decks = fallback.decks;
+      this.cards = fallback.cards.map(c => this.anki.createCard(c));
       this.saveData();
     }
 
@@ -83,6 +98,18 @@ class FlashcardApp {
       settings: this.settings,
       logs: this.logs
     });
+  }
+
+  restoreDefaultDecks() {
+    const fallback = this.getFallbackBuiltinData();
+    this.decks = fallback.decks;
+    this.cards = fallback.cards.map(c => this.anki.createCard(c));
+    this.saveData();
+    this.currentCategory = 'all';
+    this.renderCategoryTabs();
+    this.renderDeckList();
+    this.updateHeaderStats();
+    alert('🎉 已成功還原所有預設牌組與單字卡片！');
   }
 
   applyTheme() {
@@ -206,8 +233,16 @@ class FlashcardApp {
       container.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-secondary);">
           <div style="font-size: 2.5rem; margin-bottom: 12px;">📂</div>
-          <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">此分類下尚無牌組</div>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">點擊右上角「➕ 新建牌組」可為此分類新增專屬字庫！</p>
+          <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary);">目前此處尚無牌組</div>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px;">您可以點擊下方按鈕立即一鍵恢復預設牌組，或點選右上角建立新牌組！</p>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="window.app.restoreDefaultDecks()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;">
+              🔄 一鍵還原預設牌組 (營造工程/KY/日常/JLPT)
+            </button>
+            <button class="btn-secondary" onclick="window.app.openNewDeckModal()">
+              ➕ 新建自訂牌組
+            </button>
+          </div>
         </div>
       `;
       return;
@@ -267,17 +302,17 @@ class FlashcardApp {
       `;
 
       // 綁定事件
-      cardEl.querySelector('.btn-study').addEventListener('click', (e) => {
+      cardEl.querySelector('.btn-study')?.addEventListener('click', (e) => {
         e.stopPropagation();
         this.startStudy(deck.id);
       });
 
-      cardEl.querySelector('.btn-deck-cards').addEventListener('click', (e) => {
+      cardEl.querySelector('.btn-deck-cards')?.addEventListener('click', (e) => {
         e.stopPropagation();
         this.openDeckCardManager(deck.id);
       });
 
-      cardEl.querySelector('.btn-deck-menu').addEventListener('click', (e) => {
+      cardEl.querySelector('.btn-deck-menu')?.addEventListener('click', (e) => {
         e.stopPropagation();
         this.openDeckActionMenu(deck.id);
       });
@@ -1557,8 +1592,8 @@ class FlashcardApp {
   // ==========================================
 
   initPwaBanner() {
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !window.MSStream;
+    const isStandalone = !!(window.navigator && window.navigator.standalone) || (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)')?.matches);
 
     // 若在 iOS 且非全螢幕 standalone，提示用戶加入主畫面
     const banner = document.getElementById('ios-pwa-banner');
@@ -1593,7 +1628,22 @@ class FlashcardApp {
   }
 }
 
-// 啟動全域實例
-window.addEventListener('DOMContentLoaded', () => {
-  window.app = new FlashcardApp();
-});
+if (typeof window !== 'undefined') window.FlashcardApp = FlashcardApp;
+if (typeof globalThis !== 'undefined') globalThis.FlashcardApp = FlashcardApp;
+
+// 啟動全域實例（避免 DOMContentLoaded 競態條件）
+function startApp() {
+  if (!window.app) {
+    try {
+      window.app = new FlashcardApp();
+    } catch (e) {
+      console.error('[AnkiFlash] 啟動失敗:', e);
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}

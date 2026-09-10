@@ -345,10 +345,17 @@ const BUILTIN_CARDS = [
   }
 ];
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BUILTIN_CATEGORIES, BUILTIN_DECKS, BUILTIN_CARDS };
-} else {
+if (typeof window !== 'undefined') {
   window.BUILTIN_CATEGORIES = BUILTIN_CATEGORIES;
   window.BUILTIN_DECKS = BUILTIN_DECKS;
   window.BUILTIN_CARDS = BUILTIN_CARDS;
 }
+if (typeof globalThis !== 'undefined') {
+  globalThis.BUILTIN_CATEGORIES = BUILTIN_CATEGORIES;
+  globalThis.BUILTIN_DECKS = BUILTIN_DECKS;
+  globalThis.BUILTIN_CARDS = BUILTIN_CARDS;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { BUILTIN_CATEGORIES, BUILTIN_DECKS, BUILTIN_CARDS };
+}
+
