@@ -15,9 +15,20 @@ import json
 import urllib.request
 import urllib.parse
 from typing import List, Dict, Any, Optional
-import httpx
-from bs4 import BeautifulSoup
-from janome.tokenizer import Tokenizer
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
+
+try:
+    from janome.tokenizer import Tokenizer
+except ImportError:
+    Tokenizer = None
 
 # 假名轉換表
 KATAKANA_START = 0x30A1
@@ -82,6 +93,7 @@ def make_ruby(surface: str, reading_kata: str) -> str:
 
 # 定義各層級語法與助詞清單，確保文型與複合助詞不被拆解為零碎助詞
 SPECIAL_GRAMMAR_PATTERNS = [
+    # 核心特殊文型
     {'pattern': 'ながらも', 'title': '〜ながら（も）（逆接）', 'level': 'N2', 'category': '文型', 'grammar_id': 551},
     {'pattern': 'ながら', 'title': '〜ながら（同時進行・逆接）', 'level': 'N3', 'category': '文型', 'grammar_id': 550},
     {'pattern': 'つつも', 'title': '〜つつ（も）', 'level': 'N2', 'category': '文型', 'grammar_id': 330},
@@ -96,7 +108,72 @@ SPECIAL_GRAMMAR_PATTERNS = [
     {'pattern': '一方だ', 'title': '〜一方だ', 'level': 'N3', 'category': '文型', 'grammar_id': 24},
     {'pattern': 'あげく', 'title': '〜あげく（に）', 'level': 'N3', 'category': '文型', 'grammar_id': 9},
     {'pattern': 'あまり', 'title': '〜あまり', 'level': 'N2', 'category': '文型', 'grammar_id': 11},
-    {'pattern': 'がち', 'title': '〜がちだ', 'level': 'N3', 'category': '文型', 'grammar_id': 71}
+    {'pattern': 'がち', 'title': '〜がちだ', 'level': 'N3', 'category': '文型', 'grammar_id': 71},
+
+    # 義務・禁止・許可・不必要
+    {'pattern': 'はいけない', 'title': '〜てはいけない（禁止）', 'level': 'N5', 'category': '文型', 'grammar_id': 901},
+    {'pattern': 'ではいけない', 'title': '〜ではいけない（禁止）', 'level': 'N5', 'category': '文型', 'grammar_id': 901},
+    {'pattern': 'はならない', 'title': '〜てはならない（強禁止）', 'level': 'N3', 'category': '文型', 'grammar_id': 902},
+    {'pattern': 'ではならない', 'title': '〜ではならない（強禁止）', 'level': 'N3', 'category': '文型', 'grammar_id': 902},
+    {'pattern': 'しなければならない', 'title': '〜なければならない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 905},
+    {'pattern': 'しなくてはならない', 'title': '〜なくてはならない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 906},
+    {'pattern': 'しなければいけない', 'title': '〜なければいけない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 907},
+    {'pattern': 'しなくてはいけない', 'title': '〜なくてはいけない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 908},
+    {'pattern': 'なければならない', 'title': '〜なければならない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 905},
+    {'pattern': 'なくてはならない', 'title': '〜なくてはならない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 906},
+    {'pattern': 'なければいけない', 'title': '〜なければいけない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 907},
+    {'pattern': 'なくてはいけない', 'title': '〜なくてはいけない（義務）', 'level': 'N5', 'category': '文型', 'grammar_id': 908},
+    {'pattern': 'てもいい', 'title': '〜てもいい（許可）', 'level': 'N5', 'category': '文型', 'grammar_id': 903},
+    {'pattern': 'でもいい', 'title': '〜でもいい（許可）', 'level': 'N5', 'category': '文型', 'grammar_id': 903},
+    {'pattern': 'てもかまわない', 'title': '〜てもかまわない（許可）', 'level': 'N4', 'category': '文型', 'grammar_id': 904},
+    {'pattern': 'でもかまわない', 'title': '〜でもかまわない（許可）', 'level': 'N4', 'category': '文型', 'grammar_id': 904},
+    {'pattern': 'なくてもいい', 'title': '〜なくてもいい（不必要）', 'level': 'N5', 'category': '文型', 'grammar_id': 909},
+    {'pattern': 'なくてもかまわない', 'title': '〜なくてもかまわない', 'level': 'N4', 'category': '文型', 'grammar_id': 910},
+
+    # 可能・決定・習慣・變化
+    {'pattern': 'ことができる', 'title': '〜ことができる（可能）', 'level': 'N5', 'category': '文型', 'grammar_id': 911},
+    {'pattern': 'ことができた', 'title': '〜ことができた（可能過去）', 'level': 'N5', 'category': '文型', 'grammar_id': 911},
+    {'pattern': 'ことにする', 'title': '〜ことにする（決定）', 'level': 'N4', 'category': '文型', 'grammar_id': 912},
+    {'pattern': 'ことにした', 'title': '〜ことにした（決定過去）', 'level': 'N4', 'category': '文型', 'grammar_id': 912},
+    {'pattern': 'ことになる', 'title': '〜ことになる（客觀決定）', 'level': 'N4', 'category': '文型', 'grammar_id': 913},
+    {'pattern': 'ことになった', 'title': '〜ことになった（客觀決定過去）', 'level': 'N4', 'category': '文型', 'grammar_id': 913},
+    {'pattern': 'ことがある', 'title': '〜ことがある（經驗・有時）', 'level': 'N5', 'category': '文型', 'grammar_id': 914},
+    {'pattern': 'ことがあった', 'title': '〜ことがあった（過去經驗）', 'level': 'N5', 'category': '文型', 'grammar_id': 914},
+    {'pattern': 'ようになっている', 'title': '〜ようになっている（結構・習慣）', 'level': 'N3', 'category': '文型', 'grammar_id': 915},
+    {'pattern': 'ようになった', 'title': '〜ようになった（變化）', 'level': 'N4', 'category': '文型', 'grammar_id': 916},
+    {'pattern': 'ようになる', 'title': '〜ようになる（變化）', 'level': 'N4', 'category': '文型', 'grammar_id': 916},
+    {'pattern': 'ようにしている', 'title': '〜ようにしている（努力・習慣）', 'level': 'N4', 'category': '文型', 'grammar_id': 917},
+    {'pattern': 'ようにする', 'title': '〜ようにする（努力）', 'level': 'N4', 'category': '文型', 'grammar_id': 917},
+
+    # 樣態・推量
+    {'pattern': 'そうになった', 'title': '〜そうになった（差點...）', 'level': 'N3', 'category': '文型', 'grammar_id': 918},
+    {'pattern': 'そうになる', 'title': '〜そうになる（快要...）', 'level': 'N3', 'category': '文型', 'grammar_id': 918},
+    {'pattern': 'そうに見える', 'title': '〜そうに見える（看起來）', 'level': 'N4', 'category': '文型', 'grammar_id': 919},
+    {'pattern': 'そうだ', 'title': '〜そうだ（樣態・傳聞）', 'level': 'N4', 'category': '文型', 'grammar_id': 920},
+    {'pattern': 'そうです', 'title': '〜そうです（樣態・傳聞敬體）', 'level': 'N4', 'category': '文型', 'grammar_id': 920},
+    {'pattern': 'そうに', 'title': '〜そうに（樣態副詞化）', 'level': 'N4', 'category': '文型', 'grammar_id': 921},
+    {'pattern': 'そうもない', 'title': '〜そうもない（絕不可能）', 'level': 'N2', 'category': '文型', 'grammar_id': 922},
+    {'pattern': 'かもしれない', 'title': '〜かもしれない（推量）', 'level': 'N4', 'category': '文型', 'grammar_id': 923},
+    {'pattern': 'かもしれません', 'title': '〜かもしれません（推量敬體）', 'level': 'N4', 'category': '文型', 'grammar_id': 923},
+    {'pattern': 'に違いない', 'title': '〜に違いない（確信推量）', 'level': 'N3', 'category': '文型', 'grammar_id': 924},
+    {'pattern': 'はずだ', 'title': '〜はずだ（應該）', 'level': 'N4', 'category': '文型', 'grammar_id': 925},
+    {'pattern': 'はずがない', 'title': '〜はずがない（不可能）', 'level': 'N3', 'category': '文型', 'grammar_id': 926},
+    {'pattern': 'わけがない', 'title': '〜わけがない（絕不可能）', 'level': 'N3', 'category': '文型', 'grammar_id': 927},
+    {'pattern': 'わけだ', 'title': '〜わけだ（怪不得・自然結果）', 'level': 'N3', 'category': '文型', 'grammar_id': 928},
+    {'pattern': 'わけではない', 'title': '〜わけではない（並非）', 'level': 'N3', 'category': '文型', 'grammar_id': 929},
+    {'pattern': 'つもりだ', 'title': '〜つもりだ（打算）', 'level': 'N4', 'category': '文型', 'grammar_id': 930},
+
+    # 助言・比較・強調・原因
+    {'pattern': 'ほうがいい', 'title': '〜ほうがいい（建議）', 'level': 'N5', 'category': '文型', 'grammar_id': 931},
+    {'pattern': 'よりほかない', 'title': '〜よりほかない（只好）', 'level': 'N2', 'category': '文型', 'grammar_id': 933},
+    {'pattern': 'しかない', 'title': '〜しかない（只好）', 'level': 'N3', 'category': '文型', 'grammar_id': 934},
+    {'pattern': 'にすぎない', 'title': '〜にすぎない（只不過）', 'level': 'N2', 'category': '文型', 'grammar_id': 935},
+    {'pattern': 'に決まっている', 'title': '〜に決まっている（一定是）', 'level': 'N3', 'category': '文型', 'grammar_id': 936},
+    {'pattern': 'とおりに', 'title': '〜とおりに（照著...）', 'level': 'N4', 'category': '文型', 'grammar_id': 937},
+    {'pattern': 'どおりに', 'title': '〜どおりに（照著...）', 'level': 'N4', 'category': '文型', 'grammar_id': 937},
+    {'pattern': 'たびに', 'title': '〜たびに（每當...）', 'level': 'N3', 'category': '文型', 'grammar_id': 938},
+    {'pattern': 'おかげで', 'title': '〜おかげで（託福・多虧）', 'level': 'N4', 'category': '文型', 'grammar_id': 940},
+    {'pattern': 'せいで', 'title': '〜せいで（都怪...）', 'level': 'N4', 'category': '文型', 'grammar_id': 941}
 ]
 
 COMPOUND_PARTICLES = [
@@ -162,7 +239,18 @@ CONJUNCTIVE_PARTICLES = [
     {'pattern': 'ので', 'title': '接續助詞：ので', 'category': '接續助詞', 'base': 'ので'},
     {'pattern': 'のに', 'title': '接續助詞：のに', 'category': '接續助詞', 'base': 'のに'},
     {'pattern': 'ても', 'title': '接續助詞：ても', 'category': '接續助詞', 'base': 'ても'},
-    {'pattern': 'でも', 'title': '接續助詞：でも', 'category': '接續助詞', 'base': 'でも'}
+    {'pattern': 'でも', 'title': '接續助詞：でも', 'category': '接續助詞', 'base': 'でも'},
+    {'pattern': 'たり', 'title': '接續助詞：たり', 'category': '接續助詞', 'base': 'たり'},
+    {'pattern': 'だり', 'title': '接續助詞：だり', 'category': '接續助詞', 'base': 'だり'},
+    {'pattern': 'から', 'title': '接續助詞：から', 'category': '接續助詞', 'base': 'から'},
+    {'pattern': 'なら', 'title': '接續助詞：なら', 'category': '接續助詞', 'base': 'なら'},
+    {'pattern': 'ば', 'title': '接續助詞：ば', 'category': '接續助詞', 'base': 'ば'},
+    {'pattern': 'たら', 'title': '接續助詞：たら', 'category': '接續助詞', 'base': 'たら'},
+    {'pattern': 'だら', 'title': '接續助詞：だら', 'category': '接續助詞', 'base': 'たら'},
+    {'pattern': 'けれども', 'title': '接續助詞：けれども', 'category': '接續助詞', 'base': 'けれど'},
+    {'pattern': 'けれど', 'title': '接續助詞：けれど', 'category': '接續助詞', 'base': 'けれど'},
+    {'pattern': 'けど', 'title': '接續助詞：けど', 'category': '接續助詞', 'base': 'けど'},
+    {'pattern': 'し', 'title': '接續助詞：し', 'category': '接續助詞', 'base': 'し'}
 ]
 
 CASE_PARTICLES = [

@@ -29,6 +29,19 @@ def build():
             reading = entries[0].get("reading", "")
             compact_vocab[word] = [lvl, reading]
 
+    # 注入常見動詞假名形、補助動詞與形式名詞，避免分詞零碎化
+    supplemental_vocab = {
+        'みる': [5, 'みる'], 'いる': [5, 'いる'], 'おる': [3, 'おる'], 'くる': [5, 'くる'],
+        'おく': [4, 'おく'], 'ゆく': [4, 'ゆく'], 'ない': [5, 'ない'], 'ほしい': [5, 'ほしい'],
+        'たい': [5, 'たい'], 'そうだ': [4, 'そうだ'], 'ようだ': [4, 'ようだ'], 'らしい': [4, 'らしい'],
+        'わけ': [3, 'わけ'], 'もの': [4, 'もの'], 'ため': [4, 'ため'], 'よう': [4, 'よう'],
+        'ところ': [4, 'ところ'], 'とおり': [4, 'とおり'], 'どおり': [4, 'どおり'], 'はず': [4, 'はず'],
+        'つもり': [4, 'つもり'], 'こと': [5, 'こと'], 'ほう': [5, 'ほう'], 'とき': [5, 'とき']
+    }
+    for k, v in supplemental_vocab.items():
+        if k not in compact_vocab:
+            compact_vocab[k] = v
+
     with open("kanji_compact.json", "r", encoding="utf-8") as f:
         kanji_compact_str = f.read()
 
@@ -1638,6 +1651,58 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 }}
             }}
 
+            // 2.5 五段動詞 連用形 (ます形幹部: き, ぎ, し, ち, に, び, み, り, い)
+            const iStemToU = {{
+                'き': 'く', 'ぎ': 'ぐ', 'し': 'す', 'ち': 'つ',
+                'に': 'ぬ', 'び': 'ぶ', 'み': 'む', 'り': 'る', 'い': 'う'
+            }};
+            if (word.length >= 2) {{
+                const lastChar = word.slice(-1);
+                const stem = word.slice(0, -1);
+                if (iStemToU[lastChar]) {{
+                    candidates.push(stem + iStemToU[lastChar]);
+                    candidates.push(word + 'る');
+                }}
+                if (lastChar === 'し') {{
+                    candidates.push(stem + 'する');
+                }}
+            }}
+
+            // 2.6 五段動詞 未然形 (あ段: か, が, さ, た, な, ば, ま, ら, わ)
+            const aStemToU = {{
+                'か': 'く', 'が': 'ぐ', 'さ': 'す', 'た': 'つ',
+                'な': 'ぬ', 'ば': 'ぶ', 'ま': 'む', 'ら': 'る', 'わ': 'う'
+            }};
+            if (word.length >= 2) {{
+                const lastChar = word.slice(-1);
+                const stem = word.slice(0, -1);
+                if (aStemToU[lastChar]) {{
+                    candidates.push(stem + aStemToU[lastChar]);
+                }}
+            }}
+
+            // 2.7 たり / だり (列舉形: 見たり, 読んだり, 走ったり)
+            if (word.endsWith('たり') || word.endsWith('だり')) {{
+                const stem = word.slice(0, -2);
+                const aux = word.endsWith('たり') ? 'て' : 'で';
+                const subRes = deinflectWord(stem + aux);
+                if (subRes) candidates.push(subRes);
+            }}
+
+            // 2.8 たら / だら (假定形: 降ったら, 読んだら)
+            if (word.endsWith('たら') || word.endsWith('だら')) {{
+                const stem = word.slice(0, -2);
+                const aux = word.endsWith('たら') ? 'た' : 'だ';
+                const subRes = deinflectWord(stem + aux);
+                if (subRes) candidates.push(subRes);
+            }}
+
+            // 2.9 形容詞連用形 (〜く)
+            if (word.endsWith('く') && word.length >= 2) {{
+                const stem = word.slice(0, -1);
+                candidates.push(stem + 'い');
+            }}
+
             // 3. ている / ていた / ています / ていました / てる / てた
             const teiruForms = [
                 ['ていました', 5], ['ています', 4], ['ていた', 3], ['ている', 3], ['てた', 2], ['てる', 2],
@@ -2148,7 +2213,114 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 i++;
             }}
 
-            return tokens;
+            // =========================================================================
+            // POST-PROCESSING MERGE PASS (徹底防範孤立字元、敬語接頭詞 forward merge 等)
+            // =========================================================================
+            const honorifics = ['お', 'ご', '御'];
+            const merged = [];
+
+            for (let tIdx = 0; tIdx < tokens.length; tIdx++) {{
+                const cur = tokens[tIdx];
+                const next = tIdx + 1 < tokens.length ? tokens[tIdx + 1] : null;
+                const prev = merged.length > 0 ? merged[merged.length - 1] : null;
+
+                // 1. 敬語接頭詞 forward merge (例: [お] + [世話] -> [お世話], [ご] + [家族] -> [ご家族])
+                if (honorifics.includes(cur.surface) && next && (next.pos === '名詞' || next.pos === '單字' || next.is_kanji)) {{
+                    next.surface = cur.surface + next.surface;
+                    next.base_form = cur.surface + next.base_form;
+                    next.reading = cur.surface + (next.reading || '');
+                    next.ruby_html = cur.surface + (next.ruby_html || '');
+                    continue;
+                }}
+
+                // 檢查是否為孤立假名
+                if (cur.surface.length === 1 && cur.pos === '符號' && !/[。、！？!?「」『』（）\\s]/.test(cur.surface)) {{
+                    // 2. [よ] + [う] -> [よう]
+                    if (cur.surface === 'よ' && next && next.surface === 'う') {{
+                        merged.push({{
+                            surface: 'よう',
+                            base_form: 'よう',
+                            reading: 'よう',
+                            jlpt: 'N4',
+                            is_kanji: false,
+                            ruby_html: 'よう',
+                            pos: '單字',
+                            is_particle: false
+                        }});
+                        tIdx++; // skip 'う'
+                        continue;
+                    }}
+
+                    // 3. 漢字單字 + 孤立送假名 (例: [降] + [り] -> [降り], [泣] + [き] -> [泣き], [早] + [く] -> [早く], [多] + [く] -> [多く], [書] + [か] -> [書か])
+                    if (prev && prev.is_kanji && (cur.surface === 'り' || cur.surface === 'き' || cur.surface === 'く' || cur.surface === 'し' || cur.surface === 'ち' || cur.surface === 'い' || cur.surface === 'み' || cur.surface === 'か' || cur.surface === 'が' || cur.surface === 'さ' || cur.surface === 'た' || cur.surface === 'な' || cur.surface === 'ば' || cur.surface === 'ま' || cur.surface === 'ら')) {{
+                        const combinedSurface = prev.surface + cur.surface;
+                        const baseVerb = deinflectWord(combinedSurface);
+                        const isAdj = cur.surface === 'く';
+                        const pos = isAdj ? '形容詞' : (baseVerb ? '動詞' : prev.pos);
+                        let combinedReading = (prev.reading || '') + cur.surface;
+                        if (baseVerb && JLPT_VOCAB[baseVerb]) {{
+                            const baseReading = kataToHira(JLPT_VOCAB[baseVerb][1]);
+                            combinedReading = baseReading.slice(0, -1) + cur.surface;
+                        }}
+                        prev.surface = combinedSurface;
+                        prev.base_form = baseVerb || combinedSurface;
+                        prev.reading = combinedReading;
+                        prev.ruby_html = createRubyHtml(combinedSurface, combinedReading);
+                        prev.pos = pos;
+                        continue;
+                    }}
+
+                    // 4. 孤立 [る] 與前項動詞/補助動詞合併 (例：[読んで] + [み] + [る] -> [読んで] + [みる], [でき] + [る] -> [できる])
+                    if (cur.surface === 'る' && prev) {{
+                        if (prev.surface === 'み' || prev.surface === 'でき' || prev.surface === 'す' || prev.surface === 'い' || prev.surface === 'あ' || prev.surface.endsWith('てい') || prev.surface.endsWith('られ') || prev.surface.endsWith('れ') || prev.surface.endsWith('させ') || prev.surface.endsWith('せ')) {{
+                            prev.surface += 'る';
+                            prev.base_form = prev.base_form ? (prev.base_form.endsWith('る') ? prev.base_form : prev.base_form + 'る') : prev.surface;
+                            prev.reading = (prev.reading || '') + 'る';
+                            prev.ruby_html += 'る';
+                            prev.pos = '動詞';
+                            continue;
+                        }}
+                        if (prev.pos === '動詞' || prev.pos === '單字') {{
+                            prev.surface += 'る';
+                            prev.reading = (prev.reading || '') + 'る';
+                            prev.ruby_html += 'る';
+                            continue;
+                        }}
+                    }}
+
+                    // 5. 孤立 [し] 或 [した] 與前項サ變名詞合併 (例：[勉強] + [し] -> [勉強し], [変化] + [した] -> [変化した])
+                    if (cur.surface === 'し' && prev && (prev.pos === '單字' || prev.pos === '名詞')) {{
+                        prev.surface += 'し';
+                        prev.base_form = prev.surface + 'する';
+                        prev.reading = (prev.reading || '') + 'し';
+                        prev.ruby_html += 'し';
+                        prev.pos = '動詞';
+                        continue;
+                    }}
+
+                    // 6. 孤立 [り] 緊隨動詞過去形後 (例：[見た] + [り] -> [見たり], [読んだ] + [り] -> [読んだり])
+                    if (cur.surface === 'り' && prev && (prev.surface.endsWith('た') || prev.surface.endsWith('だ'))) {{
+                        prev.surface += 'り';
+                        prev.base_form = prev.base_form || prev.surface;
+                        prev.reading = (prev.reading || '') + 'り';
+                        prev.ruby_html += 'り';
+                        prev.pos = '動詞';
+                        continue;
+                    }}
+
+                    // 7. 若前項非標點符號，平滑吸收避免孤立
+                    if (prev && prev.pos !== '符號') {{
+                        prev.surface += cur.surface;
+                        prev.reading = (prev.reading || '') + cur.surface;
+                        prev.ruby_html += cur.surface;
+                        continue;
+                    }}
+                }}
+
+                merged.push(cur);
+            }}
+
+            return merged;
         }}
 
         const TRANSLATE_CACHE = new Map();
