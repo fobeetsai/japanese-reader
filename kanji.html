@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="漢字記憶道場：WaniKani全60級2101個漢字項目，音訓讀、分級複習、教材練習與AnkiFlash抽認卡即時同步。">
+  <title>漢字記憶道場 (Kanji Memory Lab) ✕ AnkiFlash 互動抽認卡</title>
+  <link rel="stylesheet" href="static/cross_nav.css">
+  <link rel="stylesheet" href="static/kanji/style.css">
+  
+  <!-- Core Scripts -->
+  <script src="static/kanji/data.js" defer></script>
+  <script src="static/kanji/app.js" defer></script>
+  <script src="static/kanji/books.js" defer></script>
+  <script src="static/kanji/book-seeds.js" defer></script>
+  <script src="static/kanji/book-app.js" defer></script>
+  <script src="static/kanji/wk-data.js" defer></script>
+  <script src="static/kanji/wk-core.js" defer></script>
+  <script src="static/kanji/wk-app.js" defer></script>
+  
+  <!-- AnkiFlash Bridge -->
+  <script src="static/flashcards/js/ankiflash_bridge.js" defer></script>
+  <script src="static/kanji/kanji_bridge_addon.js" defer></script>
+</head>
+<body>
+
+  <!-- 三站同源統一頂部導覽列 -->
+  <nav class="cross-app-nav-bar">
+    <a href="index.html" class="nav-brand">
+      <span>🇯🇵 日語學習全方位生態系</span>
+      <span class="badge-sync">三站同源已打通</span>
+    </a>
+    <div class="nav-group">
+      <a href="index.html" class="nav-link-btn">
+        <span>📖 日文閱讀助手</span>
+      </a>
+      <a href="kanji.html" class="nav-link-btn active-kanji">
+        <span>🈩 漢字記憶道場</span>
+      </a>
+      <a href="flashcard.html" class="nav-link-btn">
+        <span>🎴 AnkiFlash 抽認卡</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- 漢字道場 Header -->
+  <header>
+    <div class="brand">
+      <span class="stamp">字</span>
+      <div>
+        <strong>漢字記憶道場</strong>
+        <small>KANJI MEMORY LAB</small>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <a href="flashcard.html" class="outline" style="text-decoration: none; font-weight: 700; color: #6366f1; border-color: #818cf8;">
+        🎴 前往 AnkiFlash 複習 ↗
+      </a>
+      <button id="goExport" class="outline">匯出到 Anki 檔案 ↗</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div>
+        <span class="eyebrow">WaniKani 全 60 級 × 兩本分級教材 ✕ AnkiFlash 同源打通</span>
+        <h1>看得懂，也要念得出。</h1>
+        <p>完整 2,101 個漢字項目，按等級學音訓讀，點擊按鈕即可秒速存入 AnkiFlash 抽認卡進行 SM-2 間隔重複複習！</p>
+      </div>
+    </div>
+
+    <nav aria-label="學習模式">
+      <button class="active" data-view="wk">WaniKani 全庫</button>
+      <button data-view="books">教材練習</button>
+    </nav>
+
+    <section id="wk"></section>
+    <section id="books" hidden></section>
+
+    <details class="about">
+      <summary>老師使用說明・資料來源 ＆ AnkiFlash 連通指南</summary>
+      <p>💡 <b>與 AnkiFlash 抽認卡連通說明</b>：在全庫選取漢字或於單字詳解中點擊「🎴 送至 AnkiFlash」，單字將直接寫入瀏覽器的抽認卡題庫，隨時切換至頂部「🎴 AnkiFlash 抽認卡」即可開始翻牌練習，無需另外匯出或下載檔案！</p>
+      <p>原 12 字入門的繁中意思、記憶提示與例詞已併入 WaniKani 全庫的對應字條。學習、複習與 Anki 匯出統一使用全庫功能。繁中提示為本頁自編，並非 WaniKani 官方翻譯。</p>
+      <p>課堂建議：先選 3 字 → 念示例詞 → 遮住答案回想 → 隔天複習。看到答案才覺得熟悉時，請選「模糊」或「不熟」。合成朗讀使用裝置日文語音。</p>
+      <p>全庫的備份與還原位於全庫下方說明區；教材圖片卡的備份位於「我的教材卡片」。進度存於目前瀏覽器同源儲存空間。</p>
+      <p id="storageMessage" role="status"></p>
+    </details>
+  </main>
+
+  <footer>
+    漢字記憶道場 · 繁體中文教學版 ✕ AnkiFlash 生態系 · <a href="https://www.wanikani.com/" target="_blank" rel="noopener">參考 WaniKani ↗</a>
+  </footer>
+
+</body>
+</html>

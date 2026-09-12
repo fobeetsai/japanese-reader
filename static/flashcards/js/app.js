@@ -39,6 +39,9 @@ class FlashcardApp {
       if (typeof WordEnricher !== 'undefined') {
         this.enricher = new WordEnricher({ settings: this.settings });
       }
+      if (typeof PhotoOcrEngine !== 'undefined') {
+        this.photoOcr = new PhotoOcrEngine(this);
+      }
       this.applyTheme();
       this.initPwaBanner();
       this.setupEventListeners();
@@ -597,6 +600,8 @@ class FlashcardApp {
     document.getElementById('btn-open-settings').addEventListener('click', () => this.openSettingsModal());
     document.getElementById('btn-new-deck').addEventListener('click', () => this.openNewDeckModal());
     document.getElementById('btn-batch-import').addEventListener('click', () => this.openBatchImportModal());
+    const btnPhotoOcr = document.getElementById('btn-photo-ocr');
+    if (btnPhotoOcr) btnPhotoOcr.addEventListener('click', () => this.openPhotoOcrModal());
     const addCardBtn = document.getElementById('btn-open-add-card');
     if (addCardBtn) addCardBtn.addEventListener('click', () => this.openAddCardModal());
 
@@ -1111,13 +1116,35 @@ class FlashcardApp {
 
   importFromReaderNotes() {
     try {
-      const rawNotes = localStorage.getItem('saved_notes') || localStorage.getItem('japanese_notes');
+      if (window.AnkiBridge) {
+        const res = window.AnkiBridge.syncFromReaderNotebook();
+        if (res.success) {
+          this.loadData();
+          this.renderDeckList();
+          this.updateHeaderStats();
+          alert(`🎉 已成功從日文閱讀助手同步匯入 ${res.addedCount} 筆新收藏生詞！(更新 ${res.updatedCount || 0} 筆)`);
+          return;
+        }
+      }
+
+      const rawNotes = localStorage.getItem('japanese_reader_notebook') || localStorage.getItem('saved_notes') || localStorage.getItem('japanese_notes');
       if (!rawNotes) {
-        alert('未在日文閱讀助手中找到收藏筆記！');
+        alert('未在日文閱讀助手中找到收藏筆記！\n請先在「日文閱讀助手」閱讀文章時點擊單字星號加入生詞。');
         return;
       }
 
-      const notes = JSON.parse(rawNotes);
+      const parsed = JSON.parse(rawNotes);
+      let wordsList = [];
+      if (Array.isArray(parsed.words)) {
+        wordsList = parsed.words;
+      } else if (typeof parsed === 'object') {
+        wordsList = Object.entries(parsed).map(([w, info]) => ({
+          surface: w,
+          reading: typeof info === 'object' ? (info.reading || info.kana || '') : '',
+          meaning: typeof info === 'object' ? (info.meaning || info.def || '') : String(info)
+        }));
+      }
+
       let targetDeck = this.decks.find(d => d.id === 'deck_reader_notes');
       if (!targetDeck) {
         targetDeck = {
@@ -1131,17 +1158,17 @@ class FlashcardApp {
       }
 
       let count = 0;
-      Object.entries(notes).forEach(([word, info]) => {
-        const exists = this.cards.some(c => c.deckId === targetDeck.id && c.front === word);
+      wordsList.forEach(w => {
+        const wordStr = (w.surface || w.baseForm || '').trim();
+        if (!wordStr) return;
+        const exists = this.cards.some(c => c.deckId === targetDeck.id && c.front === wordStr);
         if (!exists) {
-          const reading = typeof info === 'object' ? (info.reading || info.kana || '') : '';
-          const meaning = typeof info === 'object' ? (info.meaning || info.def || '') : String(info);
           this.cards.push(this.anki.createCard({
             deckId: targetDeck.id,
-            front: word,
-            reading: reading,
-            back: meaning,
-            tags: ['閱讀收藏']
+            front: wordStr,
+            reading: w.reading || '',
+            back: (w.jlpt ? `[${w.jlpt}] ` : '') + (w.pos ? `(${w.pos}) ` : '') + (w.meaning || '閱讀生詞'),
+            tags: ['閱讀收藏', w.jlpt || '未分級']
           }));
           count++;
         }
@@ -1150,9 +1177,69 @@ class FlashcardApp {
       this.saveData();
       this.renderDeckList();
       this.updateHeaderStats();
-      alert(`已成功從閱讀助手同步匯入 ${count} 筆收藏生詞！`);
+      alert(`🎉 已成功從閱讀助手同步匯入 ${count} 筆收藏生詞！`);
     } catch (e) {
       alert('匯入生詞本失敗: ' + e.message);
+    }
+  }
+
+  importFromKanjiDojo() {
+    const cards = window.AnkiBridge ? window.AnkiBridge.getCards() : this.cards;
+    const kanjiCardsCount = cards.filter(c => c.deckId === 'deck_kanji_dojo').length;
+    if (kanjiCardsCount > 0) {
+      alert(`目前「🈩 漢字道場」牌組內已有 ${kanjiCardsCount} 個漢字卡片！\n點擊牌組即可開始複習。\n若想新增更多漢字，可在「🈩 漢字道場」頁面勾選漢字後點擊「送至 AnkiFlash」！`);
+      return;
+    }
+
+    if (confirm('目前尚未同步漢字道場。是否自動匯入 WaniKani 常用基礎漢字建立牌組？')) {
+      const sampleKanji = [
+        { front: '一', reading: '音：イチ ｜ 訓：ひと-', back: '【字義】一；一個\n【例詞】一つ（ひとつ）、一人（ひとり）', example: '一つ（ひとつ）', tags: ['漢字道場', 'Level_1'] },
+        { front: '二', reading: '音：ニ ｜ 訓：ふた-', back: '【字義】二；兩個\n【例詞】二つ（ふたつ）、二人（ふたり）', example: '二つ（ふたつ）', tags: ['漢字道場', 'Level_1'] },
+        { front: '三', reading: '音：サン ｜ 訓：み-', back: '【字義】三；三個\n【例詞】三つ（みっつ）、三日（みっか）', example: '三つ（みっつ）', tags: ['漢字道場', 'Level_1'] },
+        { front: '人', reading: '音：ジン、ニン ｜ 訓：ひと', back: '【字義】人；人類\n【例詞】日本人（にほんじん）、大人（おとな）', example: '日本人（にほんじん）', tags: ['漢字道場', 'Level_1'] },
+        { front: '日', reading: '音：ニチ、ジツ ｜ 訓：ひ、か', back: '【字義】太陽；日子；日本\n【例詞】日曜日（にちようび）、毎日（まいにち）', example: '日曜日（にちようび）', tags: ['漢字道場', 'Level_1'] },
+        { front: '本', reading: '音：ホン ｜ 訓：もと', back: '【字義】書本；根本；基底\n【例詞】日本（にほん）、本（ほん）', example: '本（ほん）', tags: ['漢字道場', 'Level_1'] },
+        { front: '大', reading: '音：ダイ、タイ ｜ 訓：おお-きい', back: '【字義】大；龐大\n【例詞】大学（だいがく）、大人（おとな）', example: '大学（だいがく）', tags: ['漢字道場', 'Level_1'] }
+      ];
+      if (window.AnkiBridge) {
+        window.AnkiBridge.addCardsBatch(sampleKanji, {
+          deckId: 'deck_kanji_dojo',
+          deckName: '🈩 漢字記憶道場 (WaniKani)',
+          deckIcon: '🈩',
+          deckColor: '#059669'
+        });
+      }
+      this.loadData();
+      this.renderDeckList();
+      this.updateHeaderStats();
+      alert('🎉 已成功建立「🈩 漢字記憶道場」牌組！您也可以隨時切換至頂部「🈩 漢字道場」選取更多漢字一鍵匯入！');
+    }
+  }
+
+  // 照片辨識代理方法
+  openPhotoOcrModal() {
+    if (this.photoOcr) {
+      this.photoOcr.openModal();
+    } else {
+      alert('照片辨識模組載入中，請稍候...');
+    }
+  }
+
+  handlePhotoSelect(files) {
+    if (this.photoOcr) {
+      this.photoOcr.handleFiles(files);
+    }
+  }
+
+  startPhotoOcrScan() {
+    if (this.photoOcr) {
+      this.photoOcr.startScan();
+    }
+  }
+
+  commitOcrResultsToDecks() {
+    if (this.photoOcr) {
+      this.photoOcr.commitImport();
     }
   }
 

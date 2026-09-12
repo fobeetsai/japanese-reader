@@ -15,9 +15,29 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
+  <link rel="stylesheet" href="static/cross_nav.css">
   <link rel="stylesheet" href="static/flashcards/css/app.css">
 </head>
 <body>
+
+  <!-- 三站同源統一頂部導覽列 -->
+  <nav class="cross-app-nav-bar">
+    <a href="index.html" class="nav-brand">
+      <span>🇯🇵 日語學習全方位生態系</span>
+      <span class="badge-sync">三站同源已打通</span>
+    </a>
+    <div class="nav-group">
+      <a href="index.html" class="nav-link-btn">
+        <span>📖 日文閱讀助手</span>
+      </a>
+      <a href="kanji.html" class="nav-link-btn">
+        <span>🈩 漢字記憶道場</span>
+      </a>
+      <a href="flashcard.html" class="nav-link-btn active-flashcard">
+        <span>🎴 AnkiFlash 抽認卡</span>
+      </a>
+    </div>
+  </nav>
 
   <!-- iOS PWA 導引橫幅 -->
   <div id="ios-pwa-banner" class="pwa-banner" style="display: none;">
@@ -57,9 +77,15 @@
     <section id="view-decks" class="view-section active">
       <div class="deck-header-row">
         <h2 class="section-title">📚 我的單字牌組</h2>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <button class="btn-primary" id="btn-photo-ocr" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); border: none; font-weight: 700; box-shadow: 0 2px 8px rgba(236, 72, 153, 0.35);" onclick="window.app.openPhotoOcrModal()">
+            📸 講義/教材照片批次辨識
+          </button>
           <button class="btn-secondary" onclick="window.app.importFromReaderNotes()">
             ⭐ 匯入閱讀助手生詞
+          </button>
+          <button class="btn-secondary" onclick="window.app.importFromKanjiDojo()">
+            🈩 匯入漢字道場
           </button>
           <button class="btn-secondary" id="btn-batch-import">
             📥 批次匯入
@@ -551,6 +577,112 @@
   <script src="static/flashcards/js/sync_manager.js"></script>
   <script src="static/flashcards/js/builtin_data.js"></script>
   <script src="static/flashcards/js/word_enricher.js"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js"></script>
   <script src="static/flashcards/js/app.js"></script>
+
+  <!-- ==========================================
+       彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-photo-ocr">
+    <div class="modal-box" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📸 講義/教材照片批次辨識導入</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- 步驟 1: 上傳區塊 -->
+        <div class="ocr-upload-zone" id="ocr-drop-zone" style="border: 2px dashed var(--accent-primary); padding: 24px; border-radius: 12px; text-align: center; background: rgba(99, 102, 241, 0.05); cursor: pointer;" onclick="document.getElementById('ocr-file-input').click()">
+          <input type="file" id="ocr-file-input" accept="image/*" multiple style="display: none;">
+          <div style="font-size: 2.6rem; margin-bottom: 8px;">📷</div>
+          <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; color: var(--text-primary);">點擊選取或拖曳多張教材照片至此</div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+            支援單字書、日語課本、檢定考卷、工程手冊、白板拍照或螢幕截圖（可直接於本頁 Ctrl+V 貼上截圖）
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;" onclick="event.stopPropagation()">
+            <button class="btn-primary" type="button" onclick="document.getElementById('ocr-file-input').click()">
+              📂 選擇照片 (支援多選)
+            </button>
+            <label class="btn-secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+              📷 手機直接拍照
+              <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="window.app.handlePhotoSelect(this.files)">
+            </label>
+          </div>
+        </div>
+
+        <!-- 圖片縮圖預覽列 -->
+        <div id="ocr-preview-gallery" style="display: none;"></div>
+
+        <!-- 辨識引擎與目標分類設定 -->
+        <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 1; min-width: 220px;">
+            <label class="form-label">選擇辨識引擎</label>
+            <select id="ocr-engine-select" class="form-select">
+              <option value="gemini">✨ Gemini Vision AI (推薦：深度理解課本、自動補齊讀音釋義)</option>
+              <option value="tesseract">⚡ 本地瀏覽器純前端 OCR (免金鑰、純前端分析)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 220px;">
+            <label class="form-label">目標預設分類/牌組</label>
+            <select id="ocr-target-deck-select" class="form-select">
+              <option value="auto">🤖 智慧自動分門別類 (AI 自動分類至 JLPT / 工程 / 商務 / 生活)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 辨識進度指示器 -->
+        <div id="ocr-loading-indicator" style="display: none; text-align: center; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; margin-top: 12px;">
+          <div style="font-size: 2rem; margin-bottom: 6px;">⏳</div>
+          <div id="ocr-loading-text" style="font-weight: 700; color: var(--accent-primary); font-size: 0.95rem;">
+            正在分析照片中的日文詞彙...
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+            自動過濾雜訊、校正漢字讀音振音、產生繁體中文精確釋義與實用例句中
+          </div>
+        </div>
+
+        <!-- 步驟 2: 辨識成果預覽與編輯表 -->
+        <div id="ocr-results-area" style="display: none; margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div style="font-weight: 800; font-size: 1rem; color: var(--text-primary);">
+              📋 辨識成果預覽 (<span id="ocr-detected-count">0</span> 個單字)
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <label style="font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" id="ocr-check-all" checked> 全選
+              </label>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">可直接在表格內微調修改</span>
+            </div>
+          </div>
+
+          <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 10px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+              <thead style="background: var(--bg-tertiary); position: sticky; top: 0; z-index: 2;">
+                <tr>
+                  <th style="padding: 8px; width: 36px; text-align: center;"></th>
+                  <th style="padding: 8px; text-align: left;">單字 (Front)</th>
+                  <th style="padding: 8px; text-align: left;">讀音 (Reading)</th>
+                  <th style="padding: 8px; text-align: left;">繁體中文釋義</th>
+                  <th style="padding: 8px; text-align: left;">例句 / 筆記</th>
+                  <th style="padding: 8px; text-align: left;">自動分類</th>
+                </tr>
+              </thead>
+              <tbody id="ocr-table-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">取消</button>
+        <button class="btn-primary" id="btn-ocr-start-scan" onclick="window.app.startPhotoOcrScan()">
+          🔍 開始辨識
+        </button>
+        <button class="btn-primary" id="btn-ocr-commit-import" style="display: none; background: linear-gradient(135deg, #10b981, #059669);" onclick="window.app.commitOcrResultsToDecks()">
+          🚀 確認匯入 Anki 牌組
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

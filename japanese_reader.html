@@ -2648,8 +2648,28 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 }
 
     </style>
+    <link rel="stylesheet" href="static/cross_nav.css">
 </head>
 <body data-theme="light">
+
+    <!-- 三站同源統一頂部導覽列 -->
+    <nav class="cross-app-nav-bar">
+        <a href="index.html" class="nav-brand">
+            <span>🇯🇵 日語學習全方位生態系</span>
+            <span class="badge-sync">三站同源已打通</span>
+        </a>
+        <div class="nav-group">
+            <a href="index.html" class="nav-link-btn active-reader">
+                <span>📖 日文閱讀助手</span>
+            </a>
+            <a href="kanji.html" class="nav-link-btn">
+                <span>🈩 漢字記憶道場</span>
+            </a>
+            <a href="flashcard.html" class="nav-link-btn">
+                <span>🎴 AnkiFlash 抽認卡</span>
+            </a>
+        </div>
+    </nav>
 
     <!-- Top Navigation Header -->
     <header class="app-header">
@@ -4948,6 +4968,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(baseForm)}', '${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '')">
                             <i class="fa-solid fa-star"></i>
                         </button>
+                        <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8; margin-left:4px;" onclick="sendWordToAnkiFlash('${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '${escapeHtml(w.pos || '')}')">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </button>
                     </td>
                 `;
                 dom.sentenceWordsTbody.appendChild(tr);
@@ -6042,6 +6065,93 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        }
+    </script>
+
+    <!-- AnkiFlash Bridge & Sync Helpers -->
+    <script src="static/flashcards/js/ankiflash_bridge.js"></script>
+    <script>
+        function sendWordToAnkiFlash(surface, reading, jlpt, pos) {
+            if (!window.AnkiBridge) {
+                showToast('AnkiFlash 連通模組準備中...');
+                return;
+            }
+            const res = window.AnkiBridge.addCard({
+                deckId: 'deck_reader_notes',
+                deckName: '📖 閱讀助手收藏生詞',
+                deckIcon: '⭐',
+                deckColor: '#f59e0b',
+                front: surface,
+                reading: reading || '',
+                back: (jlpt ? '[' + jlpt + '] ' : '') + (pos ? '(' + pos + ') ' : '') + '文章閱讀生詞',
+                tags: ['閱讀生詞', jlpt || '未分級']
+            });
+            if (res.success) {
+                window.AnkiBridge.showToast(`🎉 已將【${surface}】加入 AnkiFlash 抽認卡！`);
+            }
+        }
+
+        function batchSendArticleWordsToAnki() {
+            if (!state.analyzedData || !state.analyzedData.sentences) {
+                showToast('請先貼上文章並開始閱讀分析！');
+                return;
+            }
+            const wordsMap = new Map();
+            state.analyzedData.sentences.forEach(s => {
+                (s.words || []).forEach(w => {
+                    const base = deinflectWord(w.surface) || w.base_form || w.surface;
+                    if (base && !wordsMap.has(base)) {
+                        wordsMap.set(base, {
+                            surface: base,
+                            reading: w.reading || '',
+                            jlpt: w.jlpt || '',
+                            pos: w.pos || ''
+                        });
+                    }
+                });
+            });
+
+            const wordList = Array.from(wordsMap.values());
+            if (wordList.length === 0) {
+                showToast('本篇文章未檢測到有效單字');
+                return;
+            }
+
+            const rawTitle = (dom.articleTextarea.value || '').trim().split('\n')[0] || '';
+            const articleTitle = rawTitle.slice(0, 16) || `閱讀_${new Date().toISOString().slice(5, 10)}`;
+
+            const cards = wordList.map(w => ({
+                front: w.surface,
+                reading: w.reading || '',
+                back: (w.jlpt ? '[' + w.jlpt + '] ' : '') + (w.pos ? '(' + w.pos + ') ' : '') + '本篇閱讀單字',
+                tags: ['文章分析', w.jlpt || '未分級']
+            }));
+
+            if (window.AnkiBridge) {
+                const res = window.AnkiBridge.addCardsBatch(cards, {
+                    deckId: 'deck_reader_article_' + Date.now().toString(36),
+                    deckName: `📖 讀解：${articleTitle}`,
+                    deckIcon: '📑',
+                    deckColor: '#2563eb',
+                    defaultTags: ['文章分析']
+                });
+                if (res.success) {
+                    window.AnkiBridge.showToast(`🎉 成功將本篇 ${res.addedCount} 個單字整批匯入 AnkiFlash！(牌組：讀解：${articleTitle})`);
+                }
+            }
+        }
+
+        function syncNotebookToAnkiFlash() {
+            if (!window.AnkiBridge) {
+                showToast('AnkiFlash 連通模組準備中...');
+                return;
+            }
+            const res = window.AnkiBridge.syncFromReaderNotebook();
+            if (res.success) {
+                window.AnkiBridge.showToast(`🎉 生詞本共 ${res.addedCount || 0} 個新單字已同步至 AnkiFlash！(更新 ${res.updatedCount || 0} 筆)`);
+            } else {
+                showToast(res.reason || '同步失敗');
+            }
         }
     </script>
 </body>
