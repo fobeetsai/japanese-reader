@@ -1373,6 +1373,81 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     padding: 0.5rem 0;
 }
 
+/* ==========================================================================
+   Floating / Draggable Analyzer (懸浮漂移與固定切換視窗)
+   ========================================================================== */
+.btn-analyzer-mode-toggle {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-muted);
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-analyzer-mode-toggle:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-analyzer-mode-toggle.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+/* 懸浮漂移視窗樣式 */
+.analyzer-sticky-card.floating-mode {
+    position: fixed !important;
+    z-index: 1050 !important;
+    width: 480px !important;
+    max-width: calc(100vw - 32px) !important;
+    max-height: 84vh !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32), 0 0 0 2px var(--primary) !important;
+    border-radius: 14px !important;
+    background: var(--bg-card) !important;
+    resize: both;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.analyzer-sticky-card.floating-mode .analyzer-header {
+    cursor: move !important;
+    user-select: none !important;
+    background: linear-gradient(135deg, var(--bg-sub), var(--bg-card)) !important;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    border-bottom: 2px solid var(--primary-border);
+}
+
+.analyzer-sticky-card.floating-mode .drag-indicator {
+    display: inline-block !important;
+}
+
+/* 折疊收合狀態 */
+.analyzer-sticky-card.collapsed .analyzer-body,
+.analyzer-sticky-card.collapsed .analyzer-footer {
+    display: none !important;
+}
+
+.analyzer-sticky-card.collapsed {
+    max-height: auto !important;
+    height: auto !important;
+    resize: none !important;
+}
+
+/* 懸浮模式或單字總表時，文章區域擴展至全寬 (消除被側欄擠壓或重疊問題) */
+.reader-deck.deck-floating-mode {
+    grid-template-columns: 1fr !important;
+}
+
 /* Words Breakdown Table */
 .words-table-wrap {
     background: var(--bg-card);
@@ -3184,15 +3259,25 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             </div>
 
             <!-- Right Column: Sentence & Grammar Deep Analyzer (句解霸核心功能) -->
-            <aside class="analyzer-column">
-                <div class="analyzer-sticky-card">
+            <aside class="analyzer-column" id="readerSidebar">
+                <div class="analyzer-sticky-card" id="analyzerCard">
                     
-                    <div class="analyzer-header">
-                        <div class="analyzer-title">
+                    <div class="analyzer-header" id="analyzerHeader">
+                        <div class="analyzer-title" id="analyzerDragHandle" style="display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-grip-vertical text-muted drag-indicator" style="display:none; margin-right:2px;" title="按住可自由拖曳漂移視窗"></i>
                             <i class="fa-solid fa-magnifying-glass-chart text-primary"></i>
                             <h3>整句深度分析器</h3>
                         </div>
-                        <span class="sentence-index-badge" id="currentSentenceBadge">第 1 句</span>
+                        <div class="analyzer-header-actions" style="display:flex; gap:6px; align-items:center;">
+                            <span class="sentence-index-badge" id="currentSentenceBadge">第 1 句</span>
+                            <button class="btn-analyzer-mode-toggle" id="btnToggleFloating" onclick="toggleFloatingAnalyzer()" title="切換為獨立懸浮視窗 (可在畫面上自由漂移或固定)">
+                                <i class="fa-solid fa-up-right-from-square" id="iconFloatState"></i>
+                                <span id="textFloatState">懸浮漂移</span>
+                            </button>
+                            <button class="btn-analyzer-mode-toggle" id="btnCollapseAnalyzer" onclick="toggleCollapseAnalyzer()" title="折疊 / 展開分析器">
+                                <i class="fa-solid fa-chevron-up" id="iconCollapseState"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="analyzer-body" id="analyzerBody">
@@ -3325,6 +3410,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                             <th style="width: 36px; text-align: center;"><input type="checkbox" id="chkAllWordsSelectAll" checked onchange="toggleAllWordsSelection(this.checked)"></th>
                             <th>單字 (原型)</th>
                             <th>讀音 (假名)</th>
+                            <th style="min-width: 170px;">漢字 (音讀／訓讀)</th>
                             <th>JLPT 級數</th>
                             <th>繁體中文翻譯</th>
                             <th style="min-width: 220px;">文章出處例句</th>
@@ -5297,19 +5383,49 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             'なんか', 'こそ', 'さえ', 'しか', 'ずつ', 'かしら', 'かな', 'て'
         ]);
 
+        // 嚴格過濾文型碎片、助詞、助動詞詞尾與無意義假名片段，確保「單字是單字，句型是句型」
+        const EXCLUDED_GRAMMAR_AND_PARTICLES = new Set([
+            'は', 'が', 'を', 'に', 'で', 'と', 'へ', 'から', 'まで', 'より', 'も', 'や', 'か', 'ね', 'よ', 'わ', 'ぜ', 'ぞ', 'な', 'の', 'て', 'で', 'ば', 'たら', 'たり', 'なら',
+            'けど', 'けれど', 'けれども', 'のに', 'ので', 'し', 'ながら', 'など', 'くらい', 'ぐらい', 'ほど', 'ばかり', 'だけ', 'しか', 'さえ', 'こそ', 'でも', 'とか', 'だの',
+            'です', 'ます', 'でした', 'ました', 'ません', 'ませんでした', 'だ', 'である', 'だった', 'だろう', 'でしょう',
+            'ない', 'なかった', 'なくて', 'なけれ', 'なら', 'ず', 'ずに',
+            'いる', 'いた', 'ある', 'あった', 'おく', 'おいた', 'みる', 'みた', 'いく', 'いった', 'くる', 'きた', 'しまう', 'しまった',
+            'れる', 'られる', 'せる', 'させる', 'させられる',
+            'わけ', 'はず', 'べき', 'らしい', 'そうだ', 'よう', 'ようだ', 'みたい', 'みたいだ', 'こと', 'もの', 'ところ', 'とおり',
+            'ちゃう', 'じゃう', 'ちゃった', 'じゃった', 'ちゃ', 'じゃ'
+        ]);
+
+        function isValidVocabularyWord(w) {
+            if (!w) return false;
+            // 排除被標記為文型、助詞、助動詞的非單字標籤
+            if (w.is_grammar_elem || w.is_particle) return false;
+            if (w.pos === '文型' || w.pos === '複合助詞' || w.pos === '格助詞' || w.pos === '副助詞' || w.pos === '接續助詞' || w.pos === '助動詞' || w.pos === '符號/助詞') return false;
+
+            const surface = (w.surface || '').trim();
+            if (!surface) return false;
+
+            // 排除純標點、符號、數字、英文字母
+            if (/^[、。！？「」『』（）…—\s.,!?0-9a-zA-Z_\-+/:;~]+$/.test(surface)) return false;
+
+            // 動詞/形容詞還原原型
+            const base = (deinflectWord(surface) || w.base_form || surface).trim();
+
+            // 排除純語法碎片、助詞與助動詞詞尾
+            if (EXCLUDED_GRAMMAR_AND_PARTICLES.has(surface) || EXCLUDED_GRAMMAR_AND_PARTICLES.has(base)) return false;
+
+            // 單一平/片假名且無漢字通常為殘留助詞或贅字，排除
+            if (/^[\u3040-\u309f\u30a0-\u30ff]$/.test(surface) && !KANJI_REGEX.test(surface)) return false;
+
+            // 若長度 < 2 且無漢字，且未收錄於 JLPT 單字庫，排除
+            if (surface.length < 2 && !KANJI_REGEX.test(surface) && (!JLPT_VOCAB || !JLPT_VOCAB[surface])) return false;
+            if (base.length < 2 && !KANJI_REGEX.test(base) && (!JLPT_VOCAB || !JLPT_VOCAB[base])) return false;
+
+            return true;
+        }
+
         function renderSentenceWordsTable(words, grammars = []) {
-            // 1. 過濾純符號、純標點、純空白與助詞 (不分析助詞，專注核心實詞)
-            const validWords = words.filter(w => {
-                const s = (w.surface || '').trim();
-                if (!s) return false;
-                if (/^[、。！？「」『』（）…—\s.,!?]+$/.test(s)) return false;
-                if (w.pos === '符號/助詞') return false;
-                if (JAPANESE_PARTICLES.has(s)) return false;
-                if (w.base_form && JAPANESE_PARTICLES.has(w.base_form)) return false;
-                // 單一平假名且無漢字通常為助詞/感嘆詞
-                if (/^[\u3040-\u309f]$/.test(s) && !KANJI_REGEX.test(s)) return false;
-                return true;
-            });
+            // 1. 嚴格過濾單字：單字是單字，句型是句型，徹底排除助詞、文型碎片與贅字
+            const validWords = words.filter(w => isValidVocabularyWord(w));
 
             dom.sentenceWordCount.textContent = validWords.length;
             dom.sentenceWordsTbody.innerHTML = '';
@@ -6622,15 +6738,11 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             analyzedData.sentences.forEach(s => {
                 const words = s.words || [];
                 words.forEach(w => {
-                    const surface = (w.surface || '').trim();
-                    if (!surface) return;
-                    if (/^[、。！？「」『』（）…—\s.,!?0-9a-zA-Z]+$/.test(surface)) return false;
-                    if (w.pos === '符號/助詞') return false;
-                    if (JAPANESE_PARTICLES && JAPANESE_PARTICLES.has(surface)) return false;
-                    if (w.base_form && JAPANESE_PARTICLES && JAPANESE_PARTICLES.has(w.base_form)) return false;
-                    if (/^[\u3040-\u309f]$/.test(surface) && !KANJI_REGEX.test(surface)) return false;
+                    if (!isValidVocabularyWord(w)) return;
 
-                    const baseForm = deinflectWord(surface) || w.base_form || surface;
+                    const surface = (w.surface || '').trim();
+                    const baseForm = (deinflectWord(surface) || w.base_form || surface).trim();
+                    if (!baseForm) return;
                     let displayReading = w.reading || '-';
                     let displayLevel = w.jlpt || 'Other';
 
@@ -6686,6 +6798,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             const contentBox = document.getElementById('articleContentBox');
             const sidebar = document.getElementById('readerSidebar');
             const allWordsSec = document.getElementById('allWordsViewSection');
+            const deck = document.getElementById('readerDeck');
 
             if (mode === 'sentences') {
                 btnSentences.classList.add('active');
@@ -6693,11 +6806,17 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 if (contentBox) contentBox.style.display = 'block';
                 if (sidebar) sidebar.style.display = 'block';
                 if (allWordsSec) allWordsSec.style.display = 'none';
+                if (deck) {
+                    if (isFloatingAnalyzer) deck.classList.add('deck-floating-mode');
+                    else deck.classList.remove('deck-floating-mode');
+                }
             } else {
                 btnAllWords.classList.add('active');
                 btnSentences.classList.remove('active');
                 if (contentBox) contentBox.style.display = 'none';
-                if (sidebar) sidebar.style.display = 'none';
+                // 當切換至全篇單字總表時，隱藏側邊欄以釋放100%全螢幕寬度，完全避免重疊遮擋
+                if (sidebar && !isFloatingAnalyzer) sidebar.style.display = 'none';
+                if (deck) deck.classList.add('deck-floating-mode');
                 if (allWordsSec) {
                     allWordsSec.style.display = 'block';
                     renderAllWordsTable();
@@ -6744,7 +6863,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             tbody.innerHTML = '';
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-muted);">未找到符合條件的單字</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-muted);">未找到符合條件的單字</td></tr>';
                 return;
             }
 
@@ -6760,6 +6879,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         ${w.surface !== w.baseForm ? `<small style="color:var(--text-muted); display:block;">(${escapeHtml(w.surface)})</small>` : ''}
                     </td>
                     <td style="color:#e11d48; font-weight:700;">${escapeHtml(w.reading)}</td>
+                    <td>${getKanjiReadingsHtml(w.baseForm)}</td>
                     <td>
                         <span class="badge-jlpt badge-${(w.jlpt || 'other').toLowerCase().replace('~','_')}">${w.jlpt || '-'}</span>
                     </td>
@@ -7272,6 +7392,11 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                             <div style="font-weight:700; color:var(--text-main); font-size:0.95rem; margin-top:4px; word-break:break-word; line-height:1.5;">
                                 ${w.meaning ? escapeHtml(w.meaning) : '<span style="color:var(--text-muted);">暫無中文翻譯</span>'}
                             </div>
+                            ${((w.baseForm && KANJI_REGEX.test(w.baseForm)) || (w.surface && KANJI_REGEX.test(w.surface))) ? `
+                            <div style="margin-top:6px; padding:4px 8px; background:var(--bg-sub); border-radius:6px; border:1px dashed var(--border-color); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted);"><i class="fa-solid fa-font"></i> 漢字音訓：</span>
+                                ${getKanjiReadingsHtml(w.baseForm || w.surface)}
+                            </div>` : ''}
                             ${w.example ? `
                             <div class="notebook-card-example" style="word-break:break-word;">
                                 <div><b>例文：</b>${escapeHtml(w.example)}</div>
@@ -7501,6 +7626,145 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 dom.loadingState.style.display = 'none';
             }
         };
+    
+        // ==========================================================================
+        // 整句深度分析器 懸浮漂移視窗與固定停靠控制器 (Floating & Draggable Analyzer)
+        // ==========================================================================
+        let isFloatingAnalyzer = false;
+        let isAnalyzerCollapsed = false;
+        let analyzerPos = { x: null, y: null };
+
+        window.toggleFloatingAnalyzer = function() {
+            isFloatingAnalyzer = !isFloatingAnalyzer;
+            const card = document.getElementById('analyzerCard');
+            const deck = document.getElementById('readerDeck');
+            const btn = document.getElementById('btnToggleFloating');
+            const icon = document.getElementById('iconFloatState');
+            const text = document.getElementById('textFloatState');
+
+            if (!card) return;
+
+            if (isFloatingAnalyzer) {
+                card.classList.add('floating-mode');
+                if (deck) deck.classList.add('deck-floating-mode');
+                if (btn) btn.classList.add('active');
+                if (icon) icon.className = 'fa-solid fa-thumbtack';
+                if (text) text.textContent = '固定停靠';
+
+                // 計算或恢復懸浮位置 (預設停放於右上側，避開主內文)
+                if (analyzerPos.x === null || analyzerPos.y === null) {
+                    const cardWidth = Math.min(480, window.innerWidth - 30);
+                    const initLeft = Math.max(16, window.innerWidth - cardWidth - 24);
+                    const initTop = 86;
+                    card.style.left = `${initLeft}px`;
+                    card.style.top = `${initTop}px`;
+                    card.style.width = `${cardWidth}px`;
+                } else {
+                    card.style.left = `${analyzerPos.x}px`;
+                    card.style.top = `${analyzerPos.y}px`;
+                }
+                showToast('🪟 已切換為獨立懸浮視窗！按住分析器頂部標題列即可在畫面上自由拖曳漂移');
+            } else {
+                card.classList.remove('floating-mode');
+                if (deck && document.getElementById('btnModeSentences')?.classList.contains('active')) {
+                    deck.classList.remove('deck-floating-mode');
+                }
+                if (btn) btn.classList.remove('active');
+                if (icon) icon.className = 'fa-solid fa-up-right-from-square';
+                if (text) text.textContent = '懸浮漂移';
+
+                card.style.left = '';
+                card.style.top = '';
+                card.style.width = '';
+                card.style.height = '';
+                showToast('📌 已固定回側邊欄！');
+            }
+        };
+
+        window.toggleCollapseAnalyzer = function() {
+            isAnalyzerCollapsed = !isAnalyzerCollapsed;
+            const card = document.getElementById('analyzerCard');
+            const icon = document.getElementById('iconCollapseState');
+            if (card) card.classList.toggle('collapsed', isAnalyzerCollapsed);
+            if (icon) {
+                icon.className = isAnalyzerCollapsed ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+            }
+        };
+
+        // 初始化懸浮視窗滑鼠與觸控拖曳
+        function initAnalyzerDrag() {
+            const handle = document.getElementById('analyzerHeader');
+            const card = document.getElementById('analyzerCard');
+            if (!handle || !card) return;
+
+            let isDragging = false;
+            let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+
+            function onDragStart(e) {
+                if (!isFloatingAnalyzer) return;
+                // 若點擊的是按鈕或控制項則不觸發拖曳
+                if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+
+                isDragging = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                const rect = card.getBoundingClientRect();
+                origLeft = rect.left;
+                origTop = rect.top;
+                startX = clientX;
+                startY = clientY;
+
+                document.addEventListener('mousemove', onDragMove);
+                document.addEventListener('mouseup', onDragEnd);
+                document.addEventListener('touchmove', onDragMove, { passive: false });
+                document.addEventListener('touchend', onDragEnd);
+            }
+
+            function onDragMove(e) {
+                if (!isDragging) return;
+                if (e.cancelable) e.preventDefault();
+
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                let newLeft = origLeft + dx;
+                let newTop = origTop + dy;
+
+                // 邊界防溢出
+                const maxLeft = Math.max(10, window.innerWidth - card.offsetWidth - 10);
+                const maxTop = Math.max(10, window.innerHeight - 50);
+                newLeft = Math.max(10, Math.min(newLeft, maxLeft));
+                newTop = Math.max(10, Math.min(newTop, maxTop));
+
+                card.style.left = `${newLeft}px`;
+                card.style.top = `${newTop}px`;
+
+                analyzerPos.x = newLeft;
+                analyzerPos.y = newTop;
+            }
+
+            function onDragEnd() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDragMove);
+                document.removeEventListener('mouseup', onDragEnd);
+                document.removeEventListener('touchmove', onDragMove);
+                document.removeEventListener('touchend', onDragEnd);
+            }
+
+            handle.addEventListener('mousedown', onDragStart);
+            handle.addEventListener('touchstart', onDragStart, { passive: true });
+        }
+
+        // 頁面載入後自動掛載拖曳事件
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAnalyzerDrag);
+        } else {
+            initAnalyzerDrag();
+        }
     </script>
 </body>
 </html>
