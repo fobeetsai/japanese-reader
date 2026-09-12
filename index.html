@@ -1378,13 +1378,15 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    overflow: hidden;
-    max-height: 260px;
+    max-height: 320px;
+    overflow-x: auto;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .words-breakdown-table {
     width: 100%;
+    min-width: 520px;
     border-collapse: collapse;
     font-size: 0.86rem;
     text-align: left;
@@ -1727,12 +1729,12 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    max-width: 650px;
-    width: 100%;
+    max-width: 860px;
+    width: 92%;
     padding: 1.5rem;
     box-shadow: var(--shadow-lg);
     position: relative;
-    max-height: 90vh;
+    max-height: 88vh;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1791,11 +1793,93 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 }
 
 .notebook-list-area {
-    max-height: 380px;
+    max-height: 60vh;
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.75rem;
+    padding-right: 4px;
+}
+
+/* Notebook Batch Actions Toolbar */
+.notebook-batch-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-sub);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.notebook-batch-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notebook-select-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-main);
+    user-select: none;
+}
+
+.notebook-batch-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notebook-selected-count-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.btn-batch-act {
+    padding: 5px 12px;
+    font-size: 0.84rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-batch-act:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.nb-item-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+}
+
+.notebook-item-card.selected,
+.article-card-item.selected {
+    border-color: var(--primary) !important;
+    background: rgba(99, 102, 241, 0.05) !important;
+    box-shadow: 0 0 0 1px var(--primary);
 }
 
 .notebook-item {
@@ -3168,12 +3252,12 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                                 <table class="words-breakdown-table">
                                     <thead>
                                         <tr>
-                                            <th style="min-width:80px;">單字 (辭書形)</th>
-                                            <th style="min-width:68px;">讀音</th>
-                                            <th style="min-width:150px;">漢字 (音讀／訓讀)</th>
-                                            <th style="min-width:52px;">級數</th>
-                                            <th style="min-width:95px;">中文翻譯</th>
-                                            <th style="text-align:center;width:40px;">收藏</th>
+                                            <th style="min-width:85px;">單字 (辭書形)</th>
+                                            <th style="min-width:75px;">讀音</th>
+                                            <th style="min-width:140px;">漢字 (音讀／訓讀)</th>
+                                            <th style="min-width:55px;">級數</th>
+                                            <th style="min-width:110px;">中文翻譯</th>
+                                            <th style="text-align:center;min-width:76px;width:76px;">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="sentenceWordsTbody">
@@ -3226,6 +3310,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     </button>
                     <button class="btn-primary" onclick="batchSendExtractedWordsToAnki()" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; font-weight: 700; padding: 8px 14px;">
                         <i class="fa-solid fa-layer-group"></i> 🎴 一鍵送往 AnkiFlash (<span id="allWordsCheckedCountAnki">0</span>)
+                    </button>
+                    <button class="btn-danger-outline" id="btnBatchDelExtractedWords" onclick="batchDeleteExtractedWords()" style="border-radius: 8px; font-weight: 700; padding: 8px 13px; font-size: 0.86rem;" title="從抽取總表中移除勾選的單字">
+                        <i class="fa-solid fa-trash-can"></i> 移除選取 (<span id="allWordsCheckedCountDel">0</span>)
                     </button>
                 </div>
             </div>
@@ -3440,10 +3527,32 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 </button>
                 <button class="notebook-tab-btn" id="tabNotebookGrammarsBtn" onclick="switchNotebookTab('grammars')">
                     收藏文型 (<span id="nbGrammarCount">0</span>)
-                </button>                <button class="notebook-tab-btn" id="tabNotebookArticlesBtn" onclick="switchNotebookTab('articles')">
+                </button>
+                <button class="notebook-tab-btn" id="tabNotebookArticlesBtn" onclick="switchNotebookTab('articles')">
                     收藏文章 (<span id="nbArticleCount">0</span>)
                 </button>
+            </div>
 
+            <!-- 筆記本批次操作工具列 (全選、批次刪除、批次匯出 Anki) -->
+            <div class="notebook-batch-toolbar" id="notebookBatchToolbar">
+                <div class="notebook-batch-left">
+                    <label class="notebook-select-all-label">
+                        <input type="checkbox" id="nbSelectAllCheckbox" class="nb-item-checkbox" onchange="toggleNotebookSelectAll(this.checked)">
+                        <span id="nbSelectAllLabel">全選本頁</span>
+                    </label>
+                    <span class="notebook-selected-count-badge" id="nbSelectedCountBadge">已選 0 項</span>
+                </div>
+                <div class="notebook-batch-right">
+                    <button class="btn-danger-outline btn-batch-act" id="btnBatchDeleteNotebook" disabled onclick="deleteSelectedNotebookItems()">
+                        <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="nbDeleteSelectedCount">0</span>)
+                    </button>
+                    <button class="btn-secondary btn-batch-act" id="btnBatchExportNotebookToAnki" disabled onclick="exportSelectedNotebookToAnki()">
+                        <i class="fa-solid fa-layer-group"></i> 🎴 匯出至 Anki (<span id="nbAnkiSelectedCount">0</span>)
+                    </button>
+                    <button class="btn-danger-outline btn-batch-act" id="btnClearCurrentNotebookTab" onclick="clearCurrentNotebookTab()" title="清空當前分類">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 清空此分類
+                    </button>
+                </div>
             </div>
 
             <div class="notebook-list-area" id="notebookListArea">
@@ -5226,18 +5335,20 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     <td style="color:#e11d48;font-weight:700;">${escapeHtml(displayReading)}</td>
                     <td>${kanjiReadingsHtml}</td>
                     <td>${displayLevel ? `<span class="badge-jlpt badge-${displayLevel.toLowerCase()}">${displayLevel}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
-                    <td style="color:var(--text-main);font-size:0.88rem;" id="word-trans-cell-${wIdx}">
+                    <td style="color:var(--text-main);font-size:0.88rem;word-break:break-word;" id="word-trans-cell-${wIdx}">
                         <span class="word-trans-val" onclick="this.classList.toggle('revealed')" title="點擊切換揭示/遮蔽">
                             <span style="color:var(--text-muted);font-size:0.78rem;"><i class="fa-solid fa-spinner fa-spin"></i> 翻譯中</span>
                         </span>
                     </td>
                     <td style="text-align:center;">
-                        <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(baseForm)}', '${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '')">
-                            <i class="fa-solid fa-star"></i>
-                        </button>
-                        <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8; margin-left:4px;" onclick="sendWordToAnkiFlash('${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '${escapeHtml(w.pos || '')}')">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </button>
+                        <div style="display:flex; gap:6px; justify-content:center; align-items:center; white-space:nowrap;">
+                            <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(baseForm)}', '${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '')">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                            <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendWordToAnkiFlash('${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '${escapeHtml(w.pos || '')}')">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
                 dom.sentenceWordsTbody.appendChild(tr);
@@ -6662,7 +6773,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         ×${w.count}
                     </td>
                     <td style="text-align:center;">
-                        <div style="display:flex; gap:4px; justify-content:center;">
+                        <div style="display:flex; gap:4px; justify-content:center; align-items:center; white-space:nowrap;">
                             <button class="btn-fav-word ${isFav ? 'active' : ''}" title="收藏至生詞本" onclick="toggleWordNotebook('${escapeHtml(w.surface)}', '${escapeHtml(w.baseForm)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}', '${escapeHtml(w.exampleTrans)}')">
                                 <i class="fa-solid fa-star"></i>
                             </button>
@@ -6671,6 +6782,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                             </button>
                             <button class="btn-fav-word" title="朗讀發音" style="color:var(--text-muted);" onclick="speakJapanese('${escapeHtml(w.baseForm)}')">
                                 <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <button class="btn-fav-word" title="自總表移除此單字" style="color:var(--text-muted);" onclick="deleteSingleExtractedWord('${escapeHtml(w.baseForm)}')">
+                                <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
                     </td>
@@ -6704,8 +6818,40 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             const count = document.querySelectorAll('.chk-all-words-row:checked').length;
             const nbSpan = document.getElementById('allWordsCheckedCountNb');
             const ankiSpan = document.getElementById('allWordsCheckedCountAnki');
+            const delSpan = document.getElementById('allWordsCheckedCountDel');
             if (nbSpan) nbSpan.textContent = count;
             if (ankiSpan) ankiSpan.textContent = count;
+            if (delSpan) delSpan.textContent = count;
+        }
+
+        // 批次自抽取總表移除勾選的單字
+        function batchDeleteExtractedWords() {
+            const checkedBoxes = document.querySelectorAll('.chk-all-words-row:checked');
+            if (checkedBoxes.length === 0) {
+                showToast('請先勾選欲移除的單字！');
+                return;
+            }
+            const count = checkedBoxes.length;
+            if (!confirm(`確定要從單字總表中移除選取的 ${count} 個單字嗎？`)) return;
+
+            const basesToRemove = new Set(Array.from(checkedBoxes).map(cb => cb.getAttribute('data-base')));
+            if (state.analyzedData && state.analyzedData.allWords) {
+                state.analyzedData.allWords = state.analyzedData.allWords.filter(w => !basesToRemove.has(w.baseForm));
+                const allCountEl = document.getElementById('allExtractedWordsCount');
+                if (allCountEl) allCountEl.textContent = state.analyzedData.allWords.length;
+            }
+            renderAllWordsTable();
+            showToast(`🗑️ 已自總表移除 ${count} 個單字`);
+        }
+
+        // 單筆自抽取總表移除單字
+        function deleteSingleExtractedWord(baseForm) {
+            if (!state.analyzedData || !state.analyzedData.allWords) return;
+            state.analyzedData.allWords = state.analyzedData.allWords.filter(w => w.baseForm !== baseForm);
+            const allCountEl = document.getElementById('allExtractedWordsCount');
+            if (allCountEl) allCountEl.textContent = state.analyzedData.allWords.length;
+            renderAllWordsTable();
+            showToast(`已自總表移除單字「${baseForm}」`);
         }
 
         // 批次存入生詞本
@@ -6878,44 +7024,256 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             saveNotebook();
         };
 
-        // 升級 switchNotebookTab (渲染三種頁籤：生詞、文法、收藏文章)
+        // 全域筆記本多選與批次管理狀態
+        let currentNotebookTab = 'words';
+        let selectedNotebookIndices = new Set();
+
+        // 監聽筆記本個別勾選框
+        window.onNotebookItemCheckboxChange = function(idx, isChecked, event) {
+            if (event) event.stopPropagation();
+            if (isChecked) {
+                selectedNotebookIndices.add(idx);
+            } else {
+                selectedNotebookIndices.delete(idx);
+            }
+            const card = document.getElementById(`nb-card-${idx}`);
+            if (card) card.classList.toggle('selected', isChecked);
+            updateNotebookBatchToolbarUI();
+        };
+
+        // 點擊卡片本體快速選取/取消選取
+        window.toggleNotebookCardSelection = function(idx, event) {
+            if (event.target.closest('button') || event.target.closest('input')) return;
+            const cb = document.getElementById(`nb-cb-${idx}`);
+            if (cb) {
+                cb.checked = !cb.checked;
+                onNotebookItemCheckboxChange(idx, cb.checked);
+            }
+        };
+
+        // 全選 / 取消全選本頁
+        window.toggleNotebookSelectAll = function(isChecked) {
+            const total = getNotebookCurrentTabList().length;
+            selectedNotebookIndices.clear();
+            if (isChecked) {
+                for (let i = 0; i < total; i++) {
+                    selectedNotebookIndices.add(i);
+                }
+            }
+            const checkboxes = document.querySelectorAll('.nb-item-checkbox:not(#nbSelectAllCheckbox)');
+            checkboxes.forEach(cb => {
+                cb.checked = isChecked;
+                const idx = parseInt(cb.getAttribute('data-idx'), 10);
+                const card = document.getElementById(`nb-card-${idx}`);
+                if (card) card.classList.toggle('selected', isChecked);
+            });
+            updateNotebookBatchToolbarUI();
+        };
+
+        // 取得當前標籤的項目陣列
+        function getNotebookCurrentTabList() {
+            if (currentNotebookTab === 'words') return state.notebook.words || [];
+            if (currentNotebookTab === 'grammars') return state.notebook.grammars || [];
+            if (currentNotebookTab === 'articles') return state.savedArticles || [];
+            return [];
+        }
+
+        // 更新筆記本批次操作列按鈕狀態與計數
+        function updateNotebookBatchToolbarUI() {
+            const total = getNotebookCurrentTabList().length;
+            const selCount = selectedNotebookIndices.size;
+
+            const badge = document.getElementById('nbSelectedCountBadge');
+            if (badge) badge.textContent = `已選 ${selCount} / ${total} 項`;
+
+            const delBtn = document.getElementById('btnBatchDeleteNotebook');
+            if (delBtn) {
+                delBtn.disabled = selCount === 0;
+                const delNum = document.getElementById('nbDeleteSelectedCount');
+                if (delNum) delNum.textContent = selCount;
+            }
+
+            const ankiBtn = document.getElementById('btnBatchExportNotebookToAnki');
+            if (ankiBtn) {
+                ankiBtn.disabled = selCount === 0;
+                const ankiNum = document.getElementById('nbAnkiSelectedCount');
+                if (ankiNum) ankiNum.textContent = selCount;
+            }
+
+            const selectAllCb = document.getElementById('nbSelectAllCheckbox');
+            if (selectAllCb) {
+                selectAllCb.checked = (total > 0 && selCount === total);
+                selectAllCb.indeterminate = (selCount > 0 && selCount < total);
+            }
+        }
+
+        // 批次刪除選取的筆記本項目 (生詞 / 文型 / 文章)
+        window.deleteSelectedNotebookItems = function() {
+            const count = selectedNotebookIndices.size;
+            if (count === 0) return;
+
+            const tabTitle = currentNotebookTab === 'words' ? '生詞' : (currentNotebookTab === 'grammars' ? '文型' : '文章');
+            if (!confirm(`確定要刪除選取的 ${count} 個${tabTitle}嗎？
+此操作無法復原。`)) return;
+
+            if (currentNotebookTab === 'words') {
+                state.notebook.words = state.notebook.words.filter((_, idx) => !selectedNotebookIndices.has(idx));
+                saveNotebook();
+            } else if (currentNotebookTab === 'grammars') {
+                state.notebook.grammars = state.notebook.grammars.filter((_, idx) => !selectedNotebookIndices.has(idx));
+                saveNotebook();
+            } else if (currentNotebookTab === 'articles') {
+                state.savedArticles = state.savedArticles.filter((_, idx) => !selectedNotebookIndices.has(idx));
+                localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+                updateSavedArticlesCount();
+            }
+
+            selectedNotebookIndices.clear();
+            switchNotebookTab(currentNotebookTab);
+            showToast(`🗑️ 已成功刪除 ${count} 個${tabTitle}！`);
+        };
+
+        // 批次匯出選取項目至 AnkiFlash
+        window.exportSelectedNotebookToAnki = function() {
+            const count = selectedNotebookIndices.size;
+            if (count === 0) {
+                showToast('請先勾選欲匯出至 AnkiFlash 的項目！');
+                return;
+            }
+            if (!window.AnkiBridge) {
+                showToast('AnkiFlash 連通模組準備中，請稍候...');
+                return;
+            }
+
+            if (currentNotebookTab === 'words') {
+                const cards = Array.from(selectedNotebookIndices).map(idx => {
+                    const w = state.notebook.words[idx];
+                    return {
+                        front: w.baseForm || w.surface,
+                        reading: w.reading || '',
+                        back: w.meaning || '生詞本單字',
+                        example: w.example ? `${w.example}${w.exampleTrans ? '\n(' + w.exampleTrans + ')' : ''}` : '',
+                        tags: ['生詞本', w.jlpt || '未分級'].filter(Boolean)
+                    };
+                });
+                const res = window.AnkiBridge.addCardsBatch(cards, {
+                    deckId: 'deck_reader_notes',
+                    deckName: '📖 閱讀助手收藏生詞',
+                    deckIcon: '⭐',
+                    deckColor: '#f59e0b'
+                });
+                if (res.success) {
+                    window.AnkiBridge.showToast(`🎉 成功將選取的 ${res.addedCount} 個單字匯入 AnkiFlash！`);
+                }
+            } else if (currentNotebookTab === 'grammars') {
+                const cards = Array.from(selectedNotebookIndices).map(idx => {
+                    const g = state.notebook.grammars[idx];
+                    return {
+                        front: g.title,
+                        reading: g.form ? `接續：${g.form}` : '',
+                        back: `【中文釋義】${g.meaningZh || ''}\n\n【精選例文】${g.example || ''}\n【中文翻譯】${g.translation || ''}${g.note ? '\n【重點提醒】' + g.note : ''}`,
+                        example: g.example || '',
+                        tags: ['閱讀文法', g.level || '文法'].filter(Boolean)
+                    };
+                });
+                const res = window.AnkiBridge.addCardsBatch(cards, {
+                    deckId: 'deck_grammar_notes',
+                    deckName: '🔖 閱讀助手收藏文法',
+                    deckIcon: '🔖',
+                    deckColor: '#10b981'
+                });
+                if (res.success) {
+                    window.AnkiBridge.showToast(`🎉 成功將選取的 ${res.addedCount} 個文法解析匯入 AnkiFlash！`);
+                }
+            } else if (currentNotebookTab === 'articles') {
+                let totalAdded = 0;
+                Array.from(selectedNotebookIndices).forEach(idx => {
+                    const art = state.savedArticles[idx];
+                    if (art) {
+                        exportSavedArticleWordsToAnki(art.id);
+                        totalAdded++;
+                    }
+                });
+            }
+        };
+
+        // 清空當前分類的所有項目
+        window.clearCurrentNotebookTab = function() {
+            const tabTitle = currentNotebookTab === 'words' ? '生詞本' : (currentNotebookTab === 'grammars' ? '文法筆記' : '收藏文章');
+            const total = getNotebookCurrentTabList().length;
+            if (total === 0) {
+                showToast(`當前「${tabTitle}」已經是空的！`);
+                return;
+            }
+
+            if (!confirm(`確定要清空「${tabTitle}」內全部 ${total} 個項目嗎？
+此操作無法復原。`)) return;
+
+            if (currentNotebookTab === 'words') {
+                state.notebook.words = [];
+                saveNotebook();
+            } else if (currentNotebookTab === 'grammars') {
+                state.notebook.grammars = [];
+                saveNotebook();
+            } else if (currentNotebookTab === 'articles') {
+                state.savedArticles = [];
+                localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+                updateSavedArticlesCount();
+            }
+
+            selectedNotebookIndices.clear();
+            switchNotebookTab(currentNotebookTab);
+            showToast(`已清空「${tabTitle}」全部項目！`);
+        };
+
+        // 升級 switchNotebookTab (渲染三種頁籤：生詞、文法、收藏文章，支援多選與全選刪除)
         window.switchNotebookTab = function(tab) {
+            currentNotebookTab = tab;
+            selectedNotebookIndices.clear();
+
             dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
             dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
             const artBtn = document.getElementById('tabNotebookArticlesBtn');
             if (artBtn) artBtn.classList.toggle('active', tab === 'articles');
 
             dom.notebookListArea.innerHTML = '';
+            updateNotebookBatchToolbarUI();
 
             if (tab === 'words') {
                 if (state.notebook.words.length === 0) {
-                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">生詞本目前為空</div>';
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.95rem;">生詞本目前為空<br><small>在閱讀文章時點擊單字旁的 ⭐ 即可收藏</small></div>';
                     return;
                 }
                 state.notebook.words.forEach((w, idx) => {
                     const card = document.createElement('div');
                     card.className = 'notebook-item-card';
+                    card.id = `nb-card-${idx}`;
+                    card.onclick = (e) => toggleNotebookCardSelection(idx, e);
+
                     card.innerHTML = `
                         <div class="notebook-card-header">
-                            <div>
-                                <strong style="font-size:1.2rem; font-family:var(--font-jp);">${escapeHtml(w.baseForm || w.surface)}</strong>
-                                <span style="color:#e11d48; margin-left:0.5rem; font-weight:700;">${escapeHtml(w.reading || '')}</span>
-                                ${w.jlpt ? `<span class="badge-jlpt badge-${w.jlpt.toLowerCase()}" style="margin-left:0.4rem;">${w.jlpt}</span>` : ''}
-                                ${w.pos ? `<span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.4rem;">(${escapeHtml(w.pos)})</span>` : ''}
+                            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                                <input type="checkbox" class="nb-item-checkbox" id="nb-cb-${idx}" data-idx="${idx}" onchange="onNotebookItemCheckboxChange(${idx}, this.checked, event)">
+                                <div style="flex:1; min-width:0;">
+                                    <strong style="font-size:1.2rem; font-family:var(--font-jp); word-break:break-word;">${escapeHtml(w.baseForm || w.surface)}</strong>
+                                    <span style="color:#e11d48; margin-left:0.5rem; font-weight:700;">${escapeHtml(w.reading || '')}</span>
+                                    ${w.jlpt ? `<span class="badge-jlpt badge-${w.jlpt.toLowerCase()}" style="margin-left:0.4rem;">${w.jlpt}</span>` : ''}
+                                    ${w.pos ? `<span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.4rem;">(${escapeHtml(w.pos)})</span>` : ''}
+                                </div>
                             </div>
-                            <div style="display:flex; gap:6px; align-items:center;">
-                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendWordToAnkiFlash('${escapeHtml(w.baseForm || w.surface)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
+                            <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); sendWordToAnkiFlash('${escapeHtml(w.baseForm || w.surface)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
                                     <i class="fa-solid fa-layer-group"></i>
                                 </button>
-                                <button class="btn-del-item" onclick="removeWordFromNotebook(${idx})" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                                <button class="btn-del-item" onclick="event.stopPropagation(); removeWordFromNotebook(${idx})" title="單筆刪除"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                         <div class="notebook-card-body">
-                            <div style="font-weight:700; color:var(--text-main); font-size:0.95rem; margin-top:4px;">
+                            <div style="font-weight:700; color:var(--text-main); font-size:0.95rem; margin-top:4px; word-break:break-word; line-height:1.5;">
                                 ${w.meaning ? escapeHtml(w.meaning) : '<span style="color:var(--text-muted);">暫無中文翻譯</span>'}
                             </div>
                             ${w.example ? `
-                            <div class="notebook-card-example">
+                            <div class="notebook-card-example" style="word-break:break-word;">
                                 <div><b>例文：</b>${escapeHtml(w.example)}</div>
                                 ${w.exampleTrans ? `<div style="color:#2563eb; font-size:0.85rem; margin-top:2px;">${escapeHtml(w.exampleTrans)}</div>` : ''}
                             </div>` : ''}
@@ -6925,42 +7283,48 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 });
             } else if (tab === 'grammars') {
                 if (state.notebook.grammars.length === 0) {
-                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">文法筆記目前為空</div>';
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.95rem;">文法筆記目前為空<br><small>在閱讀文章時點擊文型卡片上的 ⭐ 即可收藏</small></div>';
                     return;
                 }
                 state.notebook.grammars.forEach((g, idx) => {
                     const card = document.createElement('div');
                     card.className = 'notebook-item-card';
+                    card.id = `nb-card-${idx}`;
+                    card.onclick = (e) => toggleNotebookCardSelection(idx, e);
+
                     card.innerHTML = `
                         <div class="notebook-card-header">
-                            <div>
-                                <strong style="font-size:1.2rem; font-family:var(--font-jp); color:var(--primary);">${escapeHtml(g.title)}</strong>
-                                ${g.level ? `<span class="badge-jlpt badge-${g.level.toLowerCase().replace('~', '_')}" style="margin-left:0.4rem;">${g.level}</span>` : ''}
+                            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                                <input type="checkbox" class="nb-item-checkbox" id="nb-cb-${idx}" data-idx="${idx}" onchange="onNotebookItemCheckboxChange(${idx}, this.checked, event)">
+                                <div style="flex:1; min-width:0;">
+                                    <strong style="font-size:1.2rem; font-family:var(--font-jp); color:var(--primary); word-break:break-word;">${escapeHtml(g.title)}</strong>
+                                    ${g.level ? `<span class="badge-jlpt badge-${g.level.toLowerCase().replace('~', '_')}" style="margin-left:0.4rem;">${g.level}</span>` : ''}
+                                </div>
                             </div>
-                            <div style="display:flex; gap:6px; align-items:center;">
-                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendGrammarToAnkiFlash(${idx})">
+                            <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); sendGrammarToAnkiFlash(${idx})">
                                     <i class="fa-solid fa-layer-group"></i>
                                 </button>
-                                <button class="btn-del-item" onclick="removeGrammarFromNotebook(${idx})" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                                <button class="btn-del-item" onclick="event.stopPropagation(); removeGrammarFromNotebook(${idx})" title="單筆刪除"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                         <div class="notebook-card-body">
                             ${g.form ? `
-                            <div style="font-size:0.85rem; font-weight:700; color:#1e40af; background:#eff6ff; padding:4px 8px; border-radius:4px; margin-top:4px;">
+                            <div style="font-size:0.85rem; font-weight:700; color:#1e40af; background:#eff6ff; padding:4px 8px; border-radius:4px; margin-top:4px; word-break:break-word;">
                                 <b>接續方式：</b>${escapeHtml(g.form)}
                             </div>` : ''}
-                            <div style="font-size:0.95rem; font-weight:600; line-height:1.5; margin-top:6px;">
+                            <div style="font-size:0.95rem; font-weight:600; line-height:1.5; margin-top:6px; word-break:break-word;">
                                 ${escapeHtml(g.meaningZh || '')}
                             </div>
-                            ${g.meaningJa ? `<div style="font-size:0.84rem; color:var(--text-muted); margin-top:2px;"><b>日文：</b>${escapeHtml(g.meaningJa)}</div>` : ''}
+                            ${g.meaningJa ? `<div style="font-size:0.84rem; color:var(--text-muted); margin-top:2px; word-break:break-word;"><b>日文：</b>${escapeHtml(g.meaningJa)}</div>` : ''}
                             ${g.example ? `
-                            <div class="notebook-card-example" style="border-left-color:var(--secondary);">
-                                <div><b>精選例句：</b>${g.exampleRuby || escapeHtml(g.example)}</div>
-                                <div style="color:#059669; font-size:0.85rem; margin-top:3px;">${escapeHtml(g.translation || '')}</div>
+                            <div class="notebook-card-example" style="border-left-color:var(--secondary); word-break:break-word;">
+                                <div><b>精選例句：</b>${escapeHtml(g.example)}</div>
+                                ${g.translation ? `<div style="color:#059669; font-size:0.85rem; margin-top:3px;"><b>中文翻譯：</b>${escapeHtml(g.translation)}</div>` : ''}
                             </div>` : ''}
                             ${g.note ? `
-                            <div style="font-size:0.82rem; color:#b45309; margin-top:6px; background:#fffbeb; padding:4px 8px; border-radius:4px;">
-                                💡 <b>重點提醒：</b>${escapeHtml(g.note)}
+                            <div style="font-size:0.82rem; color:#d97706; background:#fffbeb; padding:4px 8px; border-radius:4px; margin-top:6px; word-break:break-word;">
+                                <b>💡 重點提示：</b>${escapeHtml(g.note)}
                             </div>` : ''}
                         </div>
                     `;
@@ -6968,30 +7332,36 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 });
             } else if (tab === 'articles') {
                 if (!state.savedArticles || state.savedArticles.length === 0) {
-                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">目前尚未收藏任何文章<br><small style="color:var(--text-muted);">在閱讀文章時點擊「⭐ 收藏本篇文章」即可隨時保存！</small></div>';
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.95rem;">目前尚未收藏任何文章<br><small>在閱讀文章時點擊「⭐ 收藏本篇文章」即可隨時保存！</small></div>';
                     return;
                 }
                 state.savedArticles.forEach((art, idx) => {
                     const card = document.createElement('div');
                     card.className = 'article-card-item';
+                    card.id = `nb-card-${idx}`;
+                    card.onclick = (e) => toggleNotebookCardSelection(idx, e);
+
                     card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <div>
-                                <strong style="font-size:1.15rem; font-family:var(--font-jp); color:var(--text-main);">${escapeHtml(art.title)}</strong>
-                                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
-                                    收藏時間：${art.savedAt} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                                <input type="checkbox" class="nb-item-checkbox" id="nb-cb-${idx}" data-idx="${idx}" onchange="onNotebookItemCheckboxChange(${idx}, this.checked, event)">
+                                <div style="flex:1; min-width:0;">
+                                    <strong style="font-size:1.15rem; font-family:var(--font-jp); color:var(--text-main); word-break:break-word;">${escapeHtml(art.title)}</strong>
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                                        收藏時間：${art.savedAt} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
+                                    </div>
                                 </div>
                             </div>
-                            <button class="btn-del-item" onclick="deleteSavedArticle('${art.id}')" title="刪除此文章"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-del-item" onclick="event.stopPropagation(); deleteSavedArticle('${art.id}')" title="刪除此文章"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.4; background:var(--bg-sub); padding:6px 10px; border-radius:6px;">
-                            ${escapeHtml(art.content.slice(0, 110))}${art.content.length > 110 ? '...' : ''}
+                        <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; background:var(--bg-sub); padding:8px 12px; border-radius:6px; margin:8px 0; word-break:break-word;">
+                            ${escapeHtml(art.content.slice(0, 140))}${art.content.length > 140 ? '...' : ''}
                         </div>
                         <div style="display:flex; gap:8px; margin-top:4px;">
-                            <button class="btn-primary" onclick="loadSavedArticle('${art.id}')" style="padding:5px 12px; font-size:0.84rem;">
+                            <button class="btn-primary" onclick="event.stopPropagation(); loadSavedArticle('${art.id}')" style="padding:5px 12px; font-size:0.84rem;">
                                 📖 載入並重讀
                             </button>
-                            <button class="btn-secondary" onclick="exportSavedArticleWordsToAnki('${art.id}')" style="padding:5px 12px; font-size:0.84rem; color:#818cf8;">
+                            <button class="btn-secondary" onclick="event.stopPropagation(); exportSavedArticleWordsToAnki('${art.id}')" style="padding:5px 12px; font-size:0.84rem; color:#818cf8;">
                                 🎴 全篇單字送 Anki
                             </button>
                         </div>
