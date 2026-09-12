@@ -2647,6 +2647,202 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     filter: brightness(1.1) !important;
 }
 
+    
+        /* ==========================================================
+           全篇單字抽取總表、模式切換標籤與強化筆記本樣式
+           ========================================================== */
+        .reader-mode-tabs-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .btn-mode-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-mode-tab:hover {
+            color: var(--primary);
+            border-color: var(--primary-border);
+        }
+
+        .btn-mode-tab.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-save-article-bookmark {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-save-article-bookmark:hover {
+            background: rgba(245, 158, 11, 0.22);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+        }
+
+        /* 全篇單字抽取容器 */
+        .all-words-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            margin-top: 16px;
+        }
+
+        .all-words-toolbar {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .all-words-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-level-filter-pill {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            background: var(--bg-sub);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-level-filter-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-level-filter-pill.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .all-words-table-wrap {
+            max-height: 520px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .all-words-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .all-words-table th {
+            position: sticky;
+            top: 0;
+            background: var(--bg-sub);
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-color);
+            z-index: 2;
+        }
+
+        .all-words-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .all-words-table tr:hover {
+            background: var(--primary-light);
+        }
+
+        /* 筆記本卡片強化 */
+        .notebook-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .notebook-item-card:hover {
+            border-color: var(--primary-border);
+            box-shadow: var(--shadow-md);
+        }
+
+        .notebook-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .notebook-card-body {
+            font-size: 0.92rem;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .notebook-card-example {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-sub);
+            border-radius: 6px;
+            border-left: 3px solid var(--secondary);
+            font-size: 0.88rem;
+            color: var(--text-main);
+        }
+
+        .article-card-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
     </style>
     <link rel="stylesheet" href="static/cross_nav.css">
 </head>
@@ -2854,6 +3050,23 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <div class="article-badges" id="articleStatsBadges">
                             <!-- Stats Badges injected dynamically -->
                         </div>
+                <!-- Mode Switcher Tabs (逐句精讀 vs 全篇單字抽取總表) -->
+                <div class="reader-mode-tabs-bar">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-mode-tab active" id="btnModeSentences" onclick="switchReaderMode('sentences')">
+                            <i class="fa-solid fa-list-ol"></i> 📖 逐句精讀拆解模式
+                        </button>
+                        <button class="btn-mode-tab" id="btnModeAllWords" onclick="switchReaderMode('all_words')">
+                            <i class="fa-solid fa-table-list"></i> 📑 本篇全文章單字抽取總表 (<span id="allExtractedWordsCount">0</span>)
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-save-article-bookmark" id="btnBookmarkArticle" onclick="saveCurrentArticle()" title="收藏本篇貼附的文章，以便日後在筆記本隨時載入重讀">
+                            <i class="fa-solid fa-bookmark"></i> ⭐ 收藏本篇文章
+                        </button>
+                    </div>
+                </div>
+
                     </div>
 
                     <!-- JLPT Level Legend & Color Toggle Filters -->
@@ -2985,7 +3198,58 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 </div>
             </aside>
 
-        </section>
+        
+        <!-- 全篇單字抽取總表視圖 (Full Article Extracted Words View) -->
+        <div class="all-words-section" id="allWordsViewSection" style="display: none; grid-column: 1 / -1;">
+            <div class="all-words-toolbar">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main);">
+                        📑 本篇文章所有抽取單字總覽 (<span id="allWordsDisplayCount">0</span> 個單字)
+                    </div>
+                    <!-- JLPT 級數篩選 Pills -->
+                    <div class="all-words-pills" id="allWordsPillsContainer">
+                        <button class="btn-level-filter-pill active" onclick="filterAllWordsLevel('ALL')">全部 (<span id="pillCountALL">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('N1')">N1 (<span id="pillCountN1">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('N2')">N2 (<span id="pillCountN2">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('N3')">N3 (<span id="pillCountN3">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('N4')">N4 (<span id="pillCountN4">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('N5')">N5 (<span id="pillCountN5">0</span>)</button>
+                        <button class="btn-level-filter-pill" onclick="filterAllWordsLevel('Other')">外來語/其他 (<span id="pillCountOther">0</span>)</button>
+                    </div>
+                </div>
+
+                <!-- 搜尋與批次操作列 -->
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="allWordsSearchInput" class="form-input" style="padding: 7px 12px; font-size: 0.88rem; width: 200px; border-radius: 8px;" placeholder="🔍 搜尋單字或釋義..." oninput="onSearchAllWords(this.value)">
+                    <button class="btn-primary" onclick="batchSendExtractedWordsToNotebook()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700; padding: 8px 14px;">
+                        <i class="fa-solid fa-star"></i> ⭐ 存入生詞本 (<span id="allWordsCheckedCountNb">0</span>)
+                    </button>
+                    <button class="btn-primary" onclick="batchSendExtractedWordsToAnki()" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; font-weight: 700; padding: 8px 14px;">
+                        <i class="fa-solid fa-layer-group"></i> 🎴 一鍵送往 AnkiFlash (<span id="allWordsCheckedCountAnki">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 單字總覽表格 -->
+            <div class="all-words-table-wrap">
+                <table class="all-words-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 36px; text-align: center;"><input type="checkbox" id="chkAllWordsSelectAll" checked onchange="toggleAllWordsSelection(this.checked)"></th>
+                            <th>單字 (原型)</th>
+                            <th>讀音 (假名)</th>
+                            <th>JLPT 級數</th>
+                            <th>繁體中文翻譯</th>
+                            <th style="min-width: 220px;">文章出處例句</th>
+                            <th style="width: 60px; text-align: center;">頻率</th>
+                            <th style="width: 140px; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allWordsTableTbody"></tbody>
+                </table>
+            </div>
+        </div>
+</section>
 
     </main>
 
@@ -3176,7 +3440,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 </button>
                 <button class="notebook-tab-btn" id="tabNotebookGrammarsBtn" onclick="switchNotebookTab('grammars')">
                     收藏文型 (<span id="nbGrammarCount">0</span>)
+                </button>                <button class="notebook-tab-btn" id="tabNotebookArticlesBtn" onclick="switchNotebookTab('articles')">
+                    收藏文章 (<span id="nbArticleCount">0</span>)
                 </button>
+
             </div>
 
             <div class="notebook-list-area" id="notebookListArea">
@@ -6153,6 +6420,717 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 showToast(res.reason || '同步失敗');
             }
         }
+    </script>
+
+    <!-- Complete Logic for Full Article Word Extraction, Article Library, and Rich Notebook -->
+    <script>
+        // 初始化文章收藏庫
+        if (!state.savedArticles) {
+            try {
+                const rawArts = localStorage.getItem('japanese_reader_saved_articles');
+                state.savedArticles = rawArts ? JSON.parse(rawArts) : [];
+            } catch(e) {
+                state.savedArticles = [];
+            }
+        }
+
+        let currentAllWordsFilterLevel = 'ALL';
+        let currentAllWordsSearchKeyword = '';
+
+        // 更新文章收藏計數
+        function updateSavedArticlesCount() {
+            const el = document.getElementById('nbArticleCount');
+            if (el) el.textContent = (state.savedArticles || []).length;
+        }
+        updateSavedArticlesCount();
+
+        // 收藏本篇文章
+        function saveCurrentArticle() {
+            const rawText = (dom.articleTextarea?.value || dom.articleInput?.value || '').trim();
+            if (!rawText) {
+                showToast('尚未輸入或貼附任何文章！');
+                return;
+            }
+
+            const firstLine = rawText.split('\n')[0].trim().replace(/^[#\s*]+/, '');
+            const title = prompt('請輸入收藏文章名稱：', firstLine.slice(0, 30) || `日文文章_${new Date().toLocaleDateString()}`);
+            if (!title || !title.trim()) return;
+
+            const newArt = {
+                id: 'art_' + Date.now(),
+                title: title.trim(),
+                content: rawText,
+                savedAt: new Date().toLocaleDateString(),
+                sentenceCount: (state.analyzedData?.sentences || []).length,
+                wordCount: state.analyzedData?.allWords?.length || 0,
+                grammarCount: state.analyzedData?.stats?.grammar_count || 0
+            };
+
+            const existingIdx = state.savedArticles.findIndex(a => a.title === newArt.title || a.content === newArt.content);
+            if (existingIdx !== -1) {
+                state.savedArticles[existingIdx] = newArt;
+                showToast(`已更新收藏文章《${newArt.title}》！`);
+            } else {
+                state.savedArticles.unshift(newArt);
+                showToast(`⭐ 已成功收藏文章《${newArt.title}》！可在筆記本中隨時載入`);
+            }
+
+            localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+            updateSavedArticlesCount();
+        }
+
+        // 載入已收藏文章
+        function loadSavedArticle(artId) {
+            const art = state.savedArticles.find(a => a.id === artId);
+            if (!art) return;
+
+            if (dom.articleInput) dom.articleInput.value = art.content;
+            if (dom.articleTextarea) dom.articleTextarea.value = art.content;
+
+            closeNotebookModal();
+            handleStartReadingClient();
+            showToast(`已載入並開始分析《${art.title}》！`);
+        }
+
+        // 刪除已收藏文章
+        function deleteSavedArticle(artId) {
+            if (!confirm('確定要從收藏中移除這篇文章嗎？')) return;
+            state.savedArticles = state.savedArticles.filter(a => a.id !== artId);
+            localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+            updateSavedArticlesCount();
+            switchNotebookTab('articles');
+            showToast('已移除該收藏文章');
+        }
+
+        // 抽取整篇文章的所有單字
+        function extractAllArticleWords(analyzedData) {
+            if (!analyzedData || !analyzedData.sentences) return [];
+
+            const wordMap = new Map();
+
+            analyzedData.sentences.forEach(s => {
+                const words = s.words || [];
+                words.forEach(w => {
+                    const surface = (w.surface || '').trim();
+                    if (!surface) return;
+                    if (/^[、。！？「」『』（）…—\s.,!?0-9a-zA-Z]+$/.test(surface)) return false;
+                    if (w.pos === '符號/助詞') return false;
+                    if (JAPANESE_PARTICLES && JAPANESE_PARTICLES.has(surface)) return false;
+                    if (w.base_form && JAPANESE_PARTICLES && JAPANESE_PARTICLES.has(w.base_form)) return false;
+                    if (/^[\u3040-\u309f]$/.test(surface) && !KANJI_REGEX.test(surface)) return false;
+
+                    const baseForm = deinflectWord(surface) || w.base_form || surface;
+                    let displayReading = w.reading || '-';
+                    let displayLevel = w.jlpt || 'Other';
+
+                    if (JLPT_VOCAB && JLPT_VOCAB[baseForm]) {
+                        const [lvlNum, r] = JLPT_VOCAB[baseForm];
+                        displayReading = kataToHira(r);
+                        if (lvlNum) displayLevel = `N${lvlNum}`;
+                    }
+
+                    if (wordMap.has(baseForm)) {
+                        const item = wordMap.get(baseForm);
+                        item.count++;
+                    } else {
+                        wordMap.set(baseForm, {
+                            surface: surface,
+                            baseForm: baseForm,
+                            reading: displayReading,
+                            jlpt: displayLevel,
+                            pos: w.pos || '',
+                            count: 1,
+                            example: s.text,
+                            exampleTrans: s.translation || '',
+                            meaning: '' // 異步補齊
+                        });
+                    }
+                });
+            });
+
+            const allWords = Array.from(wordMap.values());
+            // 排序：高頻優先，其次 JLPT N1~N5
+            allWords.sort((a, b) => b.count - a.count);
+
+            // 異步補齊中文翻譯
+            allWords.forEach(item => {
+                if (TRANSLATE_CACHE.has(item.baseForm)) {
+                    item.meaning = TRANSLATE_CACHE.get(item.baseForm);
+                } else {
+                    translateJaToZh(item.baseForm).then(trans => {
+                        item.meaning = trans;
+                        const cell = document.getElementById(`all-words-trans-${item.baseForm}`);
+                        if (cell) cell.textContent = trans || '-';
+                    });
+                }
+            });
+
+            return allWords;
+        }
+
+        // 切換閱讀視圖模式 (逐句精讀 vs 全篇單字抽取總表)
+        function switchReaderMode(mode) {
+            const btnSentences = document.getElementById('btnModeSentences');
+            const btnAllWords = document.getElementById('btnModeAllWords');
+            const contentBox = document.getElementById('articleContentBox');
+            const sidebar = document.getElementById('readerSidebar');
+            const allWordsSec = document.getElementById('allWordsViewSection');
+
+            if (mode === 'sentences') {
+                btnSentences.classList.add('active');
+                btnAllWords.classList.remove('active');
+                if (contentBox) contentBox.style.display = 'block';
+                if (sidebar) sidebar.style.display = 'block';
+                if (allWordsSec) allWordsSec.style.display = 'none';
+            } else {
+                btnAllWords.classList.add('active');
+                btnSentences.classList.remove('active');
+                if (contentBox) contentBox.style.display = 'none';
+                if (sidebar) sidebar.style.display = 'none';
+                if (allWordsSec) {
+                    allWordsSec.style.display = 'block';
+                    renderAllWordsTable();
+                }
+            }
+        }
+
+        // 渲染全篇單字抽取總表
+        function renderAllWordsTable() {
+            const allWords = state.analyzedData?.allWords || [];
+            const tbody = document.getElementById('allWordsTableTbody');
+            const displayCount = document.getElementById('allWordsDisplayCount');
+            if (!tbody) return;
+
+            // 計算各級別統計
+            const counts = { ALL: allWords.length, N1: 0, N2: 0, N3: 0, N4: 0, N5: 0, Other: 0 };
+            allWords.forEach(w => {
+                const lvl = w.jlpt || 'Other';
+                if (counts[lvl] !== undefined) counts[lvl]++;
+                else counts.Other++;
+            });
+
+            ['ALL', 'N1', 'N2', 'N3', 'N4', 'N5', 'Other'].forEach(k => {
+                const el = document.getElementById(`pillCount${k}`);
+                if (el) el.textContent = counts[k] || 0;
+            });
+
+            // 依級別與搜尋關鍵字篩選
+            const filtered = allWords.filter(item => {
+                if (currentAllWordsFilterLevel !== 'ALL' && item.jlpt !== currentAllWordsFilterLevel) {
+                    return false;
+                }
+                if (currentAllWordsSearchKeyword) {
+                    const kw = currentAllWordsSearchKeyword.toLowerCase();
+                    const matchWord = item.baseForm.toLowerCase().includes(kw) || item.surface.toLowerCase().includes(kw);
+                    const matchReading = (item.reading || '').toLowerCase().includes(kw);
+                    const matchMeaning = (item.meaning || '').toLowerCase().includes(kw);
+                    return matchWord || matchReading || matchMeaning;
+                }
+                return true;
+            });
+
+            if (displayCount) displayCount.textContent = filtered.length;
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-muted);">未找到符合條件的單字</td></tr>';
+                return;
+            }
+
+            filtered.forEach((w, idx) => {
+                const isFav = state.notebook.words.some(item => item.surface === w.baseForm || item.surface === w.surface);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center;">
+                        <input type="checkbox" class="chk-all-words-row" checked data-base="${escapeHtml(w.baseForm)}" onchange="updateAllWordsCheckedCounts()">
+                    </td>
+                    <td>
+                        <strong style="font-size:1.05rem; font-family:var(--font-jp);">${escapeHtml(w.baseForm)}</strong>
+                        ${w.surface !== w.baseForm ? `<small style="color:var(--text-muted); display:block;">(${escapeHtml(w.surface)})</small>` : ''}
+                    </td>
+                    <td style="color:#e11d48; font-weight:700;">${escapeHtml(w.reading)}</td>
+                    <td>
+                        <span class="badge-jlpt badge-${(w.jlpt || 'other').toLowerCase().replace('~','_')}">${w.jlpt || '-'}</span>
+                    </td>
+                    <td id="all-words-trans-${w.baseForm}" style="font-weight:600; color:var(--text-main);">
+                        ${w.meaning || '<span style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i> 翻譯中</span>'}
+                    </td>
+                    <td style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;">
+                        ${escapeHtml(w.example.slice(0, 45))}${w.example.length > 45 ? '...' : ''}
+                    </td>
+                    <td style="text-align:center; font-weight:700; color:var(--primary); font-family:var(--font-mono);">
+                        ×${w.count}
+                    </td>
+                    <td style="text-align:center;">
+                        <div style="display:flex; gap:4px; justify-content:center;">
+                            <button class="btn-fav-word ${isFav ? 'active' : ''}" title="收藏至生詞本" onclick="toggleWordNotebook('${escapeHtml(w.surface)}', '${escapeHtml(w.baseForm)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}', '${escapeHtml(w.exampleTrans)}')">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                            <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendWordToAnkiFlash('${escapeHtml(w.baseForm)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </button>
+                            <button class="btn-fav-word" title="朗讀發音" style="color:var(--text-muted);" onclick="speakJapanese('${escapeHtml(w.baseForm)}')">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateAllWordsCheckedCounts();
+        }
+
+        // 篩選與搜尋
+        function filterAllWordsLevel(lvl) {
+            currentAllWordsFilterLevel = lvl;
+            document.querySelectorAll('#allWordsPillsContainer .btn-level-filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.startsWith(lvl === 'ALL' ? '全部' : lvl));
+            });
+            renderAllWordsTable();
+        }
+
+        function onSearchAllWords(kw) {
+            currentAllWordsSearchKeyword = kw.trim();
+            renderAllWordsTable();
+        }
+
+        function toggleAllWordsSelection(checked) {
+            document.querySelectorAll('.chk-all-words-row').forEach(cb => cb.checked = checked);
+            updateAllWordsCheckedCounts();
+        }
+
+        function updateAllWordsCheckedCounts() {
+            const count = document.querySelectorAll('.chk-all-words-row:checked').length;
+            const nbSpan = document.getElementById('allWordsCheckedCountNb');
+            const ankiSpan = document.getElementById('allWordsCheckedCountAnki');
+            if (nbSpan) nbSpan.textContent = count;
+            if (ankiSpan) ankiSpan.textContent = count;
+        }
+
+        // 批次存入生詞本
+        function batchSendExtractedWordsToNotebook() {
+            const checkedBoxes = document.querySelectorAll('.chk-all-words-row:checked');
+            if (checkedBoxes.length === 0) {
+                showToast('請先勾選欲存入生詞本的單字！');
+                return;
+            }
+
+            const allWords = state.analyzedData?.allWords || [];
+            let added = 0;
+
+            checkedBoxes.forEach(cb => {
+                const base = cb.getAttribute('data-base');
+                const item = allWords.find(w => w.baseForm === base);
+                if (item) {
+                    const exists = state.notebook.words.some(w => w.surface === item.baseForm || w.surface === item.surface);
+                    if (!exists) {
+                        state.notebook.words.push({
+                            surface: item.surface,
+                            baseForm: item.baseForm,
+                            reading: item.reading,
+                            jlpt: item.jlpt,
+                            pos: item.pos,
+                            meaning: item.meaning || '',
+                            example: item.example || '',
+                            exampleTrans: item.exampleTrans || '',
+                            addedAt: new Date().toLocaleDateString()
+                        });
+                        added++;
+                    }
+                }
+            });
+
+            saveNotebook();
+            showToast(`⭐ 已成功將 ${added} 個單字加入生詞筆記本！(已略過重複)`);
+            renderAllWordsTable();
+        }
+
+        // 批次一鍵送往 AnkiFlash
+        function batchSendExtractedWordsToAnki() {
+            const checkedBoxes = document.querySelectorAll('.chk-all-words-row:checked');
+            if (checkedBoxes.length === 0) {
+                showToast('請先勾選欲送往 AnkiFlash 的單字！');
+                return;
+            }
+
+            const allWords = state.analyzedData?.allWords || [];
+            const cards = [];
+
+            checkedBoxes.forEach(cb => {
+                const base = cb.getAttribute('data-base');
+                const item = allWords.find(w => w.baseForm === base);
+                if (item) {
+                    cards.push({
+                        front: item.baseForm,
+                        reading: item.reading || '',
+                        back: (item.jlpt ? `[${item.jlpt}] ` : '') + (item.pos ? `(${item.pos}) ` : '') + (item.meaning || '文章閱讀生詞'),
+                        example: item.example + (item.exampleTrans ? `\n(${item.exampleTrans})` : ''),
+                        tags: ['文章抽取', item.jlpt || '未分級']
+                    });
+                }
+            });
+
+            const rawTitle = (dom.articleTextarea?.value || dom.articleInput?.value || '').trim().split('\n')[0] || '';
+            const articleTitle = rawTitle.slice(0, 16) || `讀解_${new Date().toISOString().slice(5, 10)}`;
+
+            if (window.AnkiBridge) {
+                const res = window.AnkiBridge.addCardsBatch(cards, {
+                    deckId: 'deck_reader_article_' + Date.now().toString(36),
+                    deckName: `📖 讀解：${articleTitle}`,
+                    deckIcon: '📑',
+                    deckColor: '#2563eb',
+                    defaultTags: ['文章抽取']
+                });
+                if (res.success) {
+                    window.AnkiBridge.showToast(`🎉 成功將所選 ${res.addedCount} 個單字整批匯入 AnkiFlash 專屬牌組！(更新 ${res.updatedCount || 0} 筆)`);
+                }
+            } else {
+                showToast('AnkiFlash 連通模組準備中...');
+            }
+        }
+
+        // 覆寫 / 升級 toggleWordNotebook (支援完整中文釋義與例句)
+        window.toggleWordNotebook = function(surface, baseForm, reading, jlpt, pos, meaning = '', example = '', exampleTrans = '') {
+            const cleanBase = baseForm || surface;
+            const idx = state.notebook.words.findIndex(w => w.surface === cleanBase || w.surface === surface);
+
+            if (idx > -1) {
+                state.notebook.words.splice(idx, 1);
+                showToast(`已自生詞本移除「${cleanBase}」`);
+            } else {
+                // 若例句為空，自動取目前句子
+                let ex = example;
+                let exTrans = exampleTrans;
+                if (!ex && state.analyzedData && state.analyzedData.sentences) {
+                    const curr = state.analyzedData.sentences[state.currentSentenceIdx];
+                    if (curr) {
+                        ex = curr.text;
+                        exTrans = curr.translation || '';
+                    }
+                }
+
+                // 若中文意思為空，嘗試取快取或異步查詢
+                let m = meaning;
+                if (!m && TRANSLATE_CACHE.has(cleanBase)) {
+                    m = TRANSLATE_CACHE.get(cleanBase);
+                }
+
+                const newWord = {
+                    surface: surface,
+                    baseForm: cleanBase,
+                    reading: reading || '',
+                    jlpt: jlpt || '',
+                    pos: pos || '',
+                    meaning: m || '',
+                    example: ex || '',
+                    exampleTrans: exTrans || '',
+                    addedAt: new Date().toLocaleDateString()
+                };
+
+                state.notebook.words.push(newWord);
+                showToast(`⭐ 已存入生詞本「${cleanBase}」！(含例句與中文翻譯)`);
+
+                // 若尚未有中文釋義，異步補齊
+                if (!m) {
+                    translateJaToZh(cleanBase).then(trans => {
+                        newWord.meaning = trans;
+                        saveNotebook();
+                    });
+                }
+            }
+
+            saveNotebook();
+            if (state.analyzedData) {
+                const s = state.analyzedData.sentences[state.currentSentenceIdx];
+                renderSentenceWordsTable(s.words, s.grammars || []);
+                if (document.getElementById('allWordsViewSection')?.style.display !== 'none') {
+                    renderAllWordsTable();
+                }
+            }
+        };
+
+        // 覆寫 / 升級 toggleGrammarNotebook (支援整條完整文法接續、解說、例句與翻譯)
+        window.toggleGrammarNotebook = function(g) {
+            const idx = state.notebook.grammars.findIndex(item => item.id === g.id || item.title === g.title);
+            if (idx > -1) {
+                state.notebook.grammars.splice(idx, 1);
+                showToast(`已自收藏移除文型「${g.title}」`);
+            } else {
+                // 從 941 資料庫中獲取最完整的資料
+                const fullG = (typeof GRAMMAR_DATA !== 'undefined' ? GRAMMAR_DATA.find(x => x.id === g.id || x.title === g.title) : null) || g;
+
+                state.notebook.grammars.push({
+                    id: fullG.id || g.id,
+                    title: fullG.title || g.title,
+                    level: fullG.level || g.level || '',
+                    form: fullG.form || '',
+                    meaningZh: fullG.meaningZh || '',
+                    meaningJa: fullG.meaningJa || '',
+                    example: fullG.example || '',
+                    exampleRuby: fullG.exampleRuby || '',
+                    translation: fullG.translation || '',
+                    note: fullG.note || '',
+                    addedAt: new Date().toLocaleDateString()
+                });
+                showToast(`⭐ 已收藏文型「${g.title}」！(含完整接續規則、中文詳解與例句)`);
+            }
+            saveNotebook();
+        };
+
+        // 升級 switchNotebookTab (渲染三種頁籤：生詞、文法、收藏文章)
+        window.switchNotebookTab = function(tab) {
+            dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
+            dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
+            const artBtn = document.getElementById('tabNotebookArticlesBtn');
+            if (artBtn) artBtn.classList.toggle('active', tab === 'articles');
+
+            dom.notebookListArea.innerHTML = '';
+
+            if (tab === 'words') {
+                if (state.notebook.words.length === 0) {
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">生詞本目前為空</div>';
+                    return;
+                }
+                state.notebook.words.forEach((w, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'notebook-item-card';
+                    card.innerHTML = `
+                        <div class="notebook-card-header">
+                            <div>
+                                <strong style="font-size:1.2rem; font-family:var(--font-jp);">${escapeHtml(w.baseForm || w.surface)}</strong>
+                                <span style="color:#e11d48; margin-left:0.5rem; font-weight:700;">${escapeHtml(w.reading || '')}</span>
+                                ${w.jlpt ? `<span class="badge-jlpt badge-${w.jlpt.toLowerCase()}" style="margin-left:0.4rem;">${w.jlpt}</span>` : ''}
+                                ${w.pos ? `<span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.4rem;">(${escapeHtml(w.pos)})</span>` : ''}
+                            </div>
+                            <div style="display:flex; gap:6px; align-items:center;">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendWordToAnkiFlash('${escapeHtml(w.baseForm || w.surface)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </button>
+                                <button class="btn-del-item" onclick="removeWordFromNotebook(${idx})" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <div class="notebook-card-body">
+                            <div style="font-weight:700; color:var(--text-main); font-size:0.95rem; margin-top:4px;">
+                                ${w.meaning ? escapeHtml(w.meaning) : '<span style="color:var(--text-muted);">暫無中文翻譯</span>'}
+                            </div>
+                            ${w.example ? `
+                            <div class="notebook-card-example">
+                                <div><b>例文：</b>${escapeHtml(w.example)}</div>
+                                ${w.exampleTrans ? `<div style="color:#2563eb; font-size:0.85rem; margin-top:2px;">${escapeHtml(w.exampleTrans)}</div>` : ''}
+                            </div>` : ''}
+                        </div>
+                    `;
+                    dom.notebookListArea.appendChild(card);
+                });
+            } else if (tab === 'grammars') {
+                if (state.notebook.grammars.length === 0) {
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">文法筆記目前為空</div>';
+                    return;
+                }
+                state.notebook.grammars.forEach((g, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'notebook-item-card';
+                    card.innerHTML = `
+                        <div class="notebook-card-header">
+                            <div>
+                                <strong style="font-size:1.2rem; font-family:var(--font-jp); color:var(--primary);">${escapeHtml(g.title)}</strong>
+                                ${g.level ? `<span class="badge-jlpt badge-${g.level.toLowerCase().replace('~', '_')}" style="margin-left:0.4rem;">${g.level}</span>` : ''}
+                            </div>
+                            <div style="display:flex; gap:6px; align-items:center;">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="sendGrammarToAnkiFlash(${idx})">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </button>
+                                <button class="btn-del-item" onclick="removeGrammarFromNotebook(${idx})" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <div class="notebook-card-body">
+                            ${g.form ? `
+                            <div style="font-size:0.85rem; font-weight:700; color:#1e40af; background:#eff6ff; padding:4px 8px; border-radius:4px; margin-top:4px;">
+                                <b>接續方式：</b>${escapeHtml(g.form)}
+                            </div>` : ''}
+                            <div style="font-size:0.95rem; font-weight:600; line-height:1.5; margin-top:6px;">
+                                ${escapeHtml(g.meaningZh || '')}
+                            </div>
+                            ${g.meaningJa ? `<div style="font-size:0.84rem; color:var(--text-muted); margin-top:2px;"><b>日文：</b>${escapeHtml(g.meaningJa)}</div>` : ''}
+                            ${g.example ? `
+                            <div class="notebook-card-example" style="border-left-color:var(--secondary);">
+                                <div><b>精選例句：</b>${g.exampleRuby || escapeHtml(g.example)}</div>
+                                <div style="color:#059669; font-size:0.85rem; margin-top:3px;">${escapeHtml(g.translation || '')}</div>
+                            </div>` : ''}
+                            ${g.note ? `
+                            <div style="font-size:0.82rem; color:#b45309; margin-top:6px; background:#fffbeb; padding:4px 8px; border-radius:4px;">
+                                💡 <b>重點提醒：</b>${escapeHtml(g.note)}
+                            </div>` : ''}
+                        </div>
+                    `;
+                    dom.notebookListArea.appendChild(card);
+                });
+            } else if (tab === 'articles') {
+                if (!state.savedArticles || state.savedArticles.length === 0) {
+                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2rem;">目前尚未收藏任何文章<br><small style="color:var(--text-muted);">在閱讀文章時點擊「⭐ 收藏本篇文章」即可隨時保存！</small></div>';
+                    return;
+                }
+                state.savedArticles.forEach((art, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'article-card-item';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <strong style="font-size:1.15rem; font-family:var(--font-jp); color:var(--text-main);">${escapeHtml(art.title)}</strong>
+                                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                                    收藏時間：${art.savedAt} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
+                                </div>
+                            </div>
+                            <button class="btn-del-item" onclick="deleteSavedArticle('${art.id}')" title="刪除此文章"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.4; background:var(--bg-sub); padding:6px 10px; border-radius:6px;">
+                            ${escapeHtml(art.content.slice(0, 110))}${art.content.length > 110 ? '...' : ''}
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <button class="btn-primary" onclick="loadSavedArticle('${art.id}')" style="padding:5px 12px; font-size:0.84rem;">
+                                📖 載入並重讀
+                            </button>
+                            <button class="btn-secondary" onclick="exportSavedArticleWordsToAnki('${art.id}')" style="padding:5px 12px; font-size:0.84rem; color:#818cf8;">
+                                🎴 全篇單字送 Anki
+                            </button>
+                        </div>
+                    `;
+                    dom.notebookListArea.appendChild(card);
+                });
+            }
+        };
+
+        // 送出收藏文法至 AnkiFlash
+        function sendGrammarToAnkiFlash(idx) {
+            const g = state.notebook.grammars[idx];
+            if (!g || !window.AnkiBridge) return;
+            const res = window.AnkiBridge.addCard({
+                deckId: 'deck_grammar_notes',
+                deckName: '🔖 閱讀助手收藏文法',
+                deckIcon: '🔖',
+                deckColor: '#10b981',
+                front: g.title,
+                reading: g.form ? `接續：${g.form}` : '',
+                back: `【中文釋義】${g.meaningZh || ''}\n\n【精選例文】${g.example || ''}\n【中文翻譯】${g.translation || ''}${g.note ? '\n【重點提醒】' + g.note : ''}`,
+                example: g.example || '',
+                tags: ['閱讀文法', g.level || '文法']
+            });
+            if (res.success) {
+                window.AnkiBridge.showToast(`🎉 已將文法【${g.title}】完整解析存入 AnkiFlash 抽認卡！`);
+            }
+        }
+
+        // 導出已收藏文章的單字至 Anki
+        function exportSavedArticleWordsToAnki(artId) {
+            const art = state.savedArticles.find(a => a.id === artId);
+            if (!art) return;
+            const sentences = splitArticleSentences(art.content);
+            const wordsMap = new Map();
+            sentences.forEach(s => {
+                const words = tokenizeSentence(s);
+                words.forEach(w => {
+                    const surface = (w.surface || '').trim();
+                    if (!surface || /^[、。！？「」『』（）…—\s.,!?0-9a-zA-Z]+$/.test(surface)) return;
+                    const base = deinflectWord(surface) || w.base_form || surface;
+                    if (!wordsMap.has(base)) {
+                        wordsMap.set(base, {
+                            front: base,
+                            reading: w.reading || '',
+                            back: (w.jlpt ? `[${w.jlpt}] ` : '') + '文章閱讀詞彙',
+                            example: s,
+                            tags: ['文章抽取', w.jlpt || '未分級']
+                        });
+                    }
+                });
+            });
+
+            const cards = Array.from(wordsMap.values());
+            if (window.AnkiBridge) {
+                const res = window.AnkiBridge.addCardsBatch(cards, {
+                    deckId: 'deck_saved_art_' + art.id,
+                    deckName: `📖 讀解：${art.title.slice(0, 16)}`,
+                    deckIcon: '📑',
+                    deckColor: '#2563eb'
+                });
+                if (res.success) {
+                    window.AnkiBridge.showToast(`🎉 成功將《${art.title}》中 ${res.addedCount} 個單字匯入 AnkiFlash！`);
+                }
+            }
+        }
+
+        // 升級 sendWordToAnkiFlash 支援真實中文釋義與例句
+        const _origSendWordToAnkiFlash = window.sendWordToAnkiFlash;
+        window.sendWordToAnkiFlash = function(surface, reading, jlpt, pos, meaning = '', example = '') {
+            if (!window.AnkiBridge) {
+                showToast('AnkiFlash 連通模組準備中...');
+                return;
+            }
+
+            let m = meaning;
+            if (!m && TRANSLATE_CACHE.has(surface)) {
+                m = TRANSLATE_CACHE.get(surface);
+            }
+            if (!m) {
+                m = (jlpt ? `[${jlpt}] ` : '') + (pos ? `(${pos}) ` : '') + '文章閱讀生詞';
+            }
+
+            let ex = example;
+            if (!ex && state.analyzedData?.sentences) {
+                const curr = state.analyzedData.sentences[state.currentSentenceIdx];
+                if (curr) ex = curr.text + (curr.translation ? `\n(${curr.translation})` : '');
+            }
+
+            const res = window.AnkiBridge.addCard({
+                deckId: 'deck_reader_notes',
+                deckName: '📖 閱讀助手收藏生詞',
+                deckIcon: '⭐',
+                deckColor: '#f59e0b',
+                front: surface,
+                reading: reading || '',
+                back: m,
+                example: ex || '',
+                tags: ['閱讀生詞', jlpt || '未分級'].filter(Boolean)
+            });
+
+            if (res.success) {
+                window.AnkiBridge.showToast(`🎉 已將【${surface}】（含中文釋義與例句）加入 AnkiFlash 抽認卡！`);
+            }
+        };
+
+        // 升級 handleStartReadingClient 支援自動整篇單字抽取
+        const _origHandleStartReading = window.handleStartReadingClient;
+        window.handleStartReadingClient = async function() {
+            const text = (dom.articleInput?.value || dom.articleTextarea?.value || '').trim();
+            if (!text) {
+                showToast('請先貼上日文文章！');
+                return;
+            }
+
+            dom.loadingState.style.display = 'flex';
+            dom.readerDeck.style.display = 'none';
+
+            try {
+                const res = await clientAnalyzeText(text, dom.chkAutoTranslate?.checked ?? true);
+                state.analyzedData = res;
+                state.currentSentenceIdx = 0;
+
+                // 核心：抽取整篇單字總表
+                state.analyzedData.allWords = extractAllArticleWords(res);
+                const allCountEl = document.getElementById('allExtractedWordsCount');
+                if (allCountEl) allCountEl.textContent = state.analyzedData.allWords.length;
+
+                renderReaderView();
+                renderAllWordsTable();
+
+                showToast(`文章解析完成！已全自動抽取全篇 ${state.analyzedData.allWords.length} 個單字`);
+                dom.readerDeck.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                showToast(`解析出錯: ${err.message}`);
+            } finally {
+                dom.loadingState.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>
