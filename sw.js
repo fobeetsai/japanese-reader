@@ -2,7 +2,7 @@
  * AnkiFlash Service Worker - 支援離線使用、PWA 與自動快取更新
  */
 
-const CACHE_NAME = 'ankiflash-v3';
+const CACHE_NAME = 'ankiflash-v4-excel';
 const ASSETS_TO_CACHE = [
   './flashcard.html',
   './manifest.json',
@@ -12,6 +12,8 @@ const ASSETS_TO_CACHE = [
   './static/flashcards/js/builtin_data.js',
   './static/flashcards/js/word_enricher.js',
   './static/flashcards/js/app.js',
+  './static/flashcards/js/excel_import.js',
+  './static/flashcards/vendor/xlsx.full.min.js',
   './static/flashcards/icons/icon-192.svg'
 ];
 
