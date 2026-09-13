@@ -28,8 +28,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-7">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-7">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-8">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-8">
 </head>
 <body>
 
@@ -64,7 +64,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v7 · 手動發音</small></span>
+      <span>AnkiFlash <small class="app-version">v8 · 手動發音</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -104,6 +104,8 @@
             📥 批次匯入
           </button>
           <button class="btn-secondary" id="btn-excel-import">📊 匯入 Excel 建立牌組</button>
+          <button class="btn-secondary" onclick="window.app.openDeckCardManager(null)">📋 全部單字</button>
+          <button class="btn-secondary" id="btn-manual-review" onclick="window.app.openDeckCardManager(null, 'manual')">手動複習</button>
           <button class="btn-primary" id="btn-open-add-card" style="background: linear-gradient(135deg, #10b981, #059669);">
             ➕ 新增單字
           </button>
@@ -119,10 +121,42 @@
       </div>
 
       <p class="help-text" id="deck-list-summary" role="status"></p>
-      <p class="help-text">每列是一組，最多 20 張；點「開啟」即可用 ← → 瀏覽。現有的大牌組會自動分組並保留複習進度。</p>
+      <p class="help-text">每列是一個來源牌組；進入後可設定每組字數、切換或展開小組。原有拆開的小組會收在同一來源下顯示。</p>
+      <div class="group-controls">
+        <input id="family-search" class="form-input" aria-label="搜尋牌組" placeholder="搜尋牌組名稱" oninput="window.app.deckPage=0; window.app.renderDeckList()">
+        <button class="btn-secondary" id="btn-delete-families" disabled onclick="window.app.deleteSelectedFamilies()">刪除勾選牌組</button>
+        <button class="btn-secondary" id="deck-page-prev" onclick="window.app.deckPage--; window.app.renderDeckList()">上一頁</button>
+        <span id="deck-page-label"></span>
+        <button class="btn-secondary" id="deck-page-next" onclick="window.app.deckPage++; window.app.renderDeckList()">下一頁</button>
+      </div>
       <div class="deck-table-wrap" id="decks-grid-container">
         <!-- 由 JavaScript 動態渲染 -->
       </div>
+    </section>
+
+    <section id="view-groups" class="view-section">
+      <button class="btn-secondary" onclick="window.app.showView('view-decks')">← 返回來源牌組</button>
+      <h2 id="group-family-title"></h2>
+      <div class="group-controls">
+        <label for="review-group-size">每組字數</label>
+        <input id="review-group-size" class="form-input" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
+        <datalist id="group-size-presets"><option value="20"><option value="40"><option value="50"><option value="100"></datalist>
+        <button class="btn-primary" onclick="window.app.applyGroupSize()">套用分組</button>
+        <select id="group-display-mode" class="form-select" aria-label="小組顯示方式" onchange="window.app.renderGroupList()">
+          <option value="current">只顯示目前小組</option><option value="all">同時顯示全部小組</option>
+        </select>
+        <label><input type="checkbox" id="group-expand-all" onchange="window.app.renderGroupList()"> 展開全部內容</label>
+      </div>
+      <p class="help-text">分組依目前單字順序排列；更改字數不會刪除單字或重設複習進度。</p>
+      <div class="group-controls">
+        <label><input type="checkbox" id="groups-select-all" onchange="window.app.selectAllGroups(this.checked)"> 全選本牌組全部小組</label>
+        <button class="btn-secondary" id="btn-delete-groups" disabled onclick="window.app.deleteSelectedGroups()">刪除勾選小組</button>
+        <button class="btn-secondary" id="group-prev" onclick="window.app.moveGroup(-1)">← 上一組</button>
+        <span id="group-counter" role="status"></span>
+        <button class="btn-secondary" id="group-next" onclick="window.app.moveGroup(1)">下一組 →</button>
+      </div>
+      <p id="group-status" class="help-text" role="status"></p>
+      <div id="group-list" class="deck-table-wrap"></div>
     </section>
 
     <!-- 視圖 2: 抽認卡複習畫面 (View: Study) -->
@@ -139,6 +173,11 @@
       </div>
 
       <!-- 今日複習進度條 -->
+      <div id="study-group-controls" class="group-controls" hidden>
+        <button class="btn-secondary" id="study-prev-group" onclick="window.app.moveStudyGroup(-1)">← 上一組</button>
+        <button class="btn-secondary" onclick="window.app.openFamilyGroups(window.app.studyGroupContext.familyId, window.app.studyGroupContext.index)">返回小組列表</button>
+        <button class="btn-secondary" id="study-next-group" onclick="window.app.moveStudyGroup(1)">下一組 →</button>
+      </div>
       <div class="progress-container">
         <div class="progress-bar-bg">
           <div class="progress-fill reviewed" id="study-progress-fill" style="width: 0%;"></div>
@@ -462,7 +501,16 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <input type="text" id="deck-cards-search-input" class="form-input card-manager-search" placeholder="🔍 搜尋此牌組內的單字、讀音或中文釋義...">
+        <input type="text" id="deck-cards-search-input" aria-label="搜尋單字、假名或中文" class="form-input card-manager-search" placeholder="🔍 搜尋單字、假名或中文翻譯...">
+        <p class="help-text">日文與假名在上方，中文在下方。點單字展開例句；勾選方框可變更複習方式。</p>
+        <div class="review-mode-tools">
+          <label for="manager-review-filter">顯示</label>
+          <select id="manager-review-filter" class="form-select" onchange="window.app.managerVisibleLimit=100; window.app.selectedCardIds.clear(); window.app.renderDeckCardsList(window.app.activeManagerDeckId, document.getElementById('deck-cards-search-input').value)">
+            <option value="all">全部單字</option><option value="anki">Anki 排程</option><option value="manual">手動複習</option>
+          </select>
+          <button class="btn-primary" id="btn-start-manual" onclick="window.app.startManualReview()">開始手動複習</button>
+        </div>
+        <p id="manager-review-status" class="help-text" role="status"></p>
         
         <!-- 多選與全選刪除操作列 -->
         <div class="card-manager-toolbar" id="card-manager-toolbar">
@@ -472,6 +520,8 @@
           </label>
           <div class="toolbar-actions">
             <span id="selected-count-badge" class="selected-count-badge" style="display: none;">已選 0 張</span>
+            <button class="btn-secondary" id="btn-set-manual" disabled onclick="window.app.setSelectedReviewMode('manual')">移至手動複習</button>
+            <button class="btn-secondary" id="btn-set-anki" disabled onclick="window.app.setSelectedReviewMode('anki')">改回 Anki 排程</button>
             <button class="btn-batch-delete-danger" id="btn-delete-selected-cards" disabled onclick="window.app.deleteSelectedCards()">
               🗑️ 刪除選取 (<span id="delete-selected-num">0</span>)
             </button>
@@ -608,7 +658,8 @@
           <label class="form-label" for="excel-name">新牌組名稱</label>
           <input class="form-input" id="excel-name" maxlength="100" placeholder="預設使用檔名，可自行修改">
         </div>
-        <p class="help-text"><input type="checkbox" id="excel-split" checked hidden> 每 20 張建立一個牌組，全部顯示（最後一組可少於 20 張）。</p>
+        <label class="form-label" for="excel-group-size">牌組內每組字數（之後可修改）</label>
+        <input class="form-input" id="excel-group-size" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
         <div id="excel-options" hidden>
           <div class="form-group">
             <label class="form-label" for="excel-sheet">選擇工作表</label>
@@ -635,15 +686,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-7"></script>
-  <script src="static/flashcards/js/app.js?v=20260913-7"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-8"></script>
+  <script src="static/flashcards/js/app.js?v=20260913-8"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)

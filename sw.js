@@ -1,6 +1,6 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v7-table-manual';
-const VERSION = '20260913-7';
+const CACHE_NAME = 'ankiflash-v8-review-modes';
+const VERSION = '20260913-8';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
   './static/cross_nav.css', './static/flashcards/css/app.css',

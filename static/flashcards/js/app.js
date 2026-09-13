@@ -148,6 +148,7 @@ class FlashcardApp {
     let totalDue = 0;
 
     this.cards.forEach(c => {
+      if (c.reviewMode === 'manual') return;
       if (c.state === 'new') totalNew++;
       else if (c.state === 'learning' || c.state === 'relearning') {
         if (c.due <= now) totalLearn++;
@@ -222,91 +223,206 @@ class FlashcardApp {
     return map[categoryId] || (categoryId ? `🏷️ ${categoryId}` : '未分類');
   }
 
-  ensureTwentyCardDecks() {
-    if (this.groupingFailed) return;
-    const groups = new Map();
-    this.cards.forEach(card => {
-      if (!groups.has(card.deckId)) groups.set(card.deckId, []);
-      groups.get(card.deckId).push(card);
+  getDeckFamilies() {
+    // Present legacy sequential groups together without rewriting any card or deck IDs.
+    const families = [];
+    let previous = null;
+    this.decks.forEach(deck => {
+      const match = deck.name.match(/^(.*)（(\d+)\/(\d+)）$/);
+      const part = match && Number(match[3]) > 1 ? {base: match[1], index: Number(match[2]), total: Number(match[3])} : null;
+      if (part && previous && previous.base === part.base && previous.total === part.total && previous.category === deck.category && part.index > previous.lastIndex) {
+        previous.sourceIds.push(deck.id);
+        previous.lastIndex = part.index;
+        previous.name = part.base;
+      } else {
+        previous = {id: deck.id, name: deck.name, category: deck.category, sourceIds: [deck.id], reviewGroupSize: deck.reviewGroupSize, base: part?.base, total: part?.total, lastIndex: part?.index};
+        families.push(previous);
+        if (!part) previous = null;
+      }
     });
-    const destinations = new Map();
-    const decks = this.decks.flatMap(deck => {
-      const source = groups.get(deck.id) || [];
-      if (source.length <= 20) return [deck];
-      const count = Math.ceil(source.length / 20);
-      const parts = Array.from({length: count}, (_, i) => ({
-        ...deck,
-        id: i === 0 ? deck.id : 'deck_' + crypto.randomUUID(),
-        name: `${deck.name}（${i + 1}/${count}）`
-      }));
-      source.forEach((card, i) => destinations.set(card.id, parts[Math.floor(i / 20)].id));
-      return parts;
-    });
-    if (!destinations.size) return;
-    const cards = this.cards.map(card => destinations.has(card.id)
-      ? {...card, deckId: destinations.get(card.id)} : card);
-    this.groupingFailed = !this.persistDeckChanges(decks, cards, false);
+    return families;
+  }
+
+  getFamilyCards(family) {
+    const ids = new Set(family?.sourceIds || []);
+    return this.cards.filter(card => ids.has(card.deckId));
   }
 
   renderDeckList() {
     const container = document.getElementById('decks-grid-container');
     if (!container) return;
-    this.ensureTwentyCardDecks();
-    // Splitting only changes deck membership; original card IDs and SRS history are retained.
+    this.selectedFamilyIds ||= new Set();
+    const families = this.getDeckFamilies();
+    document.getElementById('btn-manual-review').textContent = `手動複習（${this.cards.filter(c => c.reviewMode === 'manual').length}）`;
     this.renderCategoryTabs();
-    const filtered = this.currentCategory === 'all' ? this.decks
-      : this.decks.filter(deck => deck.category === this.currentCategory);
-    const summary = document.getElementById('deck-list-summary');
-    if (summary) summary.textContent = `全部共 ${this.decks.length} 組、${this.cards.length} 張單字卡；目前顯示 ${filtered.length} 組。`;
+    const query = document.getElementById('family-search').value.trim().toLowerCase();
+    const filtered = families.filter(f => (this.currentCategory === 'all' || f.category === this.currentCategory) && f.name.toLowerCase().includes(query));
+    const pages = Math.max(1, Math.ceil(filtered.length / 12));
+    this.deckPage = Math.max(0, Math.min(this.deckPage || 0, pages - 1));
+    document.getElementById('deck-page-prev').disabled = this.deckPage === 0;
+    document.getElementById('deck-page-next').disabled = this.deckPage === pages - 1;
+    document.getElementById('deck-page-label').textContent = `${this.deckPage + 1} / ${pages} 頁`;
+    document.getElementById('deck-list-summary').textContent = `共 ${families.length} 個來源牌組、${this.cards.length} 張單字卡；符合搜尋 ${filtered.length} 個。`;
     container.replaceChildren();
-    if (!filtered.length) {
-      const empty = document.createElement('p');
-      empty.textContent = this.decks.length ? '這個分類沒有牌組，請選擇「全部牌組」。' : '目前沒有牌組，請匯入 Excel 或建立新牌組。';
-      container.append(empty);
-      return;
-    }
     const table = document.createElement('table');
     table.className = 'deck-overview';
-    table.innerHTML = '<thead><tr><th scope="col">牌組／組別</th><th scope="col">張數</th><th scope="col">選擇與管理</th></tr></thead><tbody></tbody>';
-    const body = table.querySelector('tbody');
-    filtered.forEach(deck => {
-      const cards = this.cards.filter(card => card.deckId === deck.id);
+    table.innerHTML = '<thead><tr><th scope="col"><input type="checkbox" class="family-select-all" aria-label="全選符合搜尋牌組"></th><th scope="col">來源牌組</th><th scope="col">單字數</th><th scope="col">操作</th></tr></thead><tbody></tbody>';
+    const all = table.querySelector('.family-select-all');
+    all.checked = !!filtered.length && filtered.every(f => this.selectedFamilyIds.has(f.id));
+    all.indeterminate = !all.checked && filtered.some(f => this.selectedFamilyIds.has(f.id));
+    all.onchange = () => {filtered.forEach(f => all.checked ? this.selectedFamilyIds.add(f.id) : this.selectedFamilyIds.delete(f.id)); this.renderDeckList();};
+    filtered.slice(this.deckPage * 12, this.deckPage * 12 + 12).forEach(family => {
       const row = document.createElement('tr');
-      row.dataset.deckId = deck.id;
-      row.innerHTML = `
-        <td><strong class="deck-row-name">${this.escapeHtml(deck.name)}</strong><small>${this.escapeHtml(this.getCategoryLabel(deck.category))}</small></td>
-        <td class="deck-row-count">${cards.length}</td>
-        <td><div class="deck-row-actions">
-          <button class="btn-primary btn-browse">開啟 ↔</button>
-          <button class="btn-secondary btn-study">排程複習</button>
-          <button class="btn-secondary btn-deck-cards">單字一覽</button>
-          <button class="btn-secondary btn-export-deck">匯出</button>
-          <button class="btn-secondary btn-delete-deck">🗑️ 刪除此組</button>
-        </div></td>`;
-      row.querySelector('.btn-browse').onclick = () => this.startStudy(deck.id, true);
-      row.querySelector('.btn-study').onclick = () => this.startStudy(deck.id);
-      row.querySelector('.btn-deck-cards').onclick = () => this.openDeckCardManager(deck.id);
-      row.querySelector('.btn-export-deck').onclick = () => this.sync.exportAnkiTsv(deck.name, cards);
-      row.querySelector('.btn-delete-deck').onclick = () => this.deleteDeck(deck.id);
-      body.append(row);
+      row.dataset.deckId = family.id;
+      row.innerHTML = `<td><input type="checkbox" class="family-checkbox" aria-label="選取 ${this.escapeHtml(family.name)}" ${this.selectedFamilyIds.has(family.id) ? 'checked' : ''}></td>
+        <td><strong>${this.escapeHtml(family.name)}</strong><small>${this.escapeHtml(this.getCategoryLabel(family.category))}</small></td>
+        <td>${this.getFamilyCards(family).length}</td><td><div class="deck-row-actions"><button class="btn-primary btn-open-groups">進入牌組</button><button class="btn-secondary btn-deck-cards">單字一覽</button></div></td>`;
+      row.querySelector('.family-checkbox').onchange = e => {e.target.checked ? this.selectedFamilyIds.add(family.id) : this.selectedFamilyIds.delete(family.id); this.renderDeckList();};
+      row.querySelector('.btn-open-groups').onclick = () => this.openFamilyGroups(family.id);
+      row.querySelector('.btn-deck-cards').onclick = () => this.openDeckCardManager(family.id);
+      table.querySelector('tbody').append(row);
     });
     container.append(table);
+    const selectedCount = families.filter(f => this.selectedFamilyIds.has(f.id)).length;
+    document.getElementById('btn-delete-families').disabled = !selectedCount;
+    document.getElementById('btn-delete-families').textContent = `刪除勾選牌組（${selectedCount}）`;
+  }
+
+  deleteSelectedFamilies() {
+    const families = this.getDeckFamilies().filter(f => this.selectedFamilyIds?.has(f.id));
+    if (!families.length) return;
+    const ids = new Set(families.flatMap(f => f.sourceIds));
+    const count = this.cards.filter(c => ids.has(c.deckId)).length;
+    if (!confirm(`確定刪除勾選的 ${families.length} 個牌組及其中 ${count} 個單字？此操作無法撤銷。`)) return;
+    if (this.persistDeckChanges(this.decks.filter(d => !ids.has(d.id)), this.cards.filter(c => !ids.has(c.deckId)), false)) {
+      this.selectedFamilyIds.clear();
+      this.renderDeckList(); this.updateHeaderStats();
+    }
+  }
+
+  getReviewGroups() {
+    const family = this.getDeckFamilies().find(f => f.id === this.activeFamilyId);
+    if (!family) return [];
+    const size = Math.max(1, Number(family.reviewGroupSize) || 20);
+    const cards = this.getFamilyCards(family);
+    const groups = [];
+    for (let i = 0; i < cards.length; i += size) groups.push(cards.slice(i, i + size));
+    return groups;
+  }
+
+  openFamilyGroups(familyId, index = 0) {
+    const family = this.getDeckFamilies().find(f => f.id === familyId);
+    if (!family) return;
+    this.activeFamilyId = familyId;
+    this.activeGroupIndex = index;
+    this.selectedGroupIndices = new Set();
+    document.getElementById('review-group-size').value = family.reviewGroupSize || 20;
+    document.getElementById('group-status').textContent = '';
+    document.getElementById('group-display-mode').value = 'current';
+    document.getElementById('group-expand-all').checked = false;
+    this.showView('view-groups'); this.renderGroupList();
+  }
+
+  applyGroupSize() {
+    const input = document.getElementById('review-group-size');
+    const size = Number(input.value);
+    if (!Number.isInteger(size) || size < 1 || size > 1000) { document.getElementById('group-status').textContent = '請輸入 1～1000 的整數。'; return; }
+    const decks = this.decks.map(d => d.id === this.activeFamilyId ? {...d, reviewGroupSize: size} : d);
+    if (!this.persistDeckChanges(decks, this.cards, false)) return;
+    this.selectedGroupIndices.clear(); this.activeGroupIndex = 0;
+    this.renderGroupList();
+    document.getElementById('group-status').textContent = `已改為每組 ${size} 個單字，單字與學習紀錄保留。`;
+  }
+
+  renderGroupList() {
+    const family = this.getDeckFamilies().find(f => f.id === this.activeFamilyId);
+    if (!family) { this.showView('view-decks'); return; }
+    const groups = this.getReviewGroups();
+    this.activeGroupIndex = Math.max(0, Math.min(this.activeGroupIndex || 0, groups.length - 1));
+    document.getElementById('group-family-title').textContent = family.name;
+    document.getElementById('group-counter').textContent = groups.length ? `第 ${this.activeGroupIndex + 1} / ${groups.length} 組` : '此牌組尚無單字';
+    document.getElementById('group-prev').disabled = !groups.length || this.activeGroupIndex === 0;
+    document.getElementById('group-next').disabled = this.activeGroupIndex >= groups.length - 1;
+    const all = document.getElementById('groups-select-all');
+    all.checked = !!groups.length && this.selectedGroupIndices.size === groups.length;
+    all.indeterminate = !!this.selectedGroupIndices.size && !all.checked;
+    document.getElementById('btn-delete-groups').disabled = !this.selectedGroupIndices.size;
+    document.getElementById('btn-delete-groups').textContent = `刪除勾選小組（${this.selectedGroupIndices.size}）`;
+    const table = document.createElement('table'); table.className = 'deck-overview group-overview';
+    table.innerHTML = '<thead><tr><th scope="col">選取</th><th scope="col">小組與內容</th><th scope="col">操作</th></tr></thead><tbody></tbody>';
+    const showAll = document.getElementById('group-display-mode').value === 'all';
+    groups.forEach((cards, i) => {
+      if (!showAll && i !== this.activeGroupIndex) return;
+      const row = document.createElement('tr'); row.dataset.groupIndex = i;
+      row.innerHTML = `<td><input type="checkbox" class="group-checkbox" aria-label="選取第 ${i+1} 組" ${this.selectedGroupIndices.has(i) ? 'checked' : ''}></td>
+        <td><details class="group-preview" ${document.getElementById('group-expand-all').checked ? 'open' : ''}><summary>第 ${i+1} 組 · ${cards.length} 個單字</summary><div class="group-words"></div></details></td>
+        <td><div class="deck-row-actions"><button class="btn-primary btn-browse-group">開始瀏覽</button><button class="btn-secondary btn-schedule-group">Anki 複習</button><button class="btn-secondary btn-group-words">單字一覽</button></div></td>`;
+      const preview = row.querySelector('.group-words');
+      cards.forEach(card => {const entry = document.createElement('p'); entry.textContent = `${card.front}　${card.reading || ''}\n${card.back || ''}`; preview.append(entry);});
+      row.querySelector('.group-checkbox').onchange = e => {e.target.checked ? this.selectedGroupIndices.add(i) : this.selectedGroupIndices.delete(i); this.renderGroupList();};
+      row.querySelector('.btn-browse-group').onclick = () => this.startGroupStudy(i, true);
+      row.querySelector('.btn-schedule-group').onclick = () => this.startGroupStudy(i, false);
+      row.querySelector('.btn-group-words').onclick = () => this.openDeckCardManager(family.id, 'all', cards.map(c => c.id));
+      table.querySelector('tbody').append(row);
+    });
+    document.getElementById('group-list').replaceChildren(table);
+  }
+
+  moveGroup(direction) {
+    this.activeGroupIndex = Math.max(0, Math.min(this.activeGroupIndex + direction, this.getReviewGroups().length - 1));
+    this.renderGroupList();
+  }
+
+  selectAllGroups(checked) {
+    this.selectedGroupIndices = checked ? new Set(this.getReviewGroups().map((_, i) => i)) : new Set();
+    this.renderGroupList();
+  }
+
+  deleteSelectedGroups() {
+    const groups = this.getReviewGroups();
+    const ids = new Set([...this.selectedGroupIndices].flatMap(i => (groups[i] || []).map(c => c.id)));
+    if (!ids.size) return;
+    if (!confirm(`確定刪除勾選的 ${this.selectedGroupIndices.size} 個小組，共 ${ids.size} 個單字？包含其中的手動複習單字，其他單字保留。此操作無法撤銷。`)) return;
+    if (!this.persistDeckChanges(this.decks, this.cards.filter(c => !ids.has(c.id)), false)) return;
+    this.selectedGroupIndices.clear(); this.activeGroupIndex = 0; this.renderGroupList(); this.updateHeaderStats();
+    document.getElementById('group-status').textContent = `已刪除 ${ids.size} 個單字；剩餘單字依設定重新分組。`;
+  }
+
+  startGroupStudy(index, browseAll = true) {
+    const family = this.getDeckFamilies().find(f => f.id === this.activeFamilyId);
+    const cards = this.getReviewGroups()[index];
+    if (!family || !cards) return;
+    this.activeGroupIndex = index;
+    this.startStudy(null, browseAll, cards, `${family.name} · 第 ${index + 1} 組`, {familyId: family.id, index});
+  }
+
+  moveStudyGroup(direction) {
+    if (!this.studyGroupContext) return;
+    this.activeFamilyId = this.studyGroupContext.familyId;
+    const index = this.studyGroupContext.index + direction;
+    if (index >= 0 && index < this.getReviewGroups().length) this.startGroupStudy(index, this.browseAll);
   }
 
   // ==========================================
   // 抽認卡複習模式 (Study Mode)
   // ==========================================
 
-  startStudy(deckId, browseAll = false) {
+  startStudy(deckId, browseAll = false, manualCards = null, title = '手動複習', groupContext = null) {
+    this.studyGroupContext = groupContext;
+    document.getElementById('study-group-controls').hidden = !groupContext;
+    if (groupContext) {
+      document.getElementById('study-prev-group').disabled = groupContext.index === 0;
+      document.getElementById('study-next-group').disabled = groupContext.index >= this.getReviewGroups().length - 1;
+    }
     this.browseAll = browseAll;
-    this.currentDeck = this.decks.find(d => d.id === deckId);
+    this.currentDeck = manualCards ? {id: 'custom-review', name: title} : this.decks.find(d => d.id === deckId);
     if (!this.currentDeck) return;
 
-    const deckCards = this.cards.filter(c => c.deckId === deckId);
+    const deckCards = manualCards || this.cards.filter(c => c.deckId === deckId);
     const now = Date.now();
     const queueObj = this.anki.getStudyQueue(deckCards, now, {
-      dailyNewLimit: this.settings.dailyNewLimit,
-      dailyReviewLimit: this.settings.dailyReviewLimit
+      dailyNewLimit: groupContext ? deckCards.length : this.settings.dailyNewLimit,
+      dailyReviewLimit: groupContext ? deckCards.length : this.settings.dailyReviewLimit
     });
 
     this.studyQueue = browseAll ? deckCards.slice() : queueObj.queue;
@@ -425,6 +541,7 @@ class FlashcardApp {
     if (this.currentCardIndex >= this.studyQueue.length) return;
     const currentCard = this.cards.find(c => c.id === this.studyQueue[this.currentCardIndex].id);
     if (!currentCard) return;
+    if (currentCard.reviewMode === 'manual') return;
     const now = Date.now();
 
     // 透過 SM-2 核心計算新數值
@@ -674,7 +791,8 @@ class FlashcardApp {
     const searchInput = document.getElementById('deck-cards-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
-        if (this.activeManagerDeckId) {
+        if (document.getElementById('modal-deck-cards').classList.contains('open')) {
+          this.managerVisibleLimit = 100;
           this.renderDeckCardsList(this.activeManagerDeckId, e.target.value.trim());
         }
       });
@@ -1430,56 +1548,83 @@ class FlashcardApp {
     }
   }
 
-  openDeckCardManager(deckId) {
+  openDeckCardManager(deckId, mode = 'all', cardIds = null) {
+    const family = this.getDeckFamilies().find(f => f.id === deckId);
+    this.managerSourceIds = family ? new Set(family.sourceIds) : null;
+    this.managerCardIds = cardIds ? new Set(cardIds) : null;
     this.activeManagerDeckId = deckId;
     this.selectedCardIds = new Set();
-    const deck = this.decks.find(d => d.id === deckId);
-    if (!deck) return;
-
-    const titleEl = document.getElementById('deck-cards-title');
-    if (titleEl) {
-      titleEl.innerText = `📋 【${deck.name}】單字管理與刪除`;
-    }
-
-    const searchInput = document.getElementById('deck-cards-search-input');
-    if (searchInput) searchInput.value = '';
-
-    // 綁定全選勾選框事件
+    this.managerVisibleLimit = 100;
+    const deck = family || this.decks.find(d => d.id === deckId);
+    if (deckId && !deck) return;
+    document.getElementById('deck-cards-title').textContent = deck ? `📋 ${deck.name} · 單字一覽` : mode === 'manual' ? '手動複習 · 單字一覽' : '📋 全部單字';
+    document.getElementById('deck-cards-search-input').value = '';
+    document.getElementById('manager-review-filter').value = mode;
+    document.getElementById('manager-review-status').textContent = '';
+    document.getElementById('btn-delete-all-deck-cards').hidden = true;
     const selectAllBox = document.getElementById('deck-cards-select-all');
-    if (selectAllBox && !selectAllBox.dataset.hasListener) {
+    if (!selectAllBox.dataset.hasListener) {
       selectAllBox.dataset.hasListener = 'true';
-      selectAllBox.addEventListener('change', (e) => {
-        this.handleToggleSelectAll(e.target.checked);
-      });
+      selectAllBox.addEventListener('change', e => this.handleToggleSelectAll(e.target.checked));
     }
-
     this.renderDeckCardsList(deckId);
     document.getElementById('modal-deck-cards').classList.add('open');
   }
 
+  getManagerCards(query = '') {
+    const mode = document.getElementById('manager-review-filter').value;
+    const q = query.trim().toLowerCase();
+    return this.cards.filter(card =>
+      (!this.activeManagerDeckId || (this.managerSourceIds ? this.managerSourceIds.has(card.deckId) : card.deckId === this.activeManagerDeckId)) &&
+      (!this.managerCardIds || this.managerCardIds.has(card.id)) &&
+      (mode === 'all' || (card.reviewMode === 'manual' ? 'manual' : 'anki') === mode) &&
+      (!q || [card.front, card.reading, card.back].some(text => String(text || '').toLowerCase().includes(q)))
+    );
+  }
+
   handleToggleSelectAll(isChecked) {
-    const searchVal = document.getElementById('deck-cards-search-input')?.value || '';
-    const deckCards = this.cards.filter(c => c.deckId === this.activeManagerDeckId);
-    const q = searchVal.toLowerCase();
-    const filtered = q
-      ? deckCards.filter(c => 
-          (c.front && c.front.toLowerCase().includes(q)) ||
-          (c.reading && c.reading.toLowerCase().includes(q)) ||
-          (c.back && c.back.toLowerCase().includes(q))
-        )
-      : deckCards;
+    const query = document.getElementById('deck-cards-search-input').value;
+    this.getManagerCards(query).forEach(card => {
+      if (isChecked) this.selectedCardIds.add(card.id);
+      else this.selectedCardIds.delete(card.id);
+    });
+    this.renderDeckCardsList(this.activeManagerDeckId, query);
+  }
 
-    if (isChecked) {
-      filtered.forEach(c => this.selectedCardIds.add(c.id));
-    } else {
-      filtered.forEach(c => this.selectedCardIds.delete(c.id));
+  setSelectedReviewMode(mode) {
+    if (!['manual', 'anki'].includes(mode) || !this.selectedCardIds?.size) return;
+    const selected = new Set(this.selectedCardIds);
+    const cards = this.cards.map(card => selected.has(card.id) ? {...card, reviewMode: mode} : card);
+    if (!this.persistDeckChanges(this.decks, cards, false)) return;
+    // A manual-only card must also leave a queue that was already open.
+    if (!this.browseAll && this.studyQueue.length) {
+      const currentId = this.studyQueue[this.currentCardIndex]?.id;
+      this.studyQueue = this.studyQueue.filter(card => cards.some(c => c.id === card.id && c.reviewMode !== 'manual'));
+      const index = this.studyQueue.findIndex(card => card.id === currentId);
+      this.currentCardIndex = index >= 0 ? index : Math.max(0, Math.min(this.currentCardIndex, this.studyQueue.length - 1));
+      if (document.getElementById('view-study').classList.contains('active')) this.renderCurrentStudyCard();
     }
+    this.selectedCardIds.clear();
+    this.renderDeckCardsList(this.activeManagerDeckId, document.getElementById('deck-cards-search-input').value);
+    this.renderDeckList();
+    this.updateHeaderStats();
+    document.getElementById('manager-review-status').textContent = mode === 'manual'
+      ? `已將 ${selected.size} 個單字移至手動複習，不再加入 Anki 排程；原有學習紀錄保留。`
+      : `已將 ${selected.size} 個單字改回 Anki，依原有學習進度排程。`;
+  }
 
-    this.renderDeckCardsList(this.activeManagerDeckId, searchVal);
+  startManualReview() {
+    const cards = this.getManagerCards(document.getElementById('deck-cards-search-input').value).filter(c => c.reviewMode === 'manual');
+    if (!cards.length) return;
+    document.getElementById('modal-deck-cards').classList.remove('open');
+    this.startStudy(null, true, cards);
   }
 
   updateBatchToolbar(displayedCards) {
     const selectedCount = this.selectedCardIds.size;
+    document.getElementById('btn-set-manual').disabled = selectedCount === 0;
+    document.getElementById('btn-set-anki').disabled = selectedCount === 0;
+    document.getElementById('btn-start-manual').disabled = !displayedCards.some(c => c.reviewMode === 'manual');
     const badge = document.getElementById('selected-count-badge');
     const deleteBtn = document.getElementById('btn-delete-selected-cards');
     const numSpan = document.getElementById('delete-selected-num');
@@ -1500,7 +1645,7 @@ class FlashcardApp {
       selectAllBox.checked = allSelected;
       selectAllBox.indeterminate = someSelected && !allSelected;
       if (selectAllText) {
-        selectAllText.innerText = allSelected ? '取消全選' : `全選 (${displayedCards.length})`;
+        selectAllText.innerText = allSelected ? '取消全選' : `全選符合篩選 (${displayedCards.length})`;
       }
     } else if (selectAllBox) {
       selectAllBox.checked = false;
@@ -1511,100 +1656,53 @@ class FlashcardApp {
 
   renderDeckCardsList(deckId, filterQuery = '') {
     const container = document.getElementById('deck-cards-list-container');
-    const countLabel = document.getElementById('deck-cards-count-label');
     if (!container) return;
-
     if (!this.selectedCardIds) this.selectedCardIds = new Set();
-
-    const deckCards = this.cards.filter(c => c.deckId === deckId);
-    const q = (filterQuery || '').toLowerCase();
-
-    const filtered = q
-      ? deckCards.filter(c => 
-          (c.front && c.front.toLowerCase().includes(q)) ||
-          (c.reading && c.reading.toLowerCase().includes(q)) ||
-          (c.back && c.back.toLowerCase().includes(q))
-        )
-      : deckCards;
-
-    if (countLabel) {
-      countLabel.innerText = `共 ${deckCards.length} 個單字${q ? ` (符合篩選: ${filtered.length})` : ''}`;
-    }
-
+    const filtered = this.getManagerCards(filterQuery);
+    const visible = filtered.slice(0, this.managerVisibleLimit || 100);
+    document.getElementById('deck-cards-count-label').textContent = `符合篩選 ${filtered.length} 個單字 · 已顯示 ${visible.length} 個`;
     this.updateBatchToolbar(filtered);
-    container.innerHTML = '';
-
-    if (filtered.length === 0) {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 40px 10px; color: var(--text-muted); font-size: 0.9rem;">
-          ${q ? '未找到符合搜尋的單字' : '此牌組內尚無單字'}
-        </div>
-      `;
+    container.replaceChildren();
+    if (!filtered.length) {
+      const empty = document.createElement('p');
+      empty.textContent = '沒有符合篩選的單字。';
+      container.append(empty);
       return;
     }
-
-    filtered.forEach(card => {
+    visible.forEach(card => {
       const isSelected = this.selectedCardIds.has(card.id);
       const item = document.createElement('div');
-      item.className = `card-manager-item ${isSelected ? 'selected' : ''}`;
+      item.className = `card-manager-item word-detail-row ${isSelected ? 'selected' : ''}`;
       item.dataset.cardId = card.id;
-
       item.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
-          <input type="checkbox" class="card-checkbox row-card-checkbox" ${isSelected ? 'checked' : ''} style="margin: 0;">
-          <div class="card-item-main" style="cursor: pointer;">
-            <div class="card-item-word">
-              <span>${this.escapeHtml(card.front)}</span>
-              ${card.reading ? `<span class="card-item-reading">[${this.escapeHtml(card.reading)}]</span>` : ''}
-            </div>
-            <div class="card-item-meaning">${this.escapeHtml(card.back || '無釋義')}</div>
-          </div>
-        </div>
-        <div class="card-item-actions">
-          <button class="moji-btn btn-open-card-moji" title="在 MOJi 辭書中查詢">
-            <span>📖 MOJi</span>
-          </button>
-          <button class="delete-card-btn btn-del-single-card" title="刪除此單字">🗑️</button>
-        </div>
-      `;
-
-      // 勾選框切換
-      const checkbox = item.querySelector('.row-card-checkbox');
-      const toggleSelect = () => {
-        if (this.selectedCardIds.has(card.id)) {
-          this.selectedCardIds.delete(card.id);
-          item.classList.remove('selected');
-          if (checkbox) checkbox.checked = false;
-        } else {
-          this.selectedCardIds.add(card.id);
-          item.classList.add('selected');
-          if (checkbox) checkbox.checked = true;
-        }
+        <input type="checkbox" class="card-checkbox row-card-checkbox" aria-label="選取 ${this.escapeHtml(card.front)}" ${isSelected ? 'checked' : ''}>
+        <details class="word-detail">
+          <summary>
+            <div class="card-item-word"><span lang="ja">${this.escapeHtml(card.front)}</span>
+              ${card.reading ? `<span class="card-item-reading" lang="ja">${this.escapeHtml(card.reading)}</span>` : ''}</div>
+            <div class="card-item-meaning">${this.escapeHtml(card.back || '尚未填寫中文翻譯')}</div>
+            <small>${card.reviewMode === 'manual' ? '手動複習' : 'Anki 排程'} · 點一下看例句與說明</small>
+          </summary>
+          <div class="word-example-detail"><strong>例句</strong><p>${this.escapeHtml(card.example || '尚未提供例句。')}</p>
+            ${card.notes ? `<strong>說明／筆記</strong><p>${this.escapeHtml(card.notes)}</p>` : ''}</div>
+        </details>
+        <button class="delete-card-btn btn-del-single-card" aria-label="刪除 ${this.escapeHtml(card.front)}">🗑️</button>`;
+      item.querySelector('.row-card-checkbox').addEventListener('change', e => {
+        if (e.target.checked) this.selectedCardIds.add(card.id);
+        else this.selectedCardIds.delete(card.id);
+        item.classList.toggle('selected', e.target.checked);
         this.updateBatchToolbar(filtered);
-      };
-
-      checkbox.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleSelect();
       });
-
-      item.querySelector('.card-item-main').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleSelect();
-      });
-
-      item.querySelector('.btn-open-card-moji').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openMojiDict(card.front);
-      });
-
-      item.querySelector('.btn-del-single-card').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.deleteCardById(card.id, deckId);
-      });
-
-      container.appendChild(item);
+      item.querySelector('.btn-del-single-card').onclick = () => this.deleteCardById(card.id, deckId);
+      container.append(item);
     });
+    if (visible.length < filtered.length) {
+      const more = document.createElement('button');
+      more.className = 'btn-secondary';
+      more.textContent = `再顯示 ${Math.min(100, filtered.length - visible.length)} 個單字`;
+      more.onclick = () => { this.managerVisibleLimit += 100; this.renderDeckCardsList(deckId, filterQuery); };
+      container.append(more);
+    }
   }
 
   deleteCardById(cardId, deckId) {

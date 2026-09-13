@@ -209,6 +209,7 @@ class AnkiEngine {
     const newCards = [];
 
     cards.forEach(card => {
+      if (card.reviewMode === 'manual') return;
       if (card.state === 'learning' || card.state === 'relearning') {
         if (card.due <= now) {
           learningCards.push(card);
@@ -253,6 +254,7 @@ class AnkiEngine {
     const next7Days = Array(7).fill(0);
 
     cards.forEach(c => {
+      if (c.reviewMode === 'manual') return;
       if (c.state === 'new') {
         newCount++;
       } else if (c.state === 'learning' || c.state === 'relearning') {
