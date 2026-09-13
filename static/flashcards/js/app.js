@@ -128,6 +128,7 @@ class FlashcardApp {
   // ==========================================
 
   showView(viewId) {
+    if (viewId !== 'view-study') this.stopAudio();
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     const target = document.getElementById(viewId);
     if (target) target.classList.add('active');
@@ -516,7 +517,9 @@ class FlashcardApp {
     document.getElementById('interval-good').innerText = intervalPreviews[2];
     document.getElementById('interval-easy').innerText = intervalPreviews[3];
 
-    // 發音只由使用者點擊卡片上的喇叭按鈕觸發。
+    if (this.continuousAudio) this.speakText(card.front);
+    else this.cancelCurrentSpeech();
+    this.updateAudioControls();
   }
 
   flipCard() {
@@ -578,6 +581,7 @@ class FlashcardApp {
   }
 
   renderStudyEmpty(isInitiallyEmpty) {
+    this.stopAudio();
     this.showView('view-study');
     this.isCardFlipped = false;
     this.updateStudyNavigation();
@@ -611,10 +615,13 @@ class FlashcardApp {
   // ==========================================
 
   speakText(text, lang = null, event = null) {
-    if (!event?.isTrusted || !event.currentTarget?.classList.contains('audio-btn')) return;
+    const single = event?.isTrusted && event.currentTarget?.classList.contains('audio-btn');
+    if (single) this.stopAudio();
+    if (!single && !this.continuousAudio) return;
     if (!window.speechSynthesis || !text) return;
     try {
-      window.speechSynthesis.cancel(); // 停止先前的發音
+      this.cancelCurrentSpeech();
+      const generation = this.audioGeneration;
       const utterance = new SpeechSynthesisUtterance(text);
       
       const targetLang = lang || this.settings.audioLang || 'ja-JP';
@@ -625,16 +632,65 @@ class FlashcardApp {
       const audioBtns = document.querySelectorAll('.audio-btn');
       audioBtns.forEach(btn => btn.classList.add('playing'));
       utterance.onend = () => {
+        if (generation !== this.audioGeneration) return;
         audioBtns.forEach(btn => btn.classList.remove('playing'));
+        if (this.continuousAudio && document.getElementById('audio-auto-next').checked) {
+          if (this.currentCardIndex >= this.studyQueue.length - 1) {
+            this.stopAudio();
+            document.getElementById('study-audio-status').textContent = '本組朗讀完畢，已停止。';
+          } else {
+            this.audioNextTimer = setTimeout(() => {
+              if (generation === this.audioGeneration && this.continuousAudio) this.moveStudyCard(1);
+            }, 500);
+          }
+        }
       };
-      utterance.onerror = () => {
-        audioBtns.forEach(btn => btn.classList.remove('playing'));
+      utterance.onerror = error => {
+        if (generation !== this.audioGeneration) return;
+        this.stopAudio();
+        if (!['canceled', 'interrupted'].includes(error.error)) document.getElementById('study-audio-status').textContent = '發音未成功，請再按一次或檢查裝置語音設定。';
       };
 
-      window.playManualCardSpeech(utterance, event);
+      window.flashcardAudio?.speak(utterance, event);
     } catch (e) {
+      this.stopAudio();
       console.warn('語音合成暫時不可用:', e);
     }
+  }
+
+  cancelCurrentSpeech() {
+    this.audioGeneration = (this.audioGeneration || 0) + 1;
+    clearTimeout(this.audioNextTimer);
+    window.speechSynthesis?.cancel();
+    document.querySelectorAll('.audio-btn').forEach(button => button.classList.remove('playing'));
+  }
+
+  stopAudio() {
+    this.continuousAudio = false;
+    this.cancelCurrentSpeech();
+    window.flashcardAudio?.stop();
+    this.updateAudioControls();
+  }
+
+  updateAudioControls() {
+    const button = document.getElementById('btn-audio-continuous');
+    if (!button) return;
+    button.textContent = this.continuousAudio ? '⏸ 關閉連續發音' : '▶ 開啟連續發音';
+    button.setAttribute('aria-pressed', String(!!this.continuousAudio));
+    button.disabled = !window.flashcardAudio || !this.studyQueue.length || this.currentCardIndex >= this.studyQueue.length;
+    document.getElementById('btn-audio-single').disabled = button.disabled;
+    document.getElementById('study-audio-status').textContent = !window.flashcardAudio ? '此瀏覽器不支援語音朗讀。' : this.continuousAudio
+      ? (document.getElementById('audio-auto-next').checked ? '連續播放中：讀完自動下一張，不評分；本組結束即停止。' : '連續發音已開啟：切換單字時會朗讀。')
+      : '連續發音已關閉；可按單次發音。';
+  }
+
+  toggleContinuousAudio(event) {
+    if (this.continuousAudio) { this.stopAudio(); return; }
+    const card = this.studyQueue[this.currentCardIndex];
+    if (!card || !window.flashcardAudio?.enable(event)) return;
+    this.continuousAudio = true;
+    this.updateAudioControls();
+    this.speakText(card.front);
   }
 
   // ==========================================
@@ -712,6 +768,15 @@ class FlashcardApp {
   // ==========================================
 
   setupEventListeners() {
+    document.getElementById('btn-audio-continuous').addEventListener('click', e => this.toggleContinuousAudio(e));
+    document.getElementById('btn-audio-stop').addEventListener('click', () => this.stopAudio());
+    document.getElementById('btn-audio-single').addEventListener('click', e => this.speakText(this.studyQueue[this.currentCardIndex]?.front, null, e));
+    document.getElementById('audio-auto-next').addEventListener('change', () => {
+      this.updateAudioControls();
+      if (this.continuousAudio) this.speakText(this.studyQueue[this.currentCardIndex]?.front);
+    });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.stopAudio(); });
+    window.addEventListener('pagehide', () => this.stopAudio());
     document.getElementById('btn-prev-card').addEventListener('click', () => this.moveStudyCard(-1));
     document.getElementById('btn-next-card').addEventListener('click', () => this.moveStudyCard(1));
     // 導覽列操作

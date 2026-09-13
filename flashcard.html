@@ -11,7 +11,19 @@
       if (!speech) return;
       speech.cancel();
       const speak = speech.speak.bind(speech);
+      let continuous = false;
       speech.speak = () => {};
+      window.flashcardAudio = {
+        enable(event) {
+          if (event?.isTrusted && event.currentTarget?.id === 'btn-audio-continuous') continuous = true;
+          return continuous;
+        },
+        stop() { continuous = false; speech.cancel(); },
+        speak(utterance, event) {
+          const single = event?.isTrusted && event.type === 'click' && event.currentTarget?.classList.contains('audio-btn');
+          if (continuous || single) speak(utterance);
+        }
+      };
       window.playManualCardSpeech = (utterance, event) => {
         if (event?.isTrusted && event.type === 'click' && event.currentTarget?.classList.contains('audio-btn')) speak(utterance);
       };
@@ -28,8 +40,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-8">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-8">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-9">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-9">
 </head>
 <body>
 
@@ -64,7 +76,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v8 · 手動發音</small></span>
+      <span>AnkiFlash <small class="app-version">v9 · 發音可切換</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -189,6 +201,13 @@
         <button class="btn-secondary" id="btn-prev-card">← 上一張</button>
         <span id="study-navigation-help">左右切換不評分，也不改變複習進度。</span>
         <button class="btn-secondary" id="btn-next-card">下一張 →</button>
+      </div>
+      <div class="study-audio-controls" aria-label="發音控制">
+        <button class="btn-secondary" id="btn-audio-continuous" aria-pressed="false">▶ 開啟連續發音</button>
+        <button class="btn-secondary audio-btn" id="btn-audio-single" title="只朗讀目前單字一次">🔊 單次發音</button>
+        <button class="btn-secondary" id="btn-audio-stop">■ 停止發音</button>
+        <label><input type="checkbox" id="audio-auto-next"> 讀完自動下一張</label>
+        <span id="study-audio-status" role="status">目前不自動發音；需要時再開啟。</span>
       </div>
       <div id="study-empty-message" hidden></div>
       <div class="card-scene" id="card-scene-container">
@@ -596,7 +615,7 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="help-text">🔊 點擊卡片上的喇叭按鈕才會發音；開啟牌組、翻卡與切換卡片都不會自動朗讀。</p>
+        <p class="help-text">發音預設關閉。複習時可選「單次發音」或開啟「連續發音」，也可勾選讀完自動下一張；按停止立即安靜。離開複習或切換分頁時會停止。</p>
         <!-- Retained solely for compatibility with a previously cached controller. -->
         <input type="checkbox" id="setting-auto-audio" hidden aria-hidden="true" tabindex="-1">
 
@@ -686,15 +705,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-8"></script>
-  <script src="static/flashcards/js/app.js?v=20260913-8"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-9"></script>
+  <script src="static/flashcards/js/app.js?v=20260913-9"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)

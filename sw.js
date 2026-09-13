@@ -1,6 +1,6 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v8-review-modes';
-const VERSION = '20260913-8';
+const CACHE_NAME = 'ankiflash-v9-audio-controls';
+const VERSION = '20260913-9';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
   './static/cross_nav.css', './static/flashcards/css/app.css',

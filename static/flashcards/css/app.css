@@ -1370,3 +1370,9 @@ body {
 button:disabled { opacity: .45; cursor: not-allowed; }
 .deck-overview th:first-child, .deck-overview td:first-child { width: 54px; padding-left: 8px; padding-right: 8px; }
 .group-overview td { vertical-align: top; }
+
+.study-audio-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; }
+.study-audio-controls .audio-btn { width: auto; height: auto; border-radius: 10px; font-size: .9rem; padding: 10px 14px; }
+.study-audio-controls label { font-size: .85rem; }
+#study-audio-status { flex-basis: 100%; font-size: .82rem; color: var(--text-secondary); }
+#btn-audio-continuous[aria-pressed=true] { background: #047857; color: white; }
