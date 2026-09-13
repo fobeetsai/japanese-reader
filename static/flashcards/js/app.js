@@ -454,10 +454,7 @@ class FlashcardApp {
     document.getElementById('interval-good').innerText = intervalPreviews[2];
     document.getElementById('interval-easy').innerText = intervalPreviews[3];
 
-    // 發音
-    if (this.settings.autoPlayAudio && card.front) {
-      this.speakText(card.front);
-    }
+    // 發音只由使用者點擊卡片上的喇叭按鈕觸發。
   }
 
   flipCard() {
@@ -1750,7 +1747,6 @@ class FlashcardApp {
   // ==========================================
 
   openSettingsModal() {
-    document.getElementById('setting-auto-audio').checked = this.settings.autoPlayAudio !== false;
     document.getElementById('setting-audio-lang').value = this.settings.audioLang || 'ja-JP';
     document.getElementById('setting-theme-select').value = this.settings.theme || 'dark';
     document.getElementById('setting-new-limit').value = this.settings.dailyNewLimit || 20;
@@ -1761,7 +1757,7 @@ class FlashcardApp {
   }
 
   saveSettingsFromModal() {
-    this.settings.autoPlayAudio = document.getElementById('setting-auto-audio').checked;
+    this.settings.autoPlayAudio = false;
     this.settings.audioLang = document.getElementById('setting-audio-lang').value;
     this.settings.theme = document.getElementById('setting-theme-select').value;
     this.settings.dailyNewLimit = parseInt(document.getElementById('setting-new-limit').value) || 20;

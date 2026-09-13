@@ -53,7 +53,7 @@ class SyncManager {
 
   getDefaultSettings() {
     return {
-      autoPlayAudio: true,
+      autoPlayAudio: false,
       audioLang: 'ja-JP',          // 'ja-JP' | 'en-US' | 'zh-TW'
       theme: 'dark',               // 'dark' | 'light'
       dailyNewLimit: 20,
