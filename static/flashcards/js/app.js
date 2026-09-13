@@ -498,6 +498,10 @@ class FlashcardApp {
     // 背面內容
     document.getElementById('card-back-word').innerText = card.front;
     document.getElementById('card-back-reading').innerText = card.reading ? `[${card.reading}]` : '';
+    document.getElementById('study-reading-input').value = card.reading || '';
+    document.getElementById('reading-editor').open = false;
+    document.querySelector('.card-back').scrollTop = 0;
+    document.getElementById('reading-save-status').textContent = '優先朗讀這裡的假名；留空時由裝置判讀原文。';
     document.getElementById('card-back-meaning').innerText = card.back || '';
     
     const exBox = document.getElementById('card-back-example-box');
@@ -522,7 +526,7 @@ class FlashcardApp {
     document.getElementById('interval-good').innerText = intervalPreviews[2];
     document.getElementById('interval-easy').innerText = intervalPreviews[3];
 
-    if (this.continuousAudio) this.speakText(card.front);
+    if (this.continuousAudio) this.speakStudyCard();
     else this.cancelCurrentSpeech();
     this.updateAudioControls();
   }
@@ -619,6 +623,39 @@ class FlashcardApp {
   // 語音發音朗讀 (Web Speech API TTS)
   // ==========================================
 
+  kanaReading(value) {
+    const reading = String(value || '').normalize('NFKC').trim().replace(/^[[(【]\s*|\s*[\])】]$/g, '');
+    return /^[ぁ-ゖゝ-ゟァ-ヺヽ-ヿー\s・]+$/u.test(reading) ? reading : '';
+  }
+
+  currentStudyCard() {
+    const queued = this.studyQueue[this.currentCardIndex];
+    return queued && (this.cards.find(card => card.id === queued.id) || queued);
+  }
+
+  speakStudyCard(event = null) {
+    const card = this.currentStudyCard();
+    if (!card) return;
+    const kana = /[一-龯々ぁ-ゖァ-ヺ]/u.test(card.front) ? this.kanaReading(card.reading) : '';
+    this.speakText(kana || card.front, kana ? 'ja-JP' : null, event);
+  }
+
+  saveStudyReading() {
+    this.stopAudio();
+    const card = this.currentStudyCard();
+    if (!card) return;
+    const input = document.getElementById('study-reading-input').value.trim();
+    const reading = this.kanaReading(input);
+    const status = document.getElementById('reading-save-status');
+    if (input && !reading) { status.textContent = '請填入一種正確的平假名或片假名讀音，不要填漢字或多個候選讀音。'; return; }
+    card.reading = reading;
+    this.studyQueue = this.studyQueue.map(item => item.id === card.id ? {...item, reading} : item);
+    this.saveData();
+    document.getElementById('card-back-reading').textContent = reading ? `[${reading}]` : '';
+    document.getElementById('study-reading-input').value = reading;
+    status.textContent = reading ? '已儲存。按喇叭可試聽；這張卡之後會優先使用此假名。' : '已清除指定讀音，之後由裝置判讀原文。';
+  }
+
   speakText(text, lang = null, event = null) {
     const single = event?.isTrusted && event.currentTarget?.classList.contains('audio-btn');
     if (single) this.stopAudio();
@@ -640,13 +677,16 @@ class FlashcardApp {
         if (generation !== this.audioGeneration) return;
         audioBtns.forEach(btn => btn.classList.remove('playing'));
         if (this.continuousAudio && document.getElementById('audio-auto-next').checked) {
+          const reveal = document.getElementById('audio-reveal-answer').checked;
+          if (reveal) this.flipCard();
+          const delay = reveal ? Number(document.getElementById('audio-answer-delay').value) * 1000 : 500;
           if (this.currentCardIndex >= this.studyQueue.length - 1) {
             this.stopAudio();
             document.getElementById('study-audio-status').textContent = '本組朗讀完畢，已停止。';
           } else {
             this.audioNextTimer = setTimeout(() => {
               if (generation === this.audioGeneration && this.continuousAudio) this.moveStudyCard(1);
-            }, 500);
+            }, delay);
           }
         }
       };
@@ -685,7 +725,7 @@ class FlashcardApp {
     button.disabled = !window.flashcardAudio || !this.studyQueue.length || this.currentCardIndex >= this.studyQueue.length;
     document.getElementById('btn-audio-single').disabled = button.disabled;
     document.getElementById('study-audio-status').textContent = !window.flashcardAudio ? '此瀏覽器不支援語音朗讀。' : this.continuousAudio
-      ? (document.getElementById('audio-auto-next').checked ? '連續播放中：讀完自動下一張，不評分；本組結束即停止。' : '連續發音已開啟：切換單字時會朗讀。')
+      ? (document.getElementById('audio-auto-next').checked ? (document.getElementById('audio-reveal-answer').checked ? '讀完翻面看中文，停留後換張；不評分，本組結束即停止。' : '讀完自動下一張；不評分，本組結束即停止。') : '連續發音已開啟：切換單字時會朗讀。')
       : '連續發音已關閉；可按單次發音。';
   }
 
@@ -695,7 +735,7 @@ class FlashcardApp {
     if (!card || !window.flashcardAudio?.enable(event)) return;
     this.continuousAudio = true;
     this.updateAudioControls();
-    this.speakText(card.front);
+    this.speakStudyCard();
   }
 
   // ==========================================
@@ -775,10 +815,18 @@ class FlashcardApp {
   setupEventListeners() {
     document.getElementById('btn-audio-continuous').addEventListener('click', e => this.toggleContinuousAudio(e));
     document.getElementById('btn-audio-stop').addEventListener('click', () => this.stopAudio());
-    document.getElementById('btn-audio-single').addEventListener('click', e => this.speakText(this.studyQueue[this.currentCardIndex]?.front, null, e));
+    document.getElementById('reading-editor').querySelector('summary').addEventListener('click', () => this.stopAudio());
+    document.getElementById('btn-save-reading').addEventListener('click', e => {e.stopPropagation(); this.saveStudyReading();});
+    for (const id of ['audio-reveal-answer', 'audio-answer-delay']) {
+      document.getElementById(id).addEventListener('change', () => {
+        this.updateAudioControls();
+        if (this.continuousAudio) this.speakStudyCard();
+      });
+    }
+    document.getElementById('btn-audio-single').addEventListener('click', e => this.speakStudyCard(e));
     document.getElementById('audio-auto-next').addEventListener('change', () => {
       this.updateAudioControls();
-      if (this.continuousAudio) this.speakText(this.studyQueue[this.currentCardIndex]?.front);
+      if (this.continuousAudio) this.speakStudyCard();
     });
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.stopAudio(); });
     window.addEventListener('pagehide', () => this.stopAudio());
@@ -811,14 +859,12 @@ class FlashcardApp {
     // 發音按鈕
     document.getElementById('btn-speak-front').addEventListener('click', (e) => {
       e.stopPropagation();
-      const word = document.getElementById('card-front-word').innerText;
-      this.speakText(word, null, e);
+      this.speakStudyCard(e);
     });
 
     document.getElementById('btn-speak-back').addEventListener('click', (e) => {
       e.stopPropagation();
-      const word = document.getElementById('card-back-word').innerText;
-      this.speakText(word, null, e);
+      this.speakStudyCard(e);
     });
 
     // MOJi 辭書聯動按鈕 (正反面)

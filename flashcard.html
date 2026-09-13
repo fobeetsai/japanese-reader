@@ -41,8 +41,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-10">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-10">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-11">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-11">
 </head>
 <body>
 
@@ -77,7 +77,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v10 · 付費 AI 已停用</small></span>
+      <span>AnkiFlash <small class="app-version">v11 · 假名發音・翻面確認</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -208,6 +208,8 @@
         <button class="btn-secondary audio-btn" id="btn-audio-single" title="只朗讀目前單字一次">🔊 單次發音</button>
         <button class="btn-secondary" id="btn-audio-stop">■ 停止發音</button>
         <label><input type="checkbox" id="audio-auto-next"> 讀完自動下一張</label>
+        <label><input type="checkbox" id="audio-reveal-answer" checked> 換張前翻面看中文</label>
+        <label>中文停留 <select id="audio-answer-delay" aria-label="中文停留秒數"><option value="2">2 秒</option><option value="3" selected>3 秒</option><option value="5">5 秒</option><option value="8">8 秒</option><option value="10">10 秒</option></select></label>
         <span id="study-audio-status" role="status">目前不自動發音；需要時再開啟。</span>
       </div>
       <div id="study-empty-message" hidden></div>
@@ -250,6 +252,12 @@
               <div class="word-title" id="card-back-word" style="font-size: 2rem;">單字</div>
               <div class="word-reading" id="card-back-reading">[平假名/讀音]</div>
               <div class="word-meaning" id="card-back-meaning">繁體中文釋義</div>
+              <details id="reading-editor" class="reading-editor"><summary>修正讀音</summary>
+                <label for="study-reading-input">發音用假名</label>
+                <input id="study-reading-input" class="form-input" placeholder="例如：なま、いきる、せこう" autocomplete="off">
+                <button id="btn-save-reading" class="btn-secondary" type="button">儲存讀音</button>
+                <p id="reading-save-status" role="status">優先朗讀這裡的假名；留空時由裝置判讀原文。</p>
+              </details>
               <div class="word-example-box" id="card-back-example-box">
                 <div style="font-weight: 600; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">例句與用法：</div>
                 <div id="card-back-example">例文</div>
@@ -700,15 +708,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-10"></script>
-  <script src="static/flashcards/js/app.js?v=20260913-10"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-11"></script>
+  <script src="static/flashcards/js/app.js?v=20260913-11"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)
