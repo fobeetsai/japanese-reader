@@ -8,7 +8,7 @@
  * 具備三段式引擎：
  * Tier 1: 本地內建詞庫 (包含 JLPT 與 日語營造工程詞彙)
  * Tier 2: 免費免金鑰 Web 翻譯與羅馬字轉換引擎 (Google GTX + Free Dictionary API)
- * Tier 3: 選填 Google Gemini / OpenAI 智慧 AI 模型深度擴充
+ * 付費 AI 已停用；不讀取或傳送 API Key。
  */
 
 class WordEnricher {
@@ -66,16 +66,6 @@ class WordEnricher {
         example: entry.example,
         tags: options.category ? [options.category, ...(entry.tags || [])] : entry.tags
       };
-    }
-
-    // 2. 判斷是否設定了 AI 金鑰 (Gemini)
-    if (this.settings.geminiApiKey) {
-      try {
-        const aiResult = await this.enrichViaGemini(cleanWord, options);
-        if (aiResult) return aiResult;
-      } catch (e) {
-        console.warn('[WordEnricher] Gemini AI 查詢失敗，降級使用免費引擎:', e.message);
-      }
     }
 
     // 3. 免費引擎 (Google GTX + Transliteration + 智慧例句生成)
@@ -422,50 +412,8 @@ class WordEnricher {
     return `${sentenceJp}`;
   }
 
-  /**
-   * 使用 Google Gemini API 進行專業級深度自動生成
-   */
-  async enrichViaGemini(word, options = {}) {
-    const apiKey = this.settings.geminiApiKey;
-    if (!apiKey) return null;
-
-    const categoryPrompt = (options.category === 'engineering')
-      ? '此單字用於營造/建築工程與現場監造施工場景。'
-      : (options.category === 'daily')
-      ? '此單字用於日本日常生活交流或觀光場景。'
-      : '商務職場場景。';
-
-    const prompt = `請為單字「${word}」提供詳細背誦資料。${categoryPrompt}
-請以繁體中文回答，並輸出嚴格合法的 JSON 格式（不可包含 Markdown 或額外文字）：
-{
-  "reading": "讀音（日語填平假名，英語填音標）",
-  "meaning": "繁體中文精確釋義（含詞性，如名詞、動詞）",
-  "example": "例句原文(繁體中文例句翻譯)"
-}`;
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json' }
-      })
-    });
-
-    if (!res.ok) throw new Error(`Gemini API 回應錯誤 ${res.status}`);
-    const data = await res.json();
-    const text = data.candidates[0].content.parts[0].text;
-    const parsed = JSON.parse(text);
-
-    return {
-      front: word,
-      reading: parsed.reading || '',
-      back: parsed.meaning || '',
-      example: parsed.example || '',
-      tags: options.category ? [options.category, 'AI生成'] : ['AI生成']
-    };
-  }
+  // Compatibility with old integrations: paid AI is permanently disabled.
+  async enrichViaGemini() { return null; }
 
   /**
    * 批次自動生成單字 (附進度回呼)

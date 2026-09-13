@@ -76,6 +76,11 @@ class FlashcardApp {
   loadData() {
     const data = this.sync.loadLocalData();
     this.settings = data.settings || this.sync.getDefaultSettings();
+    // Remove only the retired AI credential; preserve decks, history and other settings.
+    if (Object.prototype.hasOwnProperty.call(this.settings, 'geminiApiKey')) {
+      delete this.settings.geminiApiKey;
+      this.sync.saveLocalData({settings: this.settings});
+    }
     this.logs = data.logs || {};
 
     if (Array.isArray(data.decks)) {
@@ -1861,8 +1866,6 @@ class FlashcardApp {
     document.getElementById('setting-theme-select').value = this.settings.theme || 'dark';
     document.getElementById('setting-new-limit').value = this.settings.dailyNewLimit || 20;
     document.getElementById('setting-review-limit').value = this.settings.dailyReviewLimit || 100;
-    const geminiInput = document.getElementById('setting-gemini-key');
-    if (geminiInput) geminiInput.value = this.settings.geminiApiKey || '';
     document.getElementById('modal-settings').classList.add('open');
   }
 
@@ -1872,8 +1875,6 @@ class FlashcardApp {
     this.settings.theme = document.getElementById('setting-theme-select').value;
     this.settings.dailyNewLimit = parseInt(document.getElementById('setting-new-limit').value) || 20;
     this.settings.dailyReviewLimit = parseInt(document.getElementById('setting-review-limit').value) || 100;
-    const geminiInput = document.getElementById('setting-gemini-key');
-    if (geminiInput) this.settings.geminiApiKey = geminiInput.value.trim();
 
     if (this.enricher) {
       this.enricher.settings = this.settings;

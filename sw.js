@@ -1,6 +1,6 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v9-audio-controls';
-const VERSION = '20260913-9';
+const CACHE_NAME = 'ankiflash-v10-no-paid-ai';
+const VERSION = '20260913-10';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
   './static/cross_nav.css', './static/flashcards/css/app.css',
@@ -24,6 +24,11 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  // Also stop old controlled tabs before their cached code can contact paid AI.
+  if (/(^|\.)(generativelanguage\.googleapis\.com|aiplatform\.googleapis\.com|openai\.com|anthropic\.com)$/.test(url.hostname)) {
+    event.respondWith(Promise.resolve(new Response(JSON.stringify({code: 'PAID_AI_DISABLED'}), {status: 410, headers: {'Content-Type': 'application/json'}})));
+    return;
+  }
   const scope = new URL(self.registration.scope);
   if (event.request.method !== 'GET' || url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return;
   event.respondWith((async () => {

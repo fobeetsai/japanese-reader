@@ -2,7 +2,7 @@
  * PhotoOcrEngine - 講義/教材照片批次辨識與智慧自動分類模組
  * 支援：
  * 1. 批次多張照片上傳、手機相機直接拍照、剪貼簿 Ctrl+V 貼上螢幕截圖
- * 2. Gemini 1.5/2.0 Flash Vision AI (高精度語境解析、讀音校正、例句繁中生成)
+ * 付費 AI 已停用，僅保留瀏覽器 OCR。
  * 3. 智慧自動分門別類 (JLPT N1~N5、現場營造、商務、生活)
  * 4. 預覽確認清單與一鍵批量導入 Anki 牌組
  */
@@ -212,100 +212,8 @@ class PhotoOcrEngine {
     });
   }
 
-  // 透過 Gemini Vision 深度辨識
-  async scanViaGemini() {
-    let apiKey = (this.app.settings && this.app.settings.geminiApiKey) ? this.app.settings.geminiApiKey.trim() : '';
-
-    if (!apiKey) {
-      apiKey = prompt('💡 提示：Gemini Vision 視覺辨識需要 Google Gemini API Key。\n請輸入您的 Gemini API Key（亦可於「⚙️ 系統設定」中永久儲存）：');
-      if (apiKey && apiKey.trim()) {
-        apiKey = apiKey.trim();
-        this.app.settings.geminiApiKey = apiKey;
-        this.app.sync.saveSettings(this.app.settings);
-      } else {
-        throw new Error('未提供 Gemini API Key。若想免金鑰辨識，請在下拉選單選擇「本地瀏覽器純前端 OCR」！');
-      }
-    }
-
-    const promptText = `你是一個專業的日語教學與單字抽認卡製作專家。
-請分析這批日文照片（包含日語單字書、課本教材、考卷或講義）。
-請仔細提取照片中出現的所有核心日語單字與詞彙。
-針對辨識出來的每一個詞彙，請輸出符合以下規格的 JSON 陣列：
-[
-  {
-    "word": "單字原型或出現形式（漢字/假名）",
-    "reading": "平假名標準讀音（送假名正確分開）",
-    "meaning": "精確的繁體中文釋義與詞性標籤（如：名詞、動詞、形容詞）",
-    "example": "原文例句或實用語境例句（附繁體中文翻譯）",
-    "category": "自動歸納分類，必須為以下之一：JLPT N1、JLPT N2、JLPT N3、JLPT N4、JLPT N5、現場營造工程、商務職場日語、日常生活、慣用表現"
-  }
-]
-注意事項：
-1. 繁體中文（台灣習慣用語）。
-2. 自動去除頁碼、標題等無關干擾文字。
-3. 請只回傳純 JSON 陣列字串，絕對不要包含額外的 Markdown 標記（如 \`\`\`json）或前導後綴說明文字。`;
-
-    for (let f of this.selectedFiles) {
-      const imgData = await this.fileToBase64(f);
-      
-      const payload = {
-        contents: [
-          {
-            parts: [
-              { text: promptText },
-              { inline_data: { mime_type: imgData.mimeType, data: imgData.data } }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048
-        }
-      };
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok) {
-        const errJson = await resp.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `HTTP ${resp.status}`);
-      }
-
-      const resJson = await resp.json();
-      const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      
-      // 清理可能的 markdown 區塊
-      const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      try {
-        const parsed = JSON.parse(cleanJson);
-        if (Array.isArray(parsed)) {
-          parsed.forEach(item => {
-            if (item.word && !this.detectedWords.some(w => w.word === item.word)) {
-              this.detectedWords.push(item);
-            }
-          });
-        }
-      } catch (parseErr) {
-        console.warn('JSON 解析警告，嘗試正則提取:', rawText);
-        // 容錯提取
-        const matches = rawText.match(/\{[^}]*"word"[^}]*\}/g);
-        if (matches) {
-          matches.forEach(m => {
-            try {
-              const obj = JSON.parse(m);
-              if (obj.word && !this.detectedWords.some(w => w.word === obj.word)) {
-                this.detectedWords.push(obj);
-              }
-            } catch(e){}
-          });
-        }
-      }
-    }
-  }
+  // Old callers must fail locally, without uploading photos or using a key.
+  async scanViaGemini() { throw new Error('付費 AI 已停用，請使用瀏覽器 OCR。'); }
 
   // 本地純前端 OCR (免連網 / Tesseract.js)
   async scanViaLocalOcr() {
@@ -315,7 +223,7 @@ class PhotoOcrEngine {
         const s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
         s.onload = resolve;
-        s.onerror = () => reject(new Error('無法載入本地 OCR 元件，請檢查網路連線或使用 Gemini Vision 引擎'));
+        s.onerror = () => reject(new Error('無法載入本地 OCR 元件，請檢查網路連線後重試'));
         document.head.appendChild(s);
       });
     }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: https://translate.googleapis.com/translate_a/single https://api.mojidict.com https://api.dictionaryapi.dev https://api.github.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com;">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AnkiFlash 互動單字抽認卡 - 跨平台背單字與間隔複習系統</title>
@@ -40,8 +41,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-9">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-9">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-10">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-10">
 </head>
 <body>
 
@@ -76,7 +77,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v9 · 發音可切換</small></span>
+      <span>AnkiFlash <small class="app-version">v10 · 付費 AI 已停用</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -646,13 +647,7 @@
           <input type="number" id="setting-review-limit" class="form-input" min="20" max="500" value="100">
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Google Gemini API Key (選填，啟用高階 AI 例句生成)</label>
-          <input type="password" id="setting-gemini-key" class="form-input" placeholder="AIzaSy...">
-          <div class="help-text">
-            💡 未填寫亦可使用內建免金鑰之讀音、繁中翻譯與實用語境例句引擎。若填寫則升級為 Gemini 深度情境生成。
-          </div>
-        </div>
+<div class="help-text">付費 AI 已停用。本站不接受 AI API Key；照片使用瀏覽器 OCR，單字仍可手動輸入或匯入 Excel。</div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary modal-close">取消</button>
@@ -705,15 +700,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-9"></script>
-  <script src="static/flashcards/js/app.js?v=20260913-9"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-10"></script>
+  <script src="static/flashcards/js/app.js?v=20260913-10"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)
@@ -752,7 +747,6 @@
           <div class="form-group" style="flex: 1; min-width: 220px;">
             <label class="form-label">選擇辨識引擎</label>
             <select id="ocr-engine-select" class="form-select">
-              <option value="gemini">✨ Gemini Vision AI (推薦：深度理解課本、自動補齊讀音釋義)</option>
               <option value="tesseract">⚡ 本地瀏覽器純前端 OCR (免金鑰、純前端分析)</option>
             </select>
           </div>
