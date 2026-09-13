@@ -78,7 +78,7 @@ class FlashcardApp {
     this.settings = data.settings || this.sync.getDefaultSettings();
     this.logs = data.logs || {};
 
-    if (data.decks && Array.isArray(data.decks) && data.decks.length > 0) {
+    if (Array.isArray(data.decks)) {
       this.decks = data.decks;
       this.cards = (data.cards && Array.isArray(data.cards)) ? data.cards : [];
     } else {
@@ -134,6 +134,8 @@ class FlashcardApp {
 
     // 視圖特定處理
     if (viewId === 'view-decks') {
+      this.currentCategory = 'all';
+      this.renderCategoryTabs();
       this.renderDeckList();
       this.updateHeaderStats();
     }
@@ -302,9 +304,26 @@ class FlashcardApp {
           <button class="btn-deck-cards btn-icon" data-deck-id="${deck.id}" style="width: 38px; height: 38px; border-radius: 10px;" title="查看與管理此牌組的單字列表 (可逐一刪除或查 MOJi 辭書)">📋</button>
           <button class="btn-deck-menu btn-icon" data-deck-id="${deck.id}" style="width: 38px; height: 38px; border-radius: 10px;" title="牌組選項 (匯出/刪除)">⚙️</button>
         </div>
+        <div class="deck-extra-actions">
+          <button class="btn-secondary btn-browse">↔ 瀏覽全部 (${deckCards.length})</button>
+          ${deckCards.length > 20 ? '<button class="btn-secondary btn-split-deck">每 20 張分組</button>' : ''}
+          <button class="btn-secondary btn-delete-deck">🗑️ 刪除此牌組</button>
+        </div>
       `;
 
       // 綁定事件
+      cardEl.querySelector('.btn-browse').addEventListener('click', e => {
+        e.stopPropagation();
+        this.startStudy(deck.id, true);
+      });
+      cardEl.querySelector('.btn-split-deck')?.addEventListener('click', e => {
+        e.stopPropagation();
+        this.splitDeck(deck.id);
+      });
+      cardEl.querySelector('.btn-delete-deck').addEventListener('click', e => {
+        e.stopPropagation();
+        this.deleteDeck(deck.id);
+      });
       cardEl.querySelector('.btn-study')?.addEventListener('click', (e) => {
         e.stopPropagation();
         this.startStudy(deck.id);
@@ -332,7 +351,8 @@ class FlashcardApp {
   // 抽認卡複習模式 (Study Mode)
   // ==========================================
 
-  startStudy(deckId) {
+  startStudy(deckId, browseAll = false) {
+    this.browseAll = browseAll;
     this.currentDeck = this.decks.find(d => d.id === deckId);
     if (!this.currentDeck) return;
 
@@ -343,12 +363,18 @@ class FlashcardApp {
       dailyReviewLimit: this.settings.dailyReviewLimit
     });
 
-    this.studyQueue = queueObj.queue;
+    this.studyQueue = browseAll ? deckCards.slice() : queueObj.queue;
     this.currentCardIndex = 0;
     this.isCardFlipped = false;
 
     // 設定標題
-    document.getElementById('study-deck-name').innerText = this.currentDeck.name;
+    document.getElementById('study-deck-name').innerText = this.currentDeck.name + (browseAll ? ' · 瀏覽全部' : ' · 排程複習');
+    document.getElementById('study-navigation-help').textContent = browseAll
+      ? '瀏覽全部：不受每日上限限制。← → 切換，空白鍵看答案，不評分。'
+      : '← → 切換不評分。只有按重來／困難／良好／簡單才會更新複習進度。';
+    document.querySelector('.card-back .card-footer-tip').textContent = browseAll
+      ? '使用上一張／下一張按鈕或鍵盤 ← → 自由切換'
+      : '👈 左滑重來 ｜ 右滑良好 👉';
 
     if (this.studyQueue.length === 0) {
       this.renderStudyEmpty(true);
@@ -358,13 +384,30 @@ class FlashcardApp {
     }
   }
 
+  updateStudyNavigation() {
+    document.getElementById('btn-prev-card').disabled = !this.studyQueue.length || this.currentCardIndex <= 0;
+    document.getElementById('btn-next-card').disabled = this.currentCardIndex >= this.studyQueue.length - 1;
+  }
+
+  moveStudyCard(direction) {
+    const target = this.currentCardIndex + direction;
+    if (target < 0 || target >= this.studyQueue.length) return;
+    this.currentCardIndex = target;
+    this.renderCurrentStudyCard();
+  }
+
   renderCurrentStudyCard() {
+    this.updateStudyNavigation();
     if (this.currentCardIndex >= this.studyQueue.length) {
       this.renderStudyEmpty(false);
       return;
     }
 
-    const card = this.studyQueue[this.currentCardIndex];
+    document.getElementById('study-empty-message').hidden = true;
+    document.getElementById('card-scene-container').style.display = '';
+    document.getElementById('study-actions-container').style.display = '';
+    const queued = this.studyQueue[this.currentCardIndex];
+    const card = this.cards.find(c => c.id === queued.id) || queued;
     this.isCardFlipped = false;
 
     // 取得即時間隔預估文字
@@ -418,6 +461,7 @@ class FlashcardApp {
   }
 
   flipCard() {
+    if (this.currentCardIndex >= this.studyQueue.length) return;
     if (this.isCardFlipped) return;
     this.isCardFlipped = true;
 
@@ -425,7 +469,7 @@ class FlashcardApp {
     cardEl.classList.add('is-flipped');
 
     document.getElementById('show-answer-btn').style.display = 'none';
-    document.getElementById('anki-buttons-row').classList.add('visible');
+    document.getElementById('anki-buttons-row').classList.toggle('visible', !this.browseAll);
 
     // 若正面沒發音或設定發音，翻面可點發音
     if (this.settings.vibration && navigator.vibrate) {
@@ -434,8 +478,10 @@ class FlashcardApp {
   }
 
   handleRate(rating) {
+    if (this.browseAll) return;
     if (this.currentCardIndex >= this.studyQueue.length) return;
-    const currentCard = this.studyQueue[this.currentCardIndex];
+    const currentCard = this.cards.find(c => c.id === this.studyQueue[this.currentCardIndex].id);
+    if (!currentCard) return;
     const now = Date.now();
 
     // 透過 SM-2 核心計算新數值
@@ -446,6 +492,7 @@ class FlashcardApp {
     if (idx !== -1) {
       this.cards[idx] = updatedCard;
     }
+    this.studyQueue = this.studyQueue.map(c => c.id === updatedCard.id ? updatedCard : c);
 
     // 若選 Again (rating === 1)，將此卡片重新排進隊列尾端，確保今日再次背誦
     if (rating === 1) {
@@ -472,18 +519,23 @@ class FlashcardApp {
 
   renderStudyEmpty(isInitiallyEmpty) {
     this.showView('view-study');
+    this.isCardFlipped = false;
+    this.updateStudyNavigation();
     const scene = document.getElementById('card-scene-container');
+    const message = document.getElementById('study-empty-message');
     const actions = document.getElementById('study-actions-container');
     
-    if (scene) {
-      scene.innerHTML = `
+    if (scene) scene.style.display = 'none';
+    if (message) {
+      message.hidden = false;
+      message.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: 24px; border: 1.5px solid var(--border-color); max-width: 600px; margin: 0 auto;">
           <div style="font-size: 3.5rem; margin-bottom: 16px;">🎉</div>
           <h2 style="font-size: 1.5rem; margin-bottom: 8px; color: var(--text-primary);">
-            ${isInitiallyEmpty ? '今日複習已全數完成！' : '太棒了！本輪複習已順利結束！'}
+            ${this.browseAll ? '此牌組目前沒有卡片' : isInitiallyEmpty ? '目前沒有排程內的待複習卡片' : '已到本輪最後一張'}
           </h2>
           <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
-            已遵循 Anki 遺忘曲線將單字妥善排程。持續保持，記憶效果最佳！
+            可以返回列表選擇「瀏覽全部」，或按上一張回看。只有評分的卡片會更新排程。
           </p>
           <button class="btn-primary" onclick="window.app.showView('view-decks')">
             👈 返回牌組列表
@@ -534,7 +586,12 @@ class FlashcardApp {
       if (!activeView || activeView.id !== 'view-study') return;
 
       // 若在輸入框內則不攔截
-      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable || document.querySelector('.modal-backdrop.open')) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.moveStudyCard(e.key === 'ArrowLeft' ? -1 : 1);
+        return;
+      }
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -571,7 +628,9 @@ class FlashcardApp {
 
       // 判斷是否為大幅滑動 (超過 60px)
       if (Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY)) {
-        if (this.isCardFlipped) {
+        if (this.browseAll) {
+          this.moveStudyCard(diffX < 0 ? 1 : -1);
+        } else if (this.isCardFlipped) {
           if (diffX > 0) {
             // 往右滑：Good (良好)
             this.handleRate(3);
@@ -592,6 +651,8 @@ class FlashcardApp {
   // ==========================================
 
   setupEventListeners() {
+    document.getElementById('btn-prev-card').addEventListener('click', () => this.moveStudyCard(-1));
+    document.getElementById('btn-next-card').addEventListener('click', () => this.moveStudyCard(1));
     // 導覽列操作
     document.getElementById('nav-brand').addEventListener('click', () => this.showView('view-decks'));
     document.getElementById('btn-back-decks').addEventListener('click', () => this.showView('view-decks'));
@@ -1297,6 +1358,55 @@ class FlashcardApp {
     document.getElementById('modal-new-deck').classList.remove('open');
   }
 
+  persistDeckChanges(decks, cards) {
+    const keys = [this.sync.STORAGE_KEY_CARDS, this.sync.STORAGE_KEY_DECKS];
+    const previous = [];
+    let written = 0;
+    try {
+      keys.forEach(key => previous.push(localStorage.getItem(key)));
+      [cards, decks].forEach((data, i) => {
+        localStorage.setItem(keys[i], JSON.stringify(data));
+        written++;
+      });
+    } catch (error) {
+      for (let i = written - 1; i >= 0; i--) {
+        if (previous[i] === null) localStorage.removeItem(keys[i]);
+        else localStorage.setItem(keys[i], previous[i]);
+      }
+      alert('儲存失敗，牌組未變更。請確認瀏覽器儲存空間後再試。');
+      return false;
+    }
+    this.decks = decks;
+    this.cards = cards;
+    this.showView('view-decks');
+    return true;
+  }
+
+  deleteDeck(deckId) {
+    const deck = this.decks.find(d => d.id === deckId);
+    if (!deck) return;
+    const count = this.cards.filter(c => c.deckId === deckId).length;
+    if (!confirm(`確定刪除「${deck.name}」及其中 ${count} 張卡片？其他牌組不受影響。此操作無法撤銷。`)) return;
+    this.persistDeckChanges(this.decks.filter(d => d.id !== deckId), this.cards.filter(c => c.deckId !== deckId));
+  }
+
+  splitDeck(deckId) {
+    const deck = this.decks.find(d => d.id === deckId);
+    const source = this.cards.filter(c => c.deckId === deckId);
+    if (!deck || source.length <= 20) return;
+    const count = Math.ceil(source.length / 20);
+    if (!confirm(`將「${deck.name}」的 ${source.length} 張卡片分成 ${count} 個牌組，每組最多 20 張？單字與複習進度會保留。`)) return;
+    const groups = Array.from({length: count}, (_, i) => ({
+      ...deck,
+      id: i === 0 ? deck.id : 'deck_' + crypto.randomUUID(),
+      name: `${deck.name}（${i + 1}/${count}）`
+    }));
+    const destinations = new Map(source.map((c, i) => [c.id, groups[Math.floor(i / 20)].id]));
+    const decks = this.decks.flatMap(d => d.id === deckId ? groups : [d]);
+    const cards = this.cards.map(c => destinations.has(c.id) ? {...c, deckId: destinations.get(c.id)} : c);
+    this.persistDeckChanges(decks, cards);
+  }
+
   openDeckActionMenu(deckId) {
     const deck = this.decks.find(d => d.id === deckId);
     if (!deck) return;
@@ -1308,14 +1418,7 @@ class FlashcardApp {
       const cards = this.cards.filter(c => c.deckId === deckId);
       this.sync.exportAnkiTsv(deck.name, cards);
     } else if (action === '3') {
-      if (confirm(`確定要刪除牌組【${deck.name}】及其所有單字卡片嗎？此操作無法撤銷。`)) {
-        this.decks = this.decks.filter(d => d.id !== deckId);
-        this.cards = this.cards.filter(c => c.deckId !== deckId);
-        this.saveData();
-        this.renderCategoryTabs();
-        this.renderDeckList();
-        this.updateHeaderStats();
-      }
+      this.deleteDeck(deckId);
     }
   }
 
@@ -1363,7 +1466,8 @@ class FlashcardApp {
     // 從主卡片資料庫中刪除
     this.cards = this.cards.filter(c => c.id !== currentCard.id);
     // 從當前複習隊列中移除
-    this.studyQueue.splice(this.currentCardIndex, 1);
+    this.studyQueue = this.studyQueue.filter(c => c.id !== currentCard.id);
+    this.currentCardIndex = Math.max(0, Math.min(this.currentCardIndex, this.studyQueue.length - 1));
 
     this.saveData();
     this.updateHeaderStats();

@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('excel-file').value = '';
     $('excel-name').value = '';
     $('excel-header').checked = true;
+    $('excel-split').checked = true;
     status('選檔後可預覽，再確認建立。');
     modal.classList.add('open');
     $('excel-file').focus();
@@ -124,11 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
       status(`第 ${invalid.slice(0, 10).join('、')} 列${invalid.length > 10 ? '等' : ''}缺少中文或日文，共 ${invalid.length} 列。請補齊或刪除後重新選檔，尚未匯入。`);
       return;
     }
-    status(cards.length ? `將建立 ${cards.length} 張卡片（預覽前 8 張，略過 ${blank} 個空白列）。` : '此工作表沒有可匯入的單字。');
+    const groupCount = $('excel-split').checked ? Math.ceil(cards.length / 20) : 1;
+    status(cards.length ? `將建立 ${cards.length} 張卡片，分為 ${groupCount} 個牌組（預覽前 8 張，略過 ${blank} 個空白列）。` : '此工作表沒有可匯入的單字。');
     $('excel-submit').disabled = !cards.length || !$('excel-name').value.trim();
   }
   $('excel-sheet').addEventListener('change', selectSheet);
   $('excel-header').addEventListener('change', configureColumns);
+  $('excel-split').addEventListener('change', () => { if (workbook) preview(); });
   fields.forEach(field => $('excel-' + field).addEventListener('change', preview));
   $('excel-name').addEventListener('input', () => { if (workbook) preview(); });
   $('excel-submit').addEventListener('click', () => {
@@ -137,9 +140,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!app) return status('應用程式尚未就緒，請重新整理再試。');
     $('excel-submit').disabled = true;
     const name = $('excel-name').value.trim();
-    const deckId = 'deck_excel_' + crypto.randomUUID();
-    const newDecks = [...app.decks, { id: deckId, name, desc: '從 Excel 匯入', category: 'excel', categoryName: 'Excel 匯入', icon: '📊', color: '#10b981' }];
-    const newCards = [...app.cards, ...cards.map(card => app.anki.createCard({ ...card, id: 'card_' + crypto.randomUUID(), deckId }))];
+    const groupSize = $('excel-split').checked ? 20 : cards.length;
+    const groupCount = Math.ceil(cards.length / groupSize);
+    const groups = Array.from({length: groupCount}, (_, i) => ({
+      id: 'deck_excel_' + crypto.randomUUID(),
+      name: groupCount === 1 ? name : `${name}（${i + 1}/${groupCount}）`,
+      desc: '從 Excel 匯入', category: 'excel', categoryName: 'Excel 匯入', icon: '📊', color: '#10b981'
+    }));
+    const newDecks = [...app.decks, ...groups];
+    const newCards = [...app.cards, ...cards.map((card, i) => app.anki.createCard({ ...card, id: 'card_' + crypto.randomUUID(), deckId: groups[Math.floor(i / groupSize)].id }))];
     // Snapshot both keys and roll back if either write fails (e.g. storage quota).
     const keys = [app.sync.STORAGE_KEY_CARDS, app.sync.STORAGE_KEY_DECKS];
     const previous = [];
@@ -162,12 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const count = cards.length;
     app.decks = newDecks;
     app.cards = newCards;
-    app.currentCategory = 'excel';
+    app.currentCategory = 'all';
     app.renderCategoryTabs();
     app.renderDeckList();
     app.updateHeaderStats();
     modal.classList.remove('open');
     reset();
-    alert(`已建立「${name}」，匯入 ${count} 張卡片。`);
+    alert(`已匯入「${name}」共 ${count} 張卡片，建立 ${groupCount} 個牌組。列表已顯示全部牌組。`);
   });
 });

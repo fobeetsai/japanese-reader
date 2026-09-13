@@ -2,7 +2,7 @@
  * AnkiFlash Service Worker - 支援離線使用、PWA 與自動快取更新
  */
 
-const CACHE_NAME = 'ankiflash-v4-excel';
+const CACHE_NAME = 'ankiflash-v5-navigation-groups';
 const ASSETS_TO_CACHE = [
   './flashcard.html',
   './manifest.json',

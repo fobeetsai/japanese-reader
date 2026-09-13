@@ -132,6 +132,12 @@
       </div>
 
       <!-- 3D 抽認卡場景 -->
+      <div class="study-navigation" aria-label="卡片切換">
+        <button class="btn-secondary" id="btn-prev-card">← 上一張</button>
+        <span id="study-navigation-help">左右切換不評分，也不改變複習進度。</span>
+        <button class="btn-secondary" id="btn-next-card">下一張 →</button>
+      </div>
+      <div id="study-empty-message" hidden></div>
       <div class="card-scene" id="card-scene-container">
         <div class="flashcard" id="active-flashcard">
           
@@ -589,6 +595,7 @@
           <label class="form-label" for="excel-name">新牌組名稱</label>
           <input class="form-input" id="excel-name" maxlength="100" placeholder="預設使用檔名，可自行修改">
         </div>
+        <label><input type="checkbox" id="excel-split" checked> 每 20 張建立一個牌組，全部顯示（最後一組可少於 20 張）</label>
         <div id="excel-options" hidden>
           <div class="form-group">
             <label class="form-label" for="excel-sheet">選擇工作表</label>
