@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AnkiFlash 互動單字抽認卡 - 跨平台背單字與間隔複習系統</title>
+  <script>
+    // Stop queued audio and guard against automatic speech, even from older cached scripts.
+    (() => {
+      const speech = window.speechSynthesis;
+      if (!speech) return;
+      speech.cancel();
+      const speak = speech.speak.bind(speech);
+      speech.speak = () => {};
+      window.playManualCardSpeech = (utterance, event) => {
+        if (event?.isTrusted && event.type === 'click' && event.currentTarget?.classList.contains('audio-btn')) speak(utterance);
+      };
+    })();
+  </script>
   
   <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,8 +28,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css">
-  <link rel="stylesheet" href="static/flashcards/css/app.css">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-7">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-7">
 </head>
 <body>
 
@@ -51,7 +64,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash</span>
+      <span>AnkiFlash <small class="app-version">v7 · 手動發音</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -65,7 +78,7 @@
     <div class="header-actions">
       <button class="btn-icon" id="btn-open-sync" title="雲端跨裝置同步">🔄</button>
       <button class="btn-icon" id="btn-open-stats" title="學習統計與熱圖">📊</button>
-      <button class="btn-icon" id="btn-open-settings" title="系統與發音設定">⚙️</button>
+      <button class="btn-secondary" id="btn-open-settings" title="系統與發音設定">⚙️ 設定</button>
       <a href="index.html" class="btn-icon" style="text-decoration: none;" title="返回日文閱讀助手">📖</a>
     </div>
   </header>
@@ -105,8 +118,9 @@
         <!-- 由 JavaScript 動態渲染分類切換標籤 -->
       </div>
 
-      <!-- 牌組卡片網格 -->
-      <div class="decks-grid" id="decks-grid-container">
+      <p class="help-text" id="deck-list-summary" role="status"></p>
+      <p class="help-text">每列是一組，最多 20 張；點「開啟」即可用 ← → 瀏覽。現有的大牌組會自動分組並保留複習進度。</p>
+      <div class="deck-table-wrap" id="decks-grid-container">
         <!-- 由 JavaScript 動態渲染 -->
       </div>
     </section>
@@ -533,6 +547,8 @@
       </div>
       <div class="modal-body">
         <p class="help-text">🔊 點擊卡片上的喇叭按鈕才會發音；開啟牌組、翻卡與切換卡片都不會自動朗讀。</p>
+        <!-- Retained solely for compatibility with a previously cached controller. -->
+        <input type="checkbox" id="setting-auto-audio" hidden aria-hidden="true" tabindex="-1">
 
         <div class="form-group">
           <label class="form-label">發音語系</label>
@@ -592,7 +608,7 @@
           <label class="form-label" for="excel-name">新牌組名稱</label>
           <input class="form-input" id="excel-name" maxlength="100" placeholder="預設使用檔名，可自行修改">
         </div>
-        <label><input type="checkbox" id="excel-split" checked> 每 20 張建立一個牌組，全部顯示（最後一組可少於 20 張）</label>
+        <p class="help-text"><input type="checkbox" id="excel-split" checked hidden> 每 20 張建立一個牌組，全部顯示（最後一組可少於 20 張）。</p>
         <div id="excel-options" hidden>
           <div class="form-group">
             <label class="form-label" for="excel-sheet">選擇工作表</label>
@@ -619,15 +635,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js"></script>
-  <script src="static/flashcards/js/excel_import.js"></script>
-  <script src="static/flashcards/js/anki_engine.js"></script>
-  <script src="static/flashcards/js/sync_manager.js"></script>
-  <script src="static/flashcards/js/builtin_data.js"></script>
-  <script src="static/flashcards/js/word_enricher.js"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js"></script>
-  <script src="static/flashcards/js/app.js"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-7"></script>
+  <script src="static/flashcards/js/app.js?v=20260913-7"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)

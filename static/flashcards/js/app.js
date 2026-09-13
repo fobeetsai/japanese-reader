@@ -222,129 +222,75 @@ class FlashcardApp {
     return map[categoryId] || (categoryId ? `🏷️ ${categoryId}` : '未分類');
   }
 
+  ensureTwentyCardDecks() {
+    if (this.groupingFailed) return;
+    const groups = new Map();
+    this.cards.forEach(card => {
+      if (!groups.has(card.deckId)) groups.set(card.deckId, []);
+      groups.get(card.deckId).push(card);
+    });
+    const destinations = new Map();
+    const decks = this.decks.flatMap(deck => {
+      const source = groups.get(deck.id) || [];
+      if (source.length <= 20) return [deck];
+      const count = Math.ceil(source.length / 20);
+      const parts = Array.from({length: count}, (_, i) => ({
+        ...deck,
+        id: i === 0 ? deck.id : 'deck_' + crypto.randomUUID(),
+        name: `${deck.name}（${i + 1}/${count}）`
+      }));
+      source.forEach((card, i) => destinations.set(card.id, parts[Math.floor(i / 20)].id));
+      return parts;
+    });
+    if (!destinations.size) return;
+    const cards = this.cards.map(card => destinations.has(card.id)
+      ? {...card, deckId: destinations.get(card.id)} : card);
+    this.groupingFailed = !this.persistDeckChanges(decks, cards, false);
+  }
+
   renderDeckList() {
     const container = document.getElementById('decks-grid-container');
     if (!container) return;
-
-    container.innerHTML = '';
-    const now = Date.now();
-
-    // 依照選取的分類進行篩選 (若為 'all' 則顯示全部)
-    const filteredDecks = (this.currentCategory === 'all')
-      ? this.decks
-      : this.decks.filter(d => d.category === this.currentCategory);
-
-    if (filteredDecks.length === 0) {
-      container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-secondary);">
-          <div style="font-size: 2.5rem; margin-bottom: 12px;">📂</div>
-          <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary);">目前此處尚無牌組</div>
-          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px;">您可以點擊下方按鈕立即一鍵恢復預設牌組，或點選右上角建立新牌組！</p>
-          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <button class="btn-primary" onclick="window.app.restoreDefaultDecks()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;">
-              🔄 一鍵還原預設牌組 (營造工程/KY/日常/JLPT)
-            </button>
-            <button class="btn-secondary" onclick="window.app.openNewDeckModal()">
-              ➕ 新建自訂牌組
-            </button>
-          </div>
-        </div>
-      `;
+    this.ensureTwentyCardDecks();
+    // Splitting only changes deck membership; original card IDs and SRS history are retained.
+    this.renderCategoryTabs();
+    const filtered = this.currentCategory === 'all' ? this.decks
+      : this.decks.filter(deck => deck.category === this.currentCategory);
+    const summary = document.getElementById('deck-list-summary');
+    if (summary) summary.textContent = `全部共 ${this.decks.length} 組、${this.cards.length} 張單字卡；目前顯示 ${filtered.length} 組。`;
+    container.replaceChildren();
+    if (!filtered.length) {
+      const empty = document.createElement('p');
+      empty.textContent = this.decks.length ? '這個分類沒有牌組，請選擇「全部牌組」。' : '目前沒有牌組，請匯入 Excel 或建立新牌組。';
+      container.append(empty);
       return;
     }
-
-    filteredDecks.forEach(deck => {
-      const deckCards = this.cards.filter(c => c.deckId === deck.id);
-      const queue = this.anki.getStudyQueue(deckCards, now, {
-        dailyNewLimit: this.settings.dailyNewLimit,
-        dailyReviewLimit: this.settings.dailyReviewLimit
-      });
-
-      const newCount = queue.newCards.length;
-      const learnCount = queue.learning.length;
-      const dueCount = queue.review.length;
-      const totalAvailable = queue.totalAvailable;
-      const categoryTag = this.getCategoryLabel(deck.category);
-
-      const cardEl = document.createElement('div');
-      cardEl.className = 'deck-card';
-      cardEl.innerHTML = `
-        <div class="deck-card-top">
-          <div class="deck-icon-bubble" style="color: ${deck.color || '#6366f1'}">${deck.icon || '📚'}</div>
-          <div class="deck-info">
-            <h3 class="deck-name">${this.escapeHtml(deck.name)}</h3>
-            <p class="deck-desc">${this.escapeHtml(deck.desc || '自訂單字牌組')}</p>
-            <span class="deck-category-badge">${categoryTag}</span>
-          </div>
-        </div>
-
-        <div class="deck-counts-row">
-          <div class="count-item">
-            <span class="count-label">新卡</span>
-            <span class="count-val new">${newCount}</span>
-          </div>
-          <div class="count-item">
-            <span class="count-label">學習中</span>
-            <span class="count-val learn">${learnCount}</span>
-          </div>
-          <div class="count-item">
-            <span class="count-label">待複習</span>
-            <span class="count-val due">${dueCount}</span>
-          </div>
-          <div class="count-item">
-            <span class="count-label">總計</span>
-            <span class="count-val">${deckCards.length}</span>
-          </div>
-        </div>
-
-        <div class="deck-actions-row">
-          <button class="btn-study" data-deck-id="${deck.id}">
-            ${totalAvailable > 0 ? `🚀 開始複習 (${totalAvailable})` : '✨ 今日已完成'}
-          </button>
-          <button class="btn-deck-cards btn-icon" data-deck-id="${deck.id}" style="width: 38px; height: 38px; border-radius: 10px;" title="查看與管理此牌組的單字列表 (可逐一刪除或查 MOJi 辭書)">📋</button>
-          <button class="btn-deck-menu btn-icon" data-deck-id="${deck.id}" style="width: 38px; height: 38px; border-radius: 10px;" title="牌組選項 (匯出/刪除)">⚙️</button>
-        </div>
-        <div class="deck-extra-actions">
-          <button class="btn-secondary btn-browse">↔ 瀏覽全部 (${deckCards.length})</button>
-          ${deckCards.length > 20 ? '<button class="btn-secondary btn-split-deck">每 20 張分組</button>' : ''}
-          <button class="btn-secondary btn-delete-deck">🗑️ 刪除此牌組</button>
-        </div>
-      `;
-
-      // 綁定事件
-      cardEl.querySelector('.btn-browse').addEventListener('click', e => {
-        e.stopPropagation();
-        this.startStudy(deck.id, true);
-      });
-      cardEl.querySelector('.btn-split-deck')?.addEventListener('click', e => {
-        e.stopPropagation();
-        this.splitDeck(deck.id);
-      });
-      cardEl.querySelector('.btn-delete-deck').addEventListener('click', e => {
-        e.stopPropagation();
-        this.deleteDeck(deck.id);
-      });
-      cardEl.querySelector('.btn-study')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.startStudy(deck.id);
-      });
-
-      cardEl.querySelector('.btn-deck-cards')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openDeckCardManager(deck.id);
-      });
-
-      cardEl.querySelector('.btn-deck-menu')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openDeckActionMenu(deck.id);
-      });
-
-      cardEl.addEventListener('click', () => {
-        this.startStudy(deck.id);
-      });
-
-      container.appendChild(cardEl);
+    const table = document.createElement('table');
+    table.className = 'deck-overview';
+    table.innerHTML = '<thead><tr><th scope="col">牌組／組別</th><th scope="col">張數</th><th scope="col">選擇與管理</th></tr></thead><tbody></tbody>';
+    const body = table.querySelector('tbody');
+    filtered.forEach(deck => {
+      const cards = this.cards.filter(card => card.deckId === deck.id);
+      const row = document.createElement('tr');
+      row.dataset.deckId = deck.id;
+      row.innerHTML = `
+        <td><strong class="deck-row-name">${this.escapeHtml(deck.name)}</strong><small>${this.escapeHtml(this.getCategoryLabel(deck.category))}</small></td>
+        <td class="deck-row-count">${cards.length}</td>
+        <td><div class="deck-row-actions">
+          <button class="btn-primary btn-browse">開啟 ↔</button>
+          <button class="btn-secondary btn-study">排程複習</button>
+          <button class="btn-secondary btn-deck-cards">單字一覽</button>
+          <button class="btn-secondary btn-export-deck">匯出</button>
+          <button class="btn-secondary btn-delete-deck">🗑️ 刪除此組</button>
+        </div></td>`;
+      row.querySelector('.btn-browse').onclick = () => this.startStudy(deck.id, true);
+      row.querySelector('.btn-study').onclick = () => this.startStudy(deck.id);
+      row.querySelector('.btn-deck-cards').onclick = () => this.openDeckCardManager(deck.id);
+      row.querySelector('.btn-export-deck').onclick = () => this.sync.exportAnkiTsv(deck.name, cards);
+      row.querySelector('.btn-delete-deck').onclick = () => this.deleteDeck(deck.id);
+      body.append(row);
     });
+    container.append(table);
   }
 
   // ==========================================
@@ -547,7 +493,8 @@ class FlashcardApp {
   // 語音發音朗讀 (Web Speech API TTS)
   // ==========================================
 
-  speakText(text, lang = null) {
+  speakText(text, lang = null, event = null) {
+    if (!event?.isTrusted || !event.currentTarget?.classList.contains('audio-btn')) return;
     if (!window.speechSynthesis || !text) return;
     try {
       window.speechSynthesis.cancel(); // 停止先前的發音
@@ -567,7 +514,7 @@ class FlashcardApp {
         audioBtns.forEach(btn => btn.classList.remove('playing'));
       };
 
-      window.speechSynthesis.speak(utterance);
+      window.playManualCardSpeech(utterance, event);
     } catch (e) {
       console.warn('語音合成暫時不可用:', e);
     }
@@ -678,13 +625,13 @@ class FlashcardApp {
     document.getElementById('btn-speak-front').addEventListener('click', (e) => {
       e.stopPropagation();
       const word = document.getElementById('card-front-word').innerText;
-      this.speakText(word);
+      this.speakText(word, null, e);
     });
 
     document.getElementById('btn-speak-back').addEventListener('click', (e) => {
       e.stopPropagation();
       const word = document.getElementById('card-back-word').innerText;
-      this.speakText(word);
+      this.speakText(word, null, e);
     });
 
     // MOJi 辭書聯動按鈕 (正反面)
@@ -1355,7 +1302,7 @@ class FlashcardApp {
     document.getElementById('modal-new-deck').classList.remove('open');
   }
 
-  persistDeckChanges(decks, cards) {
+  persistDeckChanges(decks, cards, refresh = true) {
     const keys = [this.sync.STORAGE_KEY_CARDS, this.sync.STORAGE_KEY_DECKS];
     const previous = [];
     let written = 0;
@@ -1375,7 +1322,7 @@ class FlashcardApp {
     }
     this.decks = decks;
     this.cards = cards;
-    this.showView('view-decks');
+    if (refresh) this.showView('view-decks');
     return true;
   }
 
@@ -1794,7 +1741,7 @@ class FlashcardApp {
     // 註冊 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
           console.log('[PWA] Service Worker 註冊成功, scope:', reg.scope);
         }).catch(err => {
           console.warn('[PWA] Service Worker 註冊失敗:', err);

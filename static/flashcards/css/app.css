@@ -1317,3 +1317,20 @@ body {
   .study-navigation span { order: 3; flex-basis: 100%; }
   .app-header { flex-wrap: wrap; gap: 8px; }
 }
+
+.app-version { display: block; font-size: .65rem; color: #a7f3d0; font-weight: 500; }
+.deck-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 14px; }
+.deck-overview { width: 100%; border-collapse: collapse; text-align: left; }
+.deck-overview th { background: var(--bg-tertiary); color: var(--text-secondary); padding: 12px 16px; }
+.deck-overview td { padding: 14px 16px; border-top: 1px solid var(--border-color); vertical-align: middle; }
+.deck-overview td:first-child { width: 38%; overflow-wrap: anywhere; }
+.deck-overview small { display: block; margin-top: 5px; color: var(--text-secondary); font-size: .75rem; }
+.deck-row-count { white-space: nowrap; }
+.deck-row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.deck-row-actions button { padding: 8px 10px; font-size: .82rem; }
+@media (max-width: 600px) {
+  .deck-overview th, .deck-overview td { padding: 10px 8px; }
+  .deck-overview td:first-child { width: 37%; }
+  .deck-row-actions { min-width: 120px; }
+  .deck-row-actions button { flex: 1 1 100%; }
+}
