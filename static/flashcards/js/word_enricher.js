@@ -122,116 +122,16 @@ class WordEnricher {
   }
 
   /**
-   * MOJi 辭書 (MOJi Dictionary) 原生雲端直連查詢
-   * 抓取官方讀音 (含音調標記)、官方詞性與中文釋義、原生權威例句
+   * 舊 MOJi 查詢方法相容入口：不再呼叫未確認授權的內部接口
+   * MOJi 功能改由官方連結及使用者主動匯入內容提供
    * @param {string} word 欲查詢單字
    */
-  async fetchMojiDict(word) {
-    if (!word || !word.trim()) return null;
-    const cleanWord = word.trim();
-
-    // 1. 優先查詢本機 FastAPI 後端 (/api/moji/search)
-    const backendEndpoints = [
-      `/api/moji/search?word=${encodeURIComponent(cleanWord)}`,
-      `http://localhost:8000/api/moji/search?word=${encodeURIComponent(cleanWord)}`
-    ];
-
-    for (const ep of backendEndpoints) {
-      try {
-        const ctrl = new AbortController();
-        const timeoutId = setTimeout(() => ctrl.abort(), 2000);
-        const res = await fetch(ep, { signal: ctrl.signal });
-        clearTimeout(timeoutId);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.status === 'success') {
-            return {
-              word: data.word || cleanWord,
-              reading: data.reading || '',
-              meaning: data.meaning || '',
-              example: data.example || '',
-              source: data.source || 'MOJi 辭書 (官方直接導出)'
-            };
-          }
-        }
-      } catch (e) {
-        // 後端未啟動或連線超時，繼續嘗試其他路徑
-      }
-    }
-
-    // 2. 嘗試調用 MOJi 原生 Parse 雲端 API (前端支援環境)
-    try {
-      const ctrl = new AbortController();
-      const timeoutId = setTimeout(() => ctrl.abort(), 2500);
-      const res = await fetch('https://api.mojidict.com/parse/functions/search-all', {
-        method: 'POST',
-        headers: {
-          'X-Parse-Application-Id': 'E62VyFVLMiW7kvbtVq3p',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: cleanWord,
-          types: [102, 103, 106]
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const data = await res.json();
-        const resObj = (data && data.result && data.result.result) || {};
-        const wList = (resObj.word && resObj.word.searchResult) || [];
-        const exList = (resObj.example && resObj.example.searchResult) || [];
-
-        if (wList.length > 0) {
-          let best = wList.find(w => (w.title || '').split('|')[0].trim() === cleanWord) || wList[0];
-          const parts = (best.title || '').split('|').map(s => s.trim());
-          const reading = parts[1] || '';
-          const meaning = this.toTraditional(best.excerpt || '');
-          let example = '';
-          if (exList.length > 0) {
-            const ex0 = exList[0];
-            const jpSent = (ex0.title || '').trim();
-            const zhSent = this.toTraditional((ex0.excerpt || '').trim());
-            example = jpSent && zhSent ? `${jpSent} (${zhSent})` : jpSent;
-          }
-          return {
-            word: parts[0] || cleanWord,
-            reading: reading,
-            meaning: meaning,
-            example: example,
-            source: 'MOJi 辭書 (原生 API)'
-          };
-        }
-      }
-    } catch (e) {
-      // 網路或 CORS 限制，進入本地辭書與備用模式
-    }
-
+  async fetchMojiDict() {
+    // Compatibility only. No documented public member API has been configured.
     return null;
   }
 
-  /**
-   * 日語單字自動擴充 (深度整合 MOJi 辭書)
-   */
   async enrichJapaneseWord(word, options = {}) {
-    // 1. 優先直接使用 MOJi 辭書原生資料
-    try {
-      const moji = await this.fetchMojiDict(word);
-      if (moji && (moji.meaning || moji.reading)) {
-        return {
-          front: word,
-          reading: moji.reading || '',
-          back: moji.meaning || '繁體中文釋義',
-          example: moji.example || await this.generateJapaneseExample(word, moji.meaning, options.category),
-          source: moji.source || 'MOJi 辭書',
-          tags: options.category ? [options.category, 'MOJi辭書'] : ['MOJi辭書']
-        };
-      }
-    } catch (e) {
-      console.warn('[WordEnricher] MOJi 直連查詢異常，切換備用管道:', e);
-    }
-
     // 2. 備用：呼叫 Google GTX Translate (自帶繁中翻譯與羅馬字拼音)
     try {
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&dt=rm&q=${encodeURIComponent(word)}`;

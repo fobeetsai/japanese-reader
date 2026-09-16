@@ -1,13 +1,13 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v12-sync';
-const VERSION = '20260916-12';
+const CACHE_NAME = 'ankiflash-v13-moji-companion';
+const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
   './static/cross_nav.css', './static/flashcards/css/app.css',
   './static/flashcards/js/anki_engine.js', './static/flashcards/js/sync_manager.js',
   './static/flashcards/js/builtin_data.js', './static/flashcards/js/word_enricher.js',
   './static/flashcards/js/ankiflash_bridge.js', './static/flashcards/js/photo_ocr_engine.js',
-  './static/flashcards/js/app.js', './static/flashcards/js/excel_import.js',
+  './static/flashcards/js/moji_bridge.js', './static/flashcards/js/app.js', './static/flashcards/js/excel_import.js',
   './static/flashcards/vendor/xlsx.full.min.js', './static/flashcards/icons/icon-192.svg'
 ].map(path => /\.(js|css)$/.test(path) ? `${path}?v=${VERSION}` : path);
 

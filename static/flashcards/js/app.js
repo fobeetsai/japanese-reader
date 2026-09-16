@@ -7,13 +7,13 @@ class FlashcardApp {
   constructor() {
     this.anki = new AnkiEngine();
     this.sync = new SyncManager();
-    
+
     // 應用狀態
     this.decks = [];
     this.cards = [];
     this.settings = {};
     this.logs = {};
-    
+
     // 當前學習狀態
     this.currentDeck = null;
     this.studyQueue = [];
@@ -221,6 +221,7 @@ class FlashcardApp {
 
   getCategoryLabel(categoryId) {
     const map = {
+      'moji': '📖 MOJi 學習',
       'engineering': '🏗️ 工程營造',
       'daily': '🍵 日常生活',
       'business': '💼 商務職場',
@@ -494,7 +495,7 @@ class FlashcardApp {
     // 正面內容
     document.getElementById('card-front-word').innerText = card.front;
     document.getElementById('card-front-tag').innerText = (card.tags && card.tags[0]) || this.currentDeck.name.slice(0, 10);
-    
+
     // 背面內容
     document.getElementById('card-back-word').innerText = card.front;
     document.getElementById('card-back-reading').innerText = card.reading ? `[${card.reading}]` : '';
@@ -503,7 +504,7 @@ class FlashcardApp {
     document.querySelector('.card-back').scrollTop = 0;
     document.getElementById('reading-save-status').textContent = '優先朗讀這裡的假名；留空時由裝置判讀原文。';
     document.getElementById('card-back-meaning').innerText = card.back || '';
-    
+
     const exBox = document.getElementById('card-back-example-box');
     if (card.example) {
       exBox.style.display = 'block';
@@ -597,7 +598,7 @@ class FlashcardApp {
     const scene = document.getElementById('card-scene-container');
     const message = document.getElementById('study-empty-message');
     const actions = document.getElementById('study-actions-container');
-    
+
     if (scene) scene.style.display = 'none';
     if (message) {
       message.hidden = false;
@@ -665,7 +666,7 @@ class FlashcardApp {
       this.cancelCurrentSpeech();
       const generation = this.audioGeneration;
       const utterance = new SpeechSynthesisUtterance(text);
-      
+
       const targetLang = lang || this.settings.audioLang || 'ja-JP';
       utterance.lang = targetLang;
       utterance.rate = 0.9; // 略微放慢語速，方便聽清
@@ -930,7 +931,7 @@ class FlashcardApp {
 
   openStatsModal() {
     const stats = this.anki.getDeckStats(this.cards);
-    
+
     document.getElementById('stat-total-cards').innerText = stats.total;
     document.getElementById('stat-mastered-cards').innerText = stats.masteredCount;
     document.getElementById('stat-learning-cards').innerText = stats.learningCount;
@@ -971,7 +972,7 @@ class FlashcardApp {
     if (tokenInput) tokenInput.value = this.settings.githubToken || '';
     if (gistInput) gistInput.value = this.settings.gistId || '';
     if (statusText) {
-      statusText.innerText = this.settings.lastSyncTime 
+      statusText.innerText = this.settings.lastSyncTime
         ? `上次同步時間：${new Date(this.settings.lastSyncTime).toLocaleString('zh-TW')}`
         : '尚未進行雲端同步';
     }
@@ -1198,123 +1199,34 @@ class FlashcardApp {
     const loadingMsg = document.getElementById('add-card-loading-msg');
     if (loadingMsg) loadingMsg.style.display = 'none';
 
-    // 監聽單字輸入框自動觸發 MOJi 辭書導入 (使用者輸入完成後自動載入)
-    const frontInput = document.getElementById('add-card-front');
-    if (frontInput && !frontInput.dataset.hasMojiListener) {
-      frontInput.dataset.hasMojiListener = 'true';
-      let debounceTimer = null;
-      frontInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimer);
-        const val = e.target.value.trim();
-        const readingVal = document.getElementById('add-card-reading').value.trim();
-        const backVal = document.getElementById('add-card-back').value.trim();
-        
-        // 若使用者已經自己填寫或單字太短，不自動覆蓋
-        if (val.length >= 1 && !readingVal && !backVal) {
-          debounceTimer = setTimeout(() => {
-            this.importFromMojiDirect(false);
-          }, 650);
-        }
-      });
-    }
-
     document.getElementById('modal-add-card').classList.add('open');
   }
 
   /**
-   * MOJi 辭書直接導入 (一鍵獲取讀音、音調、繁中釋義與權威例句)
+   * MOJi 官方查詞入口 (會員登入留在官方網站)
    * @param {boolean} isManual 是否為使用者手動點擊按鈕
    */
   async importFromMojiDirect(isManual = true) {
-    const wordInput = document.getElementById('add-card-front');
-    const word = wordInput ? wordInput.value.trim() : '';
-
-    if (!word) {
-      if (isManual) alert('請先在上方輸入欲查詢的單字！');
-      return;
-    }
-
-    const deckId = document.getElementById('add-card-deck-select').value;
-    const deck = this.decks.find(d => d.id === deckId);
-    const category = deck ? deck.category : 'engineering';
-
-    const btn = document.getElementById('btn-auto-enrich-single');
-    const mojiBtn = document.getElementById('btn-moji-import-single');
-    const loadingMsg = document.getElementById('add-card-loading-msg');
-
-    if (btn) btn.classList.add('loading');
-    if (mojiBtn) mojiBtn.classList.add('loading');
-    if (loadingMsg) {
-      loadingMsg.style.display = 'block';
-      loadingMsg.innerHTML = `📖 <strong>正在直接調用 MOJi 辭書</strong> 獲取【${word}】的官方讀音、繁中釋義與權威例句...`;
-    }
-
-    try {
-      // 優先調用 MOJi 辭書專用提取方法
-      let mojiData = null;
-      if (this.enricher && typeof this.enricher.fetchMojiDict === 'function') {
-        mojiData = await this.enricher.fetchMojiDict(word);
-      }
-
-      let result = null;
-      if (mojiData && (mojiData.meaning || mojiData.reading)) {
-        result = {
-          front: word,
-          reading: mojiData.reading || '',
-          back: mojiData.meaning || '',
-          example: mojiData.example || '',
-          source: mojiData.source || 'MOJi 辭書',
-          tags: [category, 'MOJi辭書']
-        };
-      } else {
-        // 若直連未查到，透過通用擴充器 (含備用字典與翻譯)
-        result = await this.enricher.enrichWord(word, { category });
-      }
-
-      if (result) {
-        const readingEl = document.getElementById('add-card-reading');
-        const backEl = document.getElementById('add-card-back');
-        const exampleEl = document.getElementById('add-card-example');
-        const tagsEl = document.getElementById('add-card-tags');
-
-        if (result.reading && readingEl) readingEl.value = result.reading;
-        if (result.back && backEl) backEl.value = result.back;
-        if (result.example && exampleEl) exampleEl.value = result.example;
-        if (result.tags && result.tags.length > 0 && tagsEl) {
-          tagsEl.value = result.tags.join(' ');
-        }
-
-        // 閃爍高亮提示已成功導入
-        [readingEl, backEl, exampleEl].forEach(el => {
-          if (el) {
-            el.classList.add('field-highlight-success');
-            setTimeout(() => el.classList.remove('field-highlight-success'), 1200);
-          }
-        });
-
-        if (loadingMsg) {
-          const isMoji = (result.source && result.source.includes('MOJi'));
-          loadingMsg.innerHTML = isMoji
-            ? `✅ <strong>已成功自 MOJi 辭書直接導入！</strong>（讀音：${result.reading || '已填入'}）`
-            : `✅ 已完成智慧補全（${result.source || '網路字典'}）`;
-          setTimeout(() => {
-            if (loadingMsg) loadingMsg.style.display = 'none';
-          }, 3500);
-        }
-      } else if (isManual) {
-        alert(`未在 MOJi 辭書或詞庫中找到「${word}」，請手動輸入。`);
-      }
-    } catch (e) {
-      console.warn('MOJi 導入失敗:', e);
-      if (isManual) alert('MOJi 辭書導入過程遭遇連線問題: ' + e.message);
-    } finally {
-      if (btn) btn.classList.remove('loading');
-      if (mojiBtn) mojiBtn.classList.remove('loading');
-    }
+    if (!isManual) return;
+    const word=document.getElementById('add-card-front').value.trim();
+    if (!word) { alert('請先輸入要查的單字或文型。'); return; }
+    this.openMojiDict(word);
+    const msg=document.getElementById('add-card-loading-msg');
+    msg.style.display='block';msg.textContent='已開啟 MOJi 查詢。請回來填寫自己的讀音、中文及例句；要整理整份詞表，請用 MOJi 學習工作台。';
   }
 
   async autoEnrichSingleCard() {
-    return this.importFromMojiDirect(true);
+    const word=document.getElementById('add-card-front').value.trim();
+    if(!word)return alert('請先輸入單字。');
+    const msg=document.getElementById('add-card-loading-msg');msg.style.display='block';msg.textContent='正在查詢一般字典…';
+    try {
+      const result=await this.enricher.enrichWord(word,{});
+      if(document.getElementById('add-card-front').value.trim()!==word)return;
+      for(const [field,key] of [['reading','reading'],['back','back'],['example','example']]) {
+        const el=document.getElementById('add-card-'+field);if(!el.value && result?.[key])el.value=result[key];
+      }
+      msg.textContent='一般字典補全完成，請核對內容；這不是 MOJi 會員資料。';
+    }catch(e){msg.textContent='查詢失敗，請手動填寫：'+e.message;}
   }
 
   executeAddSingleCard() {
@@ -1598,31 +1510,12 @@ class FlashcardApp {
   }
 
   // ==========================================
-  // MOJi 辭書聯動 (APP Deep Link & Web Fallback)
+  // MOJi 辭書聯動 (官方網頁入口)
   // ==========================================
 
   openMojiDict(word) {
     if (!word || !word.trim()) return;
-    const cleanWord = word.trim();
-    const encoded = encodeURIComponent(cleanWord);
-    const webUrl = `https://www.mojidict.com/search?text=${encoded}`;
-    const appUrl = `mojidict://search?text=${encoded}`;
-
-    // 判斷是否為手機/平板行動裝置 (iOS Safari / iPad / Android)
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      // 嘗試喚起 MOJi App，若未安裝或逾時則回退至 MOJi 網頁版
-      const startTime = Date.now();
-      window.location.href = appUrl;
-      setTimeout(() => {
-        if (Date.now() - startTime < 1600) {
-          window.open(webUrl, '_blank');
-        }
-      }, 900);
-    } else {
-      // 電腦網頁端直接開啟新分頁
-      window.open(webUrl, '_blank');
-    }
+    window.open('https://www.mojidict.com/search?text='+encodeURIComponent(word.trim()), '_blank', 'noopener,noreferrer');
   }
 
   // ==========================================

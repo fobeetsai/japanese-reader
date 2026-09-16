@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: https://translate.googleapis.com/translate_a/single https://api.mojidict.com https://api.dictionaryapi.dev https://api.github.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com;">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: https://translate.googleapis.com/translate_a/single https://api.dictionaryapi.dev https://api.github.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com;">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AnkiFlash 互動單字抽認卡 - 跨平台背單字與間隔複習系統</title>
@@ -30,7 +30,7 @@
       };
     })();
   </script>
-  
+
   <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -41,8 +41,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260916-12">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260916-12">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260916-13">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260916-13">
 </head>
 <body>
 
@@ -77,7 +77,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v12 · 跨裝置同步</small></span>
+      <span>AnkiFlash <small class="app-version">v13 · MOJi 學習工作台</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -117,6 +117,7 @@
           <button class="btn-secondary" id="btn-batch-import">
             📥 批次匯入
           </button>
+          <button class="btn-secondary" id="btn-moji-workspace">📖 MOJi 學習工作台</button>
           <button class="btn-secondary" id="btn-excel-import">📊 匯入 Excel 建立牌組</button>
           <button class="btn-secondary" onclick="window.app.openDeckCardManager(null)">📋 全部單字</button>
           <button class="btn-secondary" id="btn-manual-review" onclick="window.app.openDeckCardManager(null, 'manual')">手動複習</button>
@@ -216,13 +217,13 @@
       <div id="study-empty-message" hidden></div>
       <div class="card-scene" id="card-scene-container">
         <div class="flashcard" id="active-flashcard">
-          
+
           <!-- 卡片正面 (題目) -->
           <div class="card-face card-front">
             <div class="card-tag-row">
               <span class="tag-badge" id="card-front-tag">JLPT N5</span>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <button class="moji-btn" id="btn-open-moji-front" title="在 MOJi 辭書 APP 中查詢此單字">
+                <button class="moji-btn" id="btn-open-moji-front" title="在 MOJi 官方網站查詢此單字">
                   <span>📖 MOJi 辭書</span>
                 </button>
                 <button class="audio-btn" id="btn-speak-front" title="朗讀發音">🔊</button>
@@ -242,7 +243,7 @@
             <div class="card-tag-row">
               <span class="tag-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">答案詳解</span>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <button class="moji-btn" id="btn-open-moji-back" title="在 MOJi 辭書 APP 中查詢此單字">
+                <button class="moji-btn" id="btn-open-moji-back" title="在 MOJi 官方網站查詢此單字">
                   <span>📖 MOJi 辭書</span>
                 </button>
                 <button class="audio-btn" id="btn-speak-back" title="朗讀發音">🔊</button>
@@ -287,7 +288,7 @@
             <span class="anki-label">重來</span>
             <span class="anki-key">1</span>
           </button>
-          
+
           <!-- 2: Hard (困難) -->
           <button class="anki-btn hard" id="btn-anki-hard">
             <span class="anki-interval" id="interval-hard">&lt; 6分</span>
@@ -450,7 +451,7 @@
         <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; background: rgba(99, 102, 241, 0.12); padding: 12px; border-radius: 12px; border: 1.5px dashed var(--accent-primary);">
           <input type="checkbox" id="batch-import-auto-enrich" checked style="width: 20px; height: 20px; cursor: pointer;">
           <label for="batch-import-auto-enrich" style="font-size: 0.9rem; font-weight: 700; cursor: pointer; color: var(--text-primary);">
-            ✨ 優先自 MOJi 辭書直接導入缺失的「讀音、釋義與權威例句」
+            ✨ 用一般字典補全缺少欄位（非 MOJi 會員資料，請核對）
           </label>
         </div>
 
@@ -486,15 +487,15 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
             <label class="form-label" style="margin-bottom: 0;">單字 (Front / 漢字或外文)</label>
             <div style="display: flex; gap: 6px;">
-              <button class="btn-magic btn-moji-direct" id="btn-moji-import-single" type="button" onclick="window.app.importFromMojiDirect(true)" title="自 MOJi 辭書直接獲取官方讀音、繁中釋義與權威例句">
-                📖 MOJi 辭書直接導入
+              <button class="btn-magic btn-moji-direct" id="btn-moji-import-single" type="button" onclick="window.app.importFromMojiDirect(true)" title="前往 MOJi 官方查詞，再回來填寫自己的學習筆記">
+                📖 到 MOJi 查詞
               </button>
               <button class="btn-magic" id="btn-auto-enrich-single" type="button" onclick="window.app.autoEnrichSingleCard()" title="通用智慧補全">
-                ✨ 智慧生成
+                ✨ 字典補全
               </button>
             </div>
           </div>
-          <input type="text" id="add-card-front" class="form-input" placeholder="輸入單字，例如：施工、養生、足場、配筋（輸入後自動自 MOJi 導入）">
+          <input type="text" id="add-card-front" class="form-input" placeholder="輸入單字，例如：施工、養生、足場、配筋">
         </div>
 
         <div id="add-card-loading-msg" style="display: none; font-size: 0.85rem; color: var(--accent-primary); font-weight: 600; text-align: right; padding: 4px 0;">
@@ -548,7 +549,7 @@
           <button class="btn-primary" id="btn-start-manual" onclick="window.app.startManualReview()">開始手動複習</button>
         </div>
         <p id="manager-review-status" class="help-text" role="status"></p>
-        
+
         <!-- 多選與全選刪除操作列 -->
         <div class="card-manager-toolbar" id="card-manager-toolbar">
           <label class="select-all-wrap">
@@ -717,15 +718,42 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260916-12"></script>
-  <script src="static/flashcards/js/app.js?v=20260916-12"></script>
+
+  <div class="modal-backdrop" id="modal-moji" role="dialog" aria-modal="true" aria-labelledby="moji-title">
+    <div class="modal-box moji-box">
+      <div class="modal-header"><h3 class="modal-title" id="moji-title">📖 MOJi 學習工作台</h3><button class="modal-close" aria-label="關閉 MOJi 工作台">×</button></div>
+      <div class="modal-body">
+        <p class="help-text">MOJi 查詞、收藏與會員功能在官方網站使用；這裡把你整理的單字、文型變成自己的複習牌組。不讀取 MOJi 帳密，也不自動同步 MOJi 學習進度。</p>
+        <div class="moji-links"><a class="btn-secondary" href="https://www.mojidict.com/collection" target="_blank" rel="noopener noreferrer">⭐ 我的 MOJi 收藏</a><a class="btn-secondary" href="https://www.mojidict.com/share-center" target="_blank" rel="noopener noreferrer">📚 MOJi 詞表</a><a class="btn-secondary" href="https://www.mojidict.com/support/" target="_blank" rel="noopener noreferrer">官方匯出說明</a></div>
+        <label class="form-label" for="moji-query">查單字／文型</label><div class="moji-links"><input id="moji-query" class="form-input" placeholder="例如：確かめる、～たびに"><button id="moji-search" class="btn-secondary">到 MOJi 查詢</button></div>
+        <details><summary>如何把詞表帶進來？</summary><ol class="help-text"><li>在 MOJi 收藏或詞表的「單詞導出」匯出 PDF，建議包含單字、讀音、釋義與例句。</li><li>在下方選檔；PDF 只擷取文字，請對照原檔調整順序，整理成四欄。</li><li>按「預覽與修改」，確認後建立新牌組。自己的筆記也可直接貼上。</li></ol><p class="help-text">檔案只在此瀏覽器處理。僅匯入你有權使用的內容；會員素材不會因匯入而取得公開散布權。新增牌組會包含在你已設定的 GitHub 同步中。</p></details>
+        <label class="form-label" for="moji-name">新牌組名稱</label><input id="moji-name" class="form-input" maxlength="100" placeholder="例如：我的 N2 文型筆記">
+        <label class="form-label" for="moji-kind">學習內容</label><select id="moji-kind" class="form-select"><option>單字</option><option>文型</option><option>混合</option></select>
+        <label class="form-label" for="moji-source">MOJi 詞表／詞條分享網址（選填）</label><input id="moji-source" type="url" class="form-input" placeholder="https://www.mojidict.com/…"><button id="moji-open-source" class="btn-secondary">開啟來源頁</button>
+        <label class="form-label" for="moji-file">讀取自己的匯出檔（PDF／TXT／TSV）</label><input id="moji-file" type="file" accept=".pdf,.txt,.tsv" class="form-input">
+        <p class="help-text">PDF 最多 50 頁、20 MB，需有文字層；不會在這裡自動 OCR。Excel 請用原本的「匯入 Excel」。</p>
+        <label class="form-label" for="moji-format">整理區格式：日文｜讀音｜中文｜例句／接續</label><select id="moji-format" class="form-select"><option value="pipe">用半形 | 分隔四欄（無標題列）</option><option value="tab">用 Tab 分隔四欄（無標題列）</option></select>
+        <textarea id="moji-text" class="form-textarea" rows="8" spellcheck="false" placeholder="確かめる | たしかめる | 確認、查明 | 出発時間を確かめる。"></textarea>
+        <div class="moji-links"><button id="moji-sample" class="btn-secondary">載入自編示例</button><button id="moji-preview-button" class="btn-primary">預覽與修改</button></div>
+        <label><input id="moji-dedup" type="checkbox" checked> 略過四欄內容完全相同的既有卡片</label>
+        <p id="moji-status" role="status" aria-live="polite">先查詞或匯出，再整理成自己的牌組。</p>
+        <div id="moji-preview"></div>
+        <details><summary>已匯入牌組的 MOJi 來源</summary><div id="moji-sources" class="moji-links"></div></details>
+      </div>
+      <div class="modal-footer"><button class="btn-secondary modal-close">回牌組</button><button id="moji-import" class="btn-primary" disabled>確認建立新牌組</button></div>
+    </div>
+  </div>
+
+  <script src="static/flashcards/js/moji_bridge.js?v=20260916-13"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/app.js?v=20260916-13"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)

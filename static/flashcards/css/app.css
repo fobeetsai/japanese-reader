@@ -1387,3 +1387,16 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .reading-editor summary {cursor:pointer;text-align:center;color:var(--text-secondary);}
 .reading-editor input {margin:6px 0;}
 .reading-editor p {font-size:.78rem;line-height:1.5;}
+
+/* MOJi personal learning companion */
+.moji-box { max-width: 780px; }
+.moji-box .help-text { font-size:14px;line-height:1.7;color:var(--text-secondary); }
+.moji-box input,.moji-box textarea,.moji-box select { font-size:16px; }
+.moji-box summary { cursor:pointer;padding:8px 0; }
+.moji-links { display:flex;gap:8px;flex-wrap:wrap; }
+.moji-links a { text-decoration:none; }
+.moji-links input { flex:1;min-width:180px; }
+.moji-row { border:1px solid var(--border-color);border-radius:12px;padding:12px;display:grid;gap:8px; }
+.moji-row label { display:block; }
+#moji-preview { display:grid;gap:12px; }
+#moji-status { overflow-wrap:anywhere;line-height:1.6; }
