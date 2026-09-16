@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: https://translate.googleapis.com/translate_a/single https://api.mojidict.com https://api.dictionaryapi.dev https://api.github.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com;">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AnkiFlash 互動單字抽認卡 - 跨平台背單字與間隔複習系統</title>
   <script>
     // Stop queued audio and guard against automatic speech, even from older cached scripts.
@@ -41,8 +41,8 @@
   <link rel="icon" type="image/svg+xml" href="static/flashcards/icons/icon-192.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="static/cross_nav.css?v=20260913-11">
-  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260913-11">
+  <link rel="stylesheet" href="static/cross_nav.css?v=20260916-12">
+  <link rel="stylesheet" href="static/flashcards/css/app.css?v=20260916-12">
 </head>
 <body>
 
@@ -50,7 +50,7 @@
   <nav class="cross-app-nav-bar">
     <a href="index.html" class="nav-brand">
       <span>🇯🇵 日語學習全方位生態系</span>
-      <span class="badge-sync">三站同源已打通</span>
+      <span class="badge-sync">同一瀏覽器內共用</span>
     </a>
     <div class="nav-group">
       <a href="index.html" class="nav-link-btn">
@@ -68,7 +68,7 @@
   <!-- iOS PWA 導引橫幅 -->
   <div id="ios-pwa-banner" class="pwa-banner" style="display: none;">
     <div>
-      📱 <strong>在 iPhone / iPad 上享受原生 App 體驗</strong>：點擊 Safari 下方「<strong>分享 ⬆️</strong>」再選「<strong>加入主畫面 ➕</strong>」即可離線全螢幕背單字！
+      📱 <strong>在 iPhone / iPad 上使用主畫面網頁 App</strong>：點擊 Safari 下方「<strong>分享 ⬆️</strong>」再選「<strong>加入主畫面 ➕</strong>」即可離線全螢幕背單字！
     </div>
     <button id="close-pwa-banner" class="pwa-banner-close">&times;</button>
   </div>
@@ -77,7 +77,7 @@
   <header class="app-header">
     <div class="brand" id="nav-brand">
       <span class="brand-icon">🎴</span>
-      <span>AnkiFlash <small class="app-version">v11 · 假名發音・翻面確認</small></span>
+      <span>AnkiFlash <small class="app-version">v12 · 跨裝置同步</small></span>
     </div>
 
     <!-- 狀態徽章 (新/學/複) -->
@@ -89,13 +89,14 @@
 
     <!-- 操作按鈕群 -->
     <div class="header-actions">
-      <button class="btn-icon" id="btn-open-sync" title="雲端跨裝置同步">🔄</button>
+      <button class="btn-secondary" id="btn-open-sync" title="同步牌組與學習進度">🔄 同步</button>
       <button class="btn-icon" id="btn-open-stats" title="學習統計與熱圖">📊</button>
       <button class="btn-secondary" id="btn-open-settings" title="系統與發音設定">⚙️ 設定</button>
       <a href="index.html" class="btn-icon" style="text-decoration: none;" title="返回日文閱讀助手">📖</a>
     </div>
   </header>
 
+  <p id="sync-summary" role="status" style="padding:8px 20px;font-size:.85rem;overflow-wrap:anywhere">資料儲存在此瀏覽器。換裝置前後請按「🔄 同步」。</p>
   <!-- 主內容區 -->
   <main class="app-main">
 
@@ -316,20 +317,20 @@
   <!-- ==========================================
        彈窗 1: 雲端同步與備份 (Sync Modal)
        ========================================== -->
-  <div class="modal-backdrop" id="modal-sync">
+  <div class="modal-backdrop" id="modal-sync" role="dialog" aria-modal="true" aria-labelledby="sync-title">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 class="modal-title">🔄 跨裝置雲端同步 (GitHub Gist)</h3>
+        <h3 class="modal-title" id="sync-title">🔄 跨裝置同步</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
         <p class="help-text">
-          只需輸入您的 GitHub Token，即可在電腦、iPhone、iPad、Android 之間無縫同步所有牌組與背單字排程進度！完全私密且永久免費。
+          A、B 電腦和手機的本機資料各自獨立。設定相同的個人 Token 與 Gist ID 後，按「立即同步」可同步抽認卡牌組、卡片與複習紀錄；閱讀助手及漢字道場原始筆記不在此同步範圍。<br><strong>A 首次使用：</strong>填入自己的 Token，Gist ID 留空，按立即同步。<br><strong>B 首次使用：</strong>填入同一帳號的 Token 與 A 顯示的 Gist ID，再選「以雲端為準」。之後兩台換機前後各按一次立即同步。<br>請輪流使用裝置同步，勿同時上傳。Secret Gist 不是加密保險箱，知道網址的人可讀取；Token 存在此瀏覽器，勿分享給學生。此功能不使用老師的付費 AI 額度。
         </p>
 
         <div class="form-group">
           <label class="form-label">GitHub Personal Access Token (需勾選 gist 權限)</label>
-          <input type="password" id="sync-github-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxx">
+          <input type="password" id="sync-github-token" class="form-input" placeholder="貼上你自己的 Token" autocomplete="off" spellcheck="false">
           <div class="help-text">
             👉 還沒有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=AnkiFlash_Sync_Token" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">點此一鍵前往 GitHub 快速產生 Token</a>
           </div>
@@ -342,20 +343,28 @@
 
         <div style="display: flex; gap: 10px; margin-top: 6px;">
           <button class="btn-primary" style="flex: 1;" onclick="window.app.uploadToCloud()">
-            ☁️ 上傳至雲端 (備份)
+            🔄 立即同步（比對兩端）
           </button>
           <button class="btn-secondary" style="flex: 1;" onclick="window.app.downloadFromCloud()">
-            📥 從雲端下載 (覆蓋同步)
+            📥 以雲端為準
           </button>
         </div>
 
-        <div id="sync-status-msg" style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 4px;"></div>
+        <label class="help-text"><input type="checkbox" id="sync-auto-start"> 在此裝置開啟時同步（勾選後須成功同步才儲存；衝突時停止）</label>
+        <details id="sync-resolution"><summary>選擇資料來源／復原備份</summary>
+          <p class="help-text">第一次接上已有的雲端資料，或兩端都改過，需選擇一份完整資料；不會自動合併。先匯出兩份再決定，避免遺失各自新增的卡片。</p>
+          <button class="btn-secondary" onclick="window.app.syncCloud('overwrite')">以本機為準，取代雲端</button>
+          <button class="btn-secondary" onclick="window.app.exportSyncRecovery('local')">匯出覆蓋前本機備份</button>
+          <button class="btn-secondary" onclick="window.app.exportSyncRecovery('remote')">匯出覆蓋前雲端備份</button>
+          <p class="help-text">只保留最近一次覆蓋前的備份，重要資料請另存 JSON。</p>
+        </details>
+        <div role="status" aria-live="polite" id="sync-status-msg" style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 4px;"></div>
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
 
-        <!-- 檔案手動匯出與還原 -->
+        <p class="help-text">學生可在 A 匯出 JSON，透過自己的雲端硬碟或檔案傳送到 B，再還原。這是手動移轉，不會背景自動同步。<br>📱 iPhone：Safari → 分享 → 加入主畫面。Android：Chrome 選單 → 安裝應用程式／加到主畫面。首次請連網開啟，離線可複習已儲存卡片；同步及線上查詢仍需網路。</p>
         <div>
-          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">💾 本機檔案手動備份</div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">💾 不用帳號：檔案移轉／備份</div>
           <div style="display: flex; gap: 10px;">
             <button class="btn-secondary" style="flex: 1;" onclick="window.app.exportBackupFile()">
               匯出 JSON 備份檔
@@ -708,15 +717,15 @@
   </div>
 
   <!-- JavaScript 核心程式庫 -->
-  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/anki_engine.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/sync_manager.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/builtin_data.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/word_enricher.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260913-11"></script>
-  <script src="static/flashcards/js/app.js?v=20260913-11"></script>
+  <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/anki_engine.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/sync_manager.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/builtin_data.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/word_enricher.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/ankiflash_bridge.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/photo_ocr_engine.js?v=20260916-12"></script>
+  <script src="static/flashcards/js/app.js?v=20260916-12"></script>
 
   <!-- ==========================================
        彈窗 6: 講義/教材照片批次辨識 (Photo OCR Modal)

@@ -1,6 +1,6 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v11-reading-reveal';
-const VERSION = '20260913-11';
+const CACHE_NAME = 'ankiflash-v12-sync';
+const VERSION = '20260916-12';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
   './static/cross_nav.css', './static/flashcards/css/app.css',

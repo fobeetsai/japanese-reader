@@ -1053,6 +1053,12 @@ body {
   display: flex;
 }
 
+#modal-sync .help-text { font-size: 14px; line-height: 1.65; color: var(--text-secondary); }
+#modal-sync input.form-input { font-size: 16px; }
+#modal-sync details button { margin: 6px 0; width: 100%; }
+#modal-sync summary { cursor: pointer; padding: 10px 0; }
+#sync-status-msg { overflow-wrap: anywhere; }
+
 .modal-box {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);

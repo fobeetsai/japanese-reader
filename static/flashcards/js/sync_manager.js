@@ -2,8 +2,8 @@
  * AnkiFlash Sync Manager (跨裝置同步管理器)
  * 支援：
  * 1. Local-First (本機儲存 IndexedDB / LocalStorage)
- * 2. GitHub Gist 雲端同步 (私密、免費、多裝置無痛同步)
- * 3. 跨裝置 QR Code / 同步代碼快速移轉
+ * 2. GitHub Gist 雲端同步 (使用個人帳號；Secret Gist 並非加密儲存)
+ * 3. 同步基準比對與覆蓋前復原備份
  * 4. 完整備份 JSON 與 Anki TSV/CSV 匯入匯出
  */
 
@@ -39,13 +39,22 @@ class SyncManager {
   }
 
   saveLocalData({ decks, cards, settings, logs }) {
+    const previous = new Map();
     try {
-      if (decks) localStorage.setItem(this.STORAGE_KEY_DECKS, JSON.stringify(decks));
-      if (cards) localStorage.setItem(this.STORAGE_KEY_CARDS, JSON.stringify(cards));
-      if (settings) localStorage.setItem(this.STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-      if (logs) localStorage.setItem(this.STORAGE_KEY_LOGS, JSON.stringify(logs));
+      const entries = [[this.STORAGE_KEY_DECKS, decks], [this.STORAGE_KEY_CARDS, cards],
+        [this.STORAGE_KEY_SETTINGS, settings], [this.STORAGE_KEY_LOGS, logs]];
+      for (const [key, value] of entries) {
+        if (value === undefined || value === null) continue;
+        const encoded = JSON.stringify(value);
+        previous.set(key, localStorage.getItem(key));
+        localStorage.setItem(key, encoded);
+      }
       return true;
     } catch (e) {
+      for (const [key, value] of [...previous].reverse()) {
+        try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); }
+        catch (rollbackError) { console.error('[SyncManager] 回復失敗，請使用復原備份', rollbackError); }
+      }
       console.error('[SyncManager] 儲存本機資料失敗:', e);
       return false;
     }
@@ -64,6 +73,48 @@ class SyncManager {
       lastSyncTime: null,
       autoSyncOnStart: false
     };
+  }
+
+  validateData(data) {
+    if (!data || !Array.isArray(data.decks) || !Array.isArray(data.cards) ||
+        !data.logs || typeof data.logs !== 'object' || Array.isArray(data.logs)) {
+      throw new Error('資料格式不正確，未修改本機資料');
+    }
+    const ids = new Set();
+    for (const deck of data.decks) {
+      if (!deck || typeof deck.id !== 'string' || !deck.id || typeof deck.name !== 'string' || ids.has(deck.id)) throw new Error('牌組資料不正確');
+      ids.add(deck.id);
+    }
+    const cards = new Set();
+    for (const card of data.cards) {
+      if (!card || typeof card.id !== 'string' || !card.id || cards.has(card.id) || !ids.has(card.deckId) ||
+          typeof card.front !== 'string' || typeof card.back !== 'string') throw new Error('卡片資料不正確');
+      cards.add(card.id);
+    }
+    return {decks: data.decks, cards: data.cards, logs: data.logs};
+  }
+
+  async fingerprint(data) {
+    const canonical = value => Array.isArray(value) ? value.map(canonical) :
+      value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])])) : value;
+    const bytes = new TextEncoder().encode(JSON.stringify(canonical(this.validateData(data))));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  syncDirection(localHash, remoteHash, baseHash) {
+    if (localHash === remoteHash) return 'equal';
+    if (!baseHash) return 'conflict';
+    if (remoteHash === baseHash) return 'upload';
+    if (localHash === baseHash) return 'download';
+    return 'conflict';
+  }
+
+  saveRecovery(local, remote = null) {
+    // Abort if storage is full: never overwrite data without a recovery copy.
+    localStorage.setItem('ankiflash_sync_recovery_v1', JSON.stringify({
+      savedAt: Date.now(), local: this.validateData(local), remote: remote ? this.validateData(remote) : null
+    }));
   }
 
   // ==========================================
@@ -93,6 +144,8 @@ class SyncManager {
    */
   async uploadToGist(token, gistId = null, appData) {
     if (!token) throw new Error('未設定 GitHub Token');
+    this.validateData(appData);
+    if (gistId && !/^[a-f0-9]{20,64}$/i.test(gistId)) throw new Error('Gist ID 格式不正確');
 
     const payload = {
       description: 'AnkiFlash 智慧抽認卡跨裝置同步資料庫',
@@ -119,6 +172,7 @@ class SyncManager {
     }
 
     const res = await fetch(url, {
+      signal: AbortSignal.timeout(30000),
       method: method,
       headers: {
         'Authorization': `Bearer ${token.trim()}`,
@@ -146,8 +200,11 @@ class SyncManager {
    */
   async downloadFromGist(token, gistId) {
     if (!token || !gistId) throw new Error('請提供 GitHub Token 與 Gist ID');
+    if (!/^[a-f0-9]{20,64}$/i.test(gistId)) throw new Error('Gist ID 格式不正確');
 
     const res = await fetch(`https://api.github.com/gists/${gistId.trim()}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30000),
       headers: {
         'Authorization': `Bearer ${token.trim()}`,
         'Accept': 'application/vnd.github.v3+json'
@@ -159,12 +216,15 @@ class SyncManager {
     }
 
     const gistData = await res.json();
-    const file = gistData.files['ankiflash_sync_data.json'];
+    const file = gistData.files?.['ankiflash_sync_data.json'];
     if (!file || !file.content) {
       throw new Error('Gist 中未發現 AnkiFlash 專用資料檔案');
     }
 
+    if (file.truncated) throw new Error('雲端資料超出 Gist 完整下載範圍，請改用 JSON 檔案移轉，未修改資料');
     const parsed = JSON.parse(file.content);
+    parsed.logs = parsed.logs || {};
+    this.validateData(parsed);
     return {
       decks: parsed.decks,
       cards: parsed.cards,

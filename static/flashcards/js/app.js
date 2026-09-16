@@ -976,91 +976,98 @@ class FlashcardApp {
         : '尚未進行雲端同步';
     }
 
+    document.getElementById('sync-auto-start').checked = !!this.settings.autoSyncOnStart;
     document.getElementById('modal-sync').classList.add('open');
   }
 
-  async uploadToCloud() {
-    const token = document.getElementById('sync-github-token').value.trim();
-    const gistId = document.getElementById('sync-gist-id').value.trim();
-    const statusText = document.getElementById('sync-status-msg');
+  syncSnapshot() {
+    return JSON.parse(JSON.stringify({decks: this.decks, cards: this.cards, logs: this.logs}));
+  }
 
-    if (!token) {
-      alert('請先輸入 GitHub Token！');
-      return;
-    }
+  async uploadToCloud() { return this.syncCloud('sync'); }
+  async downloadFromCloud() { return this.syncCloud('download'); }
+  async autoSyncCloud() { return this.syncCloud('sync', true); }
 
-    statusText.innerText = '正在上傳備份至 GitHub Gist...';
+  async syncCloud(mode = 'sync', automatic = false) {
+    if (this.syncBusy) return;
+    const status = document.getElementById('sync-status-msg');
+    const token = automatic ? this.settings.githubToken : document.getElementById('sync-github-token').value.trim();
+    let gistId = automatic ? this.settings.gistId : document.getElementById('sync-gist-id').value.trim();
+    const show = message => { status.textContent = message; document.getElementById('sync-summary').textContent = message; };
+    if (!token) { show('請先設定自己的 GitHub Token，或使用下方 JSON 檔案移轉。'); return; }
+    if (document.getElementById('view-study').classList.contains('active')) { show('請先返回牌組列表，再同步資料。'); return; }
+    this.syncBusy = true;
+    const buttons = document.querySelectorAll('#modal-sync button, #modal-sync input');
+    buttons.forEach(b => b.disabled = true);
+    show('正在比對本機與雲端資料…');
     try {
-      const result = await this.sync.uploadToGist(token, gistId || null, {
-        decks: this.decks,
-        cards: this.cards,
-        logs: this.logs
-      });
-
-      this.settings.githubToken = token;
-      this.settings.gistId = result.gistId;
-      this.settings.lastSyncTime = Date.now();
-      this.saveData();
-
-      document.getElementById('sync-gist-id').value = result.gistId;
-      statusText.innerText = `✅ 上傳成功！Gist ID: ${result.gistId}`;
-      alert('雲端同步成功！請在其他裝置（手機/iPad）輸入相同的 Token 與 Gist ID 即可下載最新進度！');
-    } catch (e) {
-      statusText.innerText = `❌ 上傳失敗: ${e.message}`;
-      alert(`上傳失敗: ${e.message}`);
+      const local = this.syncSnapshot();
+      const localHash = await this.sync.fingerprint(local);
+      let remote = null, remoteHash = null, direction = 'upload';
+      if (gistId) {
+        remote = await this.sync.downloadFromGist(token, gistId);
+        remoteHash = await this.sync.fingerprint(remote);
+        const base = this.settings.syncBase?.gistId === gistId ? this.settings.syncBase.hash : null;
+        direction = this.sync.syncDirection(localHash, remoteHash, base);
+        if (mode === 'download') direction = 'download';
+        if (mode === 'overwrite') direction = 'upload';
+        if (direction === 'conflict') {
+          show('⚠️ 首次連接或兩端都有變更。請先匯出備份，再於「選擇資料來源」決定保留本機或雲端；目前未覆蓋任何資料。');
+          document.getElementById('sync-resolution').open = true;
+          return;
+        }
+        if (!automatic && (mode === 'download' || mode === 'overwrite') && localHash !== remoteHash) {
+          const source = direction === 'upload' ? '本機' : '雲端';
+          if (!confirm('本機：' + local.decks.length + ' 個牌組／' + local.cards.length + ' 張卡；雲端：' + remote.decks.length + ' 個牌組／' + remote.cards.length + ' 張卡。\n以' + source + '為準將取代另一份資料（不合併）。覆蓋前會保留兩份復原備份。確定繼續？')) { show('已取消，資料未變更。'); return; }
+        }
+      } else {
+        if (automatic || mode === 'download') { show('請先填入 A 裝置建立的 Gist ID。'); return; }
+        if (!confirm('將把本機牌組及進度上傳到你自己的 GitHub Secret Gist。知道 Gist 網址的人可以讀取內容，請勿放入個資或機密教材。確定建立？')) { show('已取消建立。'); return; }
+      }
+      // Do not replace edits made during a slow request or by a second tab.
+      const stored = this.sync.loadLocalData();
+      if (await this.sync.fingerprint(this.syncSnapshot()) !== localHash ||
+          await this.sync.fingerprint(stored) !== localHash) throw new Error('同步期間本機資料已變更，請重新整理後再同步');
+      if (direction !== 'equal') this.sync.saveRecovery(local, remote);
+      if (direction === 'upload') {
+        // Gist has no transaction lock; recheck immediately before writing.
+        if (gistId && await this.sync.fingerprint(await this.sync.downloadFromGist(token, gistId)) !== remoteHash) throw new Error('另一台裝置剛更新雲端，已停止上傳，請重試');
+        const result = await this.sync.uploadToGist(token, gistId || null, local);
+        gistId = result.gistId;
+      }
+      const selected = direction === 'download' ? this.sync.validateData(remote) : local;
+      const settings = {...this.settings, githubToken: token, gistId, lastSyncTime: Date.now(),
+        autoSyncOnStart: automatic ? this.settings.autoSyncOnStart : document.getElementById('sync-auto-start').checked,
+        syncBase: {gistId, hash: direction === 'download' ? remoteHash : localHash}};
+      // A user may keep studying while an upload is in flight. Preserve those new edits.
+      if (await this.sync.fingerprint(this.syncSnapshot()) !== localHash ||
+          await this.sync.fingerprint(this.sync.loadLocalData()) !== localHash) throw new Error('雲端操作已完成，但本機在等待時又有變更；本機保留原樣，請重新整理後再同步');
+      if (!this.sync.saveLocalData({...selected, settings})) throw new Error('本機儲存空間不足；請先匯出備份');
+      this.settings = settings;
+      this.decks = selected.decks; this.cards = selected.cards; this.logs = selected.logs;
+      this.refreshAfterSync();
+      document.getElementById('sync-gist-id').value = gistId;
+      show('✅ ' + (direction === 'equal' ? '兩端資料一致' : direction === 'upload' ? '已上傳本機進度' : '已下載雲端進度') + ' · ' + new Date().toLocaleString('zh-TW'));
+    } catch (error) {
+      show('❌ 同步未完成：' + error.message + '。請確認網路與 Token；上傳逾時時請先檢查雲端再重試。');
+    } finally {
+      this.syncBusy = false;
+      buttons.forEach(b => b.disabled = false);
     }
   }
 
-  async downloadFromCloud() {
-    const token = document.getElementById('sync-github-token').value.trim();
-    const gistId = document.getElementById('sync-gist-id').value.trim();
-    const statusText = document.getElementById('sync-status-msg');
-
-    if (!token || !gistId) {
-      alert('請輸入 GitHub Token 與 Gist ID！');
-      return;
-    }
-
-    if (!confirm('從雲端下載將會覆蓋本機資料，確定繼續嗎？')) return;
-
-    statusText.innerText = '正在從雲端下載最新進度...';
-    try {
-      const result = await this.sync.downloadFromGist(token, gistId);
-      if (result.decks && result.cards) {
-        this.decks = result.decks;
-        this.cards = result.cards;
-        if (result.logs) this.logs = result.logs;
-
-        this.settings.githubToken = token;
-        this.settings.gistId = gistId;
-        this.settings.lastSyncTime = Date.now();
-        this.saveData();
-
-        this.renderDeckList();
-        this.updateHeaderStats();
-        statusText.innerText = `✅ 同步完成！共載入 ${this.decks.length} 個牌組、${this.cards.length} 張單字卡。`;
-        alert('雲端進度已成功同步到本機！');
-      }
-    } catch (e) {
-      statusText.innerText = `❌ 下載失敗: ${e.message}`;
-      alert(`下載失敗: ${e.message}`);
-    }
+  refreshAfterSync() {
+    this.currentCategory = 'all';
+    this.todayReviewedCount = this.logs[new Date().toISOString().slice(0, 10)]?.reviewed || 0;
+    this.renderCategoryTabs(); this.renderDeckList(); this.updateHeaderStats();
   }
 
-  async autoSyncCloud() {
+  exportSyncRecovery(which) {
     try {
-      const result = await this.sync.downloadFromGist(this.settings.githubToken, this.settings.gistId);
-      if (result.decks && result.cards) {
-        this.decks = result.decks;
-        this.cards = result.cards;
-        if (result.logs) this.logs = result.logs;
-        this.renderDeckList();
-        this.updateHeaderStats();
-        console.log('[AutoSync] 自動同步完成');
-      }
-    } catch (e) {
-      console.warn('[AutoSync] 自動同步未成功:', e.message);
-    }
+      const recovery = JSON.parse(localStorage.getItem('ankiflash_sync_recovery_v1'));
+      if (!recovery?.[which]) throw new Error('尚無這一份復原備份');
+      this.sync.exportBackupJson(recovery[which]);
+    } catch (e) { alert(e.message); }
   }
 
   exportBackupFile() {
@@ -1071,29 +1078,19 @@ class FlashcardApp {
     });
   }
 
-  importBackupFile(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        if (parsed.decks && parsed.cards) {
-          this.decks = parsed.decks;
-          this.cards = parsed.cards;
-          if (parsed.logs) this.logs = parsed.logs;
-          this.saveData();
-          this.renderDeckList();
-          this.updateHeaderStats();
-          alert('備份檔案已成功還原！');
-          document.getElementById('modal-sync').classList.remove('open');
-        } else {
-          alert('備份檔案格式不正確！');
-        }
-      } catch (err) {
-        alert('解析 JSON 備份檔失敗：' + err.message);
-      }
-    };
-    reader.readAsText(file);
+  async importBackupFile(file) {
+    if (!file || this.syncBusy) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      parsed.logs = parsed.logs || {};
+      const data = this.sync.validateData(parsed);
+      if (!confirm('以備份中的 ' + data.decks.length + ' 個牌組、' + data.cards.length + ' 張卡片取代本機資料？本機舊資料會保留為復原備份。')) return;
+      this.sync.saveRecovery(this.syncSnapshot());
+      if (!this.sync.saveLocalData(data)) throw new Error('儲存失敗，請檢查剩餘空間');
+      this.decks = data.decks; this.cards = data.cards; this.logs = data.logs;
+      this.refreshAfterSync();
+      alert('備份已還原；如有設定雲端，請再按立即同步。');
+    } catch (e) { alert('還原失敗：' + e.message); }
   }
 
   // ==========================================
