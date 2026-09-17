@@ -1,0 +1,130 @@
+/* ==========================================================================
+   TRANCY DUAL IMMERSIVE EXTENSION - CONTENT STYLES
+   ========================================================================== */
+
+/* Floating Top Toolbar */
+#trancy-ext-toolbar {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 2147483647;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+  color: #f8fafc;
+  font-size: 13px;
+  user-select: none;
+  transition: all 0.25s ease;
+}
+
+#trancy-ext-toolbar:hover {
+  border-color: #6366f1;
+  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.35);
+}
+
+.trancy-btn-pill {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.trancy-btn-pill:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.trancy-btn-pill.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+/* Injected Chinese Translation Line */
+.trancy-injected-zh {
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+  border-left: 3px solid #6366f1;
+  padding: 4px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.93em;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Mask Japanese (遮蔽日文原文) */
+.trancy-ext-mask-jp-active .trancy-orig-jp {
+  filter: blur(7px) !important;
+  opacity: 0.35 !important;
+  user-select: none !important;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+  position: relative;
+}
+
+.trancy-ext-mask-jp-active .trancy-orig-jp:hover,
+.trancy-ext-mask-jp-active .trancy-orig-jp.trancy-revealed {
+  filter: none !important;
+  opacity: 1 !important;
+  user-select: text !important;
+}
+
+/* Mask Chinese (遮蔽中文譯文) */
+.trancy-ext-mask-zh-active .trancy-injected-zh {
+  filter: blur(7px) !important;
+  opacity: 0.3 !important;
+  user-select: none !important;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.trancy-ext-mask-zh-active .trancy-injected-zh:hover,
+.trancy-ext-mask-zh-active .trancy-injected-zh.trancy-revealed {
+  filter: none !important;
+  opacity: 1 !important;
+  user-select: text !important;
+}
+
+/* TTS Speak Button next to paragraph */
+.trancy-speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  font-size: 11px;
+  margin-left: 6px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+}
+
+.trancy-speak-btn:hover {
+  background: #6366f1;
+  color: #fff;
+  transform: scale(1.1);
+}

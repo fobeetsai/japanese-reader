@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Trancy Dual - 中日雙語沉浸翻譯與雙向遮蔽",
+  "version": "1.0.0",
+  "description": "在任何日文網頁上提供中日雙語對照、日文/中文雙向遮蔽自測、微軟 Edge 自然語音朗讀與單字查詞。",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Trancy Dual 沉浸雙語遮蔽"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

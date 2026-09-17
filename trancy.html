@@ -1335,7 +1335,7 @@
 
     .form-textarea {
       width: 100%;
-      height: 180px;
+      height: 160px;
       background: var(--bg-surface-elevated);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
@@ -1353,7 +1353,7 @@
     }
 
     .help-hint {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--text-tertiary);
       margin-top: 6px;
       line-height: 1.5;
@@ -1399,6 +1399,26 @@
     .trancy-toast.show {
       transform: translateY(0);
       opacity: 1;
+    }
+
+    /* Draggable Bookmarklet Pill */
+    .bookmarklet-drag-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff !important;
+      text-decoration: none;
+      font-weight: 800;
+      border-radius: var(--radius-full);
+      box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+      cursor: grab;
+      margin: 10px 0;
+      font-size: 0.95rem;
+    }
+    .bookmarklet-drag-btn:active {
+      cursor: grabbing;
     }
 
     @media (max-width: 900px) {
@@ -1457,7 +1477,12 @@
 
       <!-- Header Tools -->
       <div class="header-right">
-        <button class="btn-action-pill" id="btn-open-custom-input" title="貼上自訂雙語文本或 SRT 字幕">
+        <!-- New Feature: Webpage Immersive Translate Hub -->
+        <button class="btn-action-pill" id="btn-open-immersive-guide" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2)); border-color: rgba(236, 72, 153, 0.4); color: #f472b6;" title="如何在任意日文網頁直接使用沉浸雙向翻譯">
+          <i class="fa-solid fa-earth-asia"></i> 網頁沉浸翻譯
+        </button>
+
+        <button class="btn-action-pill" id="btn-open-custom-input" title="貼上自訂雙語文本、純日文或 SRT 字幕">
           <i class="fa-solid fa-plus-circle"></i> 自訂文字/字幕
         </button>
 
@@ -1543,7 +1568,7 @@
         <div>
           <strong>Trancy 雙向遮蔽沉浸學習技巧</strong>：
           切換「<strong>遮日</strong>」鍛鍊聽音口說與日文回想；切換「<strong>遮中</strong>」鍛鍊純日文閱讀理解！
-          滑鼠<strong>懸停或點擊</strong>即可即時透視查看。點擊任一單字可開啟<strong>即時懸浮詞典</strong>！
+          語音引擎預設優先載入<strong>微軟 Edge 自然語音 (Nanami / Keita)</strong> 或 <strong>Google 高音質真人發音</strong>，保證自然道地！
         </div>
       </div>
       <div class="guide-keys">
@@ -1729,7 +1754,7 @@
         </button>
       </div>
 
-      <!-- Right: Speed & Voice -->
+      <!-- Right: Speed & Voice Selection (Prioritizing Edge Natural Voices & Google Cloud HD) -->
       <div class="player-right">
         <div class="speed-pills">
           <button class="btn-speed" data-speed="0.75">0.75x</button>
@@ -1738,8 +1763,10 @@
           <button class="btn-speed" data-speed="1.5">1.5x</button>
         </div>
 
-        <select class="furigana-select" id="select-jp-voice" style="max-width: 140px; font-size: 0.78rem;">
-          <option value="default">預設日語發音</option>
+        <select class="furigana-select" id="select-jp-voice" style="max-width: 220px; font-size: 0.78rem;">
+          <option value="edge_nanami">🌸 微軟 Edge 自然女聲 (Nanami)</option>
+          <option value="edge_keita">👨 微軟 Edge 自然男聲 (Keita)</option>
+          <option value="google_hd">🌐 Google 雲端真人發音 (HD)</option>
         </select>
       </div>
 
@@ -1773,35 +1800,44 @@
     </div>
   </div>
 
-  <!-- MODAL: CUSTOM BILINGUAL INPUT & SRT/VTT IMPORTER -->
+  <!-- MODAL 1: CUSTOM BILINGUAL INPUT WITH AUTO TRANSLATION (貼上日文自動翻譯繁中) -->
   <div class="trancy-modal-backdrop" id="modal-custom-input">
     <div class="trancy-modal-card">
       <div class="modal-head">
         <h3 class="modal-title">
-          <i class="fa-solid fa-file-import" style="color: #818cf8;"></i> 自訂雙語文字 / SRT 字幕匯入
+          <i class="fa-solid fa-file-import" style="color: #818cf8;"></i> 自訂文字 / 貼上日文自動生成中文翻譯
         </h3>
         <button class="modal-close-btn" data-close="modal-custom-input">&times;</button>
       </div>
       <div class="modal-body">
         <label class="form-label">教材標題：</label>
-        <input type="text" class="dictation-input" id="custom-import-title" placeholder="例如：我的商務日語會議紀錄" style="text-align: left; width: 100%; margin-bottom: 14px; font-size: 0.95rem; padding: 10px 14px;">
+        <input type="text" class="dictation-input" id="custom-import-title" placeholder="例如：日商會議記錄 / 工程安全規範" style="text-align: left; width: 100%; margin-bottom: 14px; font-size: 0.95rem; padding: 10px 14px;">
 
-        <label class="form-label">請貼上雙語對照文本或 SRT / VTT 雙語字幕：</label>
-        <textarea class="form-textarea" id="custom-import-text" placeholder="支援多種格式：
-格式 1 (分行對照)：
-日文第一句
-中文第一句翻譯
-日文第二句
-中文第二句翻譯
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" style="margin-bottom: 0;">請貼上日文（純日文將自動翻譯繁中）或中日雙語對照 / SRT 字幕：</label>
+          <button class="btn-action-pill" id="btn-auto-translate-textarea" style="padding: 4px 10px; font-size: 0.78rem; background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 貼上日文一鍵生成中文翻譯
+          </button>
+        </div>
+        
+        <textarea class="form-textarea" id="custom-import-text" placeholder="💡 支援三種超方便輸入方式：
 
-格式 2 (直線分隔)：
+方式 1【貼上純日文】（最推薦）：
+直接貼上一整段日文小說、新聞、工作郵件，點擊「貼上日文一鍵生成中文翻譯」，系統將自動斷句並逐句翻譯為標準繁體中文！
+
+方式 2【分行或直線分隔】：
 こんにちは、お元気ですか？ | 您好，最近過得好嗎？
 はい、おかげさまで元気です。 | 是的，託您的福很好。
 
-格式 3 (SRT / VTT 字幕檔)：直接貼上完整字幕文字即可自動解析！"></textarea>
+方式 3【SRT / VTT 雙語字幕檔】：
+直接貼上完整字幕檔案，自動辨識時間軸與中日文本！"></textarea>
         
+        <div id="import-translate-status" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #34d399; font-weight: 600;">
+          <i class="fa-solid fa-spinner fa-spin"></i> 正在為您逐句翻譯為繁體中文...
+        </div>
+
         <p class="help-hint">
-          💡 <strong>智慧解析提示</strong>：系統會自動辨識日文與繁中配對，自動生成振假名與點選懸浮字典！
+          💡 <strong>自然語音與假名提示</strong>：自動生成漢字平假名振假名、分詞詞性與繁體中文，並支援微軟 Edge 招牌自然語音 (Nanami / Keita) 逐句朗讀！
         </p>
       </div>
       <div class="modal-foot">
@@ -1813,7 +1849,80 @@
     </div>
   </div>
 
-  <!-- MODAL: KEYBOARD SHORTCUTS CHEATSHEET -->
+  <!-- MODAL 2: IMMERSIVE WEBPAGE TRANSLATION GUIDE (日文網頁沉浸翻譯工具箱) -->
+  <div class="trancy-modal-backdrop" id="modal-immersive-guide">
+    <div class="trancy-modal-card" style="max-width: 760px;">
+      <div class="modal-head">
+        <h3 class="modal-title">
+          <i class="fa-solid fa-earth-asia" style="color: #ec4899;"></i> 在任意日文網頁直接運用 Trancy 雙向遮蔽沉浸翻譯
+        </h3>
+        <button class="modal-close-btn" data-close="modal-immersive-guide">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 0.92rem; line-height: 1.7;">
+        
+        <!-- Way 1: Bookmarklet (Instant) -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+          <h4 style="color: #f472b6; margin-bottom: 8px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-bookmark"></i> 方式一：瀏覽器書籤小工具 (零安裝・一秒搞定！)
+          </h4>
+          <p style="color: var(--text-secondary); margin-bottom: 12px;">
+            將下方按鈕<strong>直接拖曳至瀏覽器書籤列（Bookmarks Bar）</strong>；在瀏覽任何日文網頁（NHK 新聞、Yahoo Japan、note.com、維基百科、Twitter等）時，<strong>點擊該書籤</strong>即可在該網頁上即時彈出 Trancy 雙語對照、雙向遮蔽與微軟自然朗讀工具列！
+          </p>
+
+          <div style="text-align: center; margin: 14px 0;">
+            <a href="javascript:(function(){if(document.getElementById('trancy-ext-toolbar')){alert('Trancy雙語遮蔽工具列已在運行中！');return;}const s=document.createElement('script');s.src='https://fobeetsai.github.io/japanese-reader/trancy_extension/content.js';const c=document.createElement('link');c.rel='stylesheet';c.href='https://fobeetsai.github.io/japanese-reader/trancy_extension/content.css';document.head.appendChild(c);document.head.appendChild(s);})();" class="bookmarklet-drag-btn" onclick="alert('請直接將這個粉紅按鈕【拖曳】到您的瀏覽器上方書籤列喔！'); return false;">
+              🌐 Trancy 沉浸雙語遮蔽 (拖曳至書籤列)
+            </a>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px;">
+            <span style="font-size: 0.8rem; color: var(--text-tertiary); font-family: var(--font-mono);">或手動複製書籤代碼：</span>
+            <button class="btn-action-pill" id="btn-copy-bookmarklet" style="padding: 3px 10px; font-size: 0.78rem;">
+              <i class="fa-solid fa-copy"></i> 複製 JavaScript 網址
+            </button>
+          </div>
+        </div>
+
+        <!-- Way 2: Chrome / Edge Extension -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+          <h4 style="color: #818cf8; margin-bottom: 8px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-puzzle-piece"></i> 方式二：安裝 Chrome / Edge 擴充功能插件 (本專案已直接內建)
+          </h4>
+          <p style="color: var(--text-secondary); margin-bottom: 10px;">
+            本專案目錄內已完整封裝好原生擴充插件 <code>trancy_extension/</code>：
+          </p>
+          <ol style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8; font-size: 0.88rem;">
+            <li>在 Microsoft Edge 或 Google Chrome 網址列輸入 <code>edge://extensions</code> 或 <code>chrome://extensions</code>。</li>
+            <li>右上角開啟「<strong>開發人員模式 (Developer mode)</strong>」。</li>
+            <li>點擊左上角「<strong>載入未封裝項目 (Load unpacked)</strong>」。</li>
+            <li>選取本專案目錄下的 <code>trancy_extension</code> 資料夾，即可完成安裝！在任何日文網站自動開啟沉浸翻譯。</li>
+          </ol>
+        </div>
+
+        <!-- Way 3: URL Article Extractor -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px;">
+          <h4 style="color: #34d399; margin-bottom: 8px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-link"></i> 方式三：直接輸入日文網址擷取至播放器
+          </h4>
+          <p style="color: var(--text-secondary); margin-bottom: 10px;">
+            輸入任意日文網頁正文網址，一鍵抓取正文並載入雙語雙向遮蔽閱讀器：
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="dictation-input" id="input-article-url" placeholder="https://www3.nhk.or.jp/news/..." style="text-align: left; font-size: 0.9rem; padding: 10px 12px;">
+            <button class="btn-action-pill" id="btn-fetch-article-url" style="white-space: nowrap; background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
+              擷取正文
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-foot">
+        <button class="btn-action-pill" data-close="modal-immersive-guide">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: KEYBOARD SHORTCUTS CHEATSHEET -->
   <div class="trancy-modal-backdrop" id="modal-shortcuts">
     <div class="trancy-modal-card">
       <div class="modal-head">
@@ -1914,7 +2023,7 @@
         sentences: [
           { jp: 'いつも大変お世話になっております。大林組の蔡と申します。', zh: '承蒙您一直以來的關照。我是大林組的蔡。', furigana: 'いつも<ruby>大変<rt>たいへん</rt></ruby>お<ruby>世話<rt>せわ</rt></ruby>になっております。<ruby>大林組<rt>おおばやしぐみ</rt></ruby>の<ruby>蔡<rt>さい</rt></ruby>と<ruby>申<rt>もう</rt></ruby>します。', tokens: [['大変', 'たいへん', '非常', '副詞', 'N4'], ['お世話になっております', '', '承蒙關照', '表現', 'N4'], ['申します', 'もうします', '叫做(自稱謙讓語)', '動詞', 'N4']] },
           { jp: '先ほどお送りした設計変更の見積書について、ご確認いただけますでしょうか。', zh: '關於剛才寄給您的設計變更報價單，不知您是否方便確認呢？', furigana: '<ruby>先<rt>さき</rt></ruby>ほどお<ruby>送<rt>おく</rt></ruby>りした<ruby>設計変更<rt>せっけいへんこう</rt></ruby>の<ruby>見積書<rt>みつもりしょ</rt></ruby>について、ご<ruby>確認<rt>かくにん</rt></ruby>いただけますでしょうか。', tokens: [['先ほど', 'さきほど', '剛才', '副詞', 'N3'], ['お送りした', 'おおくりした', '寄送的(謙讓)', '動詞', 'N3'], ['設計変更', 'せっけいへんこう', '設計變更', '名詞', 'N2'], ['見積書', 'みつもりしょ', '報價單/預估單', '名詞', 'N2'], ['について', '', '關於', '助詞', 'N3'], ['ご確認いただけますでしょうか', '', '能否請您確認呢(高度敬語)', '表現', 'N2']] },
-          { jp: '恐れ入りますが、来週火曜日の進捗會議までに回答を頂戴できますと幸いです。', zh: '深感抱歉給您添麻煩，若能在下週二進度會議前收到您的回覆，將不勝感激。', furigana: '<ruby>恐<rt>おそ</rt></ruby>れ<ruby>入<rt>い</rt></ruby>りますが、<ruby>来週火曜日<rt>らいしゅうかようび</rt></ruby>の<ruby>進捗会議<rt>しんちょくかいぎ</rt></ruby>までに<ruby>回答<rt>かいとう</rt></ruby>を<ruby>頂戴<rt>ちょうだい</rt></ruby>できますと<ruby>幸<rt>さいわ</rt></ruby>いです。', tokens: [['恐れ入りますが', 'おそれいりますが', '不好意思冒昧打擾', '表現', 'N2'], ['進捗会議', 'しんちょくかいぎ', '進度追蹤會議', '名詞', 'N2'], ['頂戴できますと', 'ちょうだいできますと', '若能收到(謙讓)', '動詞', 'N1'], ['幸いです', 'さいわいです', '非常感激/榮幸', '表現', 'N2']] },
+          { jp: '恐れ入りますが、来週火曜日の進捗会議までに回答を頂戴できますと幸いです。', zh: '深感抱歉給您添麻煩，若能在下週二進度會議前收到您的回覆，將不勝感激。', furigana: '<ruby>恐<rt>おそ</rt></ruby>れ<ruby>入<rt>い</rt></ruby>りますが、<ruby>来週火曜日<rt>らいしゅうかようび</rt></ruby>の<ruby>進捗会議<rt>しんちょくかいぎ</rt></ruby>までに<ruby>回答<rt>かいとう</rt></ruby>を<ruby>頂戴<rt>ちょうだい</rt></ruby>できますと<ruby>幸<rt>さいわ</rt></ruby>いです。', tokens: [['恐れ入りますが', 'おそれいりますが', '不好意思冒昧打擾', '表現', 'N2'], ['進捗会議', 'しんちょくかいぎ', '進度追蹤會議', '名詞', 'N2'], ['頂戴できますと', 'ちょうだいできますと', '若能收到(謙讓)', '動詞', 'N1'], ['幸いです', 'さいわいです', '非常感激/榮幸', '表現', 'N2']] },
           { jp: 'ご不明な点などがございましたら、いつでも遠慮なくお申し付けください。', zh: '如果有任何不明之處，請隨時不吝告知吩咐。', furigana: 'ご<ruby>不明<rt>ふめい</rt></ruby>な<ruby>点<rt>てん</rt></ruby>などがございましたら、いつでも<ruby>遠慮<rt>えんりょ</rt></ruby>なくお<ruby>申<rt>もう</rt></ruby>し<ruby>付<rt>つ</rt></ruby>けください。', tokens: [['ご不明な点', 'ごふめいなてん', '不清楚之處', '名詞', 'N2'], ['ございましたら', '', '若有的話(敬語)', '動詞', 'N3'], ['遠慮なく', 'えんりょなく', '不客氣/不避諱地', '副詞', 'N3'], ['お申し付けください', 'おもうしつけください', '請吩咐/交代', '表現', 'N2']] }
         ]
       },
@@ -1958,6 +2067,8 @@
       isLoop: false,
       playbackRate: 1.0,
       currentVoice: null,
+      selectedVoiceType: localStorage.getItem('trancy_voice_type') || 'edge_nanami',
+      currentAudioObj: null,
       maskMode: localStorage.getItem('trancy_mask_mode') || 'all',
       furiganaMode: localStorage.getItem('trancy_furigana_mode') || 'show',
       starredSentences: JSON.parse(localStorage.getItem('trancy_starred_sentences') || '[]'),
@@ -2023,13 +2134,20 @@
       btnExportAnki: document.getElementById('btn-export-anki'),
       btnClearVocab: document.getElementById('btn-clear-vocab'),
       modalCustomInput: document.getElementById('modal-custom-input'),
+      modalImmersiveGuide: document.getElementById('modal-immersive-guide'),
       modalShortcuts: document.getElementById('modal-shortcuts'),
       customImportTitle: document.getElementById('custom-import-title'),
       customImportText: document.getElementById('custom-import-text'),
       btnConfirmImport: document.getElementById('btn-confirm-import'),
+      btnAutoTranslateTextarea: document.getElementById('btn-auto-translate-textarea'),
+      importTranslateStatus: document.getElementById('import-translate-status'),
       btnOpenCustomInput: document.getElementById('btn-open-custom-input'),
+      btnOpenImmersiveGuide: document.getElementById('btn-open-immersive-guide'),
       btnOpenShortcuts: document.getElementById('btn-open-shortcuts'),
       btnToggleTheme: document.getElementById('btn-toggle-theme'),
+      btnCopyBookmarklet: document.getElementById('btn-copy-bookmarklet'),
+      inputArticleUrl: document.getElementById('input-article-url'),
+      btnFetchArticleUrl: document.getElementById('btn-fetch-article-url'),
       toast: document.getElementById('trancy-toast'),
       toastMsg: document.getElementById('toast-message')
     };
@@ -2072,35 +2190,154 @@
       }, 2500);
     }
 
+    /* ==========================================================================
+       SPEECH SYNTHESIS ENGINE (微軟 Edge 自然語音優先 + Google 雲端高清真人音訊)
+       ========================================================================== */
     function initSpeechSynthesis() {
-      if (!('speechSynthesis' in window)) return;
       function populateVoices() {
-        const voices = window.speechSynthesis.getVoices();
-        const jpVoices = voices.filter(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
-        DOM.voiceSelect.innerHTML = '<option value="default">預設日語發音</option>';
+        if (!('speechSynthesis' in window)) return;
+        const allVoices = window.speechSynthesis.getVoices();
+        const jpVoices = allVoices.filter(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
+
+        // Rank voices to prioritize Edge Natural Voices
+        jpVoices.sort((a, b) => getVoicePriority(b) - getVoicePriority(a));
+
+        DOM.voiceSelect.innerHTML = '';
+
+        // Option 1: Microsoft Nanami (Natural)
+        const nanami = jpVoices.find(v => v.name.includes('Nanami') || (v.name.includes('Natural') && !v.name.includes('Keita')));
+        const optNanami = document.createElement('option');
+        optNanami.value = nanami ? nanami.name : 'edge_nanami';
+        optNanami.textContent = '🌸 微軟 Edge 自然女聲 (Nanami 七海)';
+        DOM.voiceSelect.appendChild(optNanami);
+
+        // Option 2: Microsoft Keita (Natural)
+        const keita = jpVoices.find(v => v.name.includes('Keita'));
+        const optKeita = document.createElement('option');
+        optKeita.value = keita ? keita.name : 'edge_keita';
+        optKeita.textContent = '👨 微軟 Edge 自然男聲 (Keita 圭太)';
+        DOM.voiceSelect.appendChild(optKeita);
+
+        // Option 3: Google Cloud HD Natural Voice
+        const optGoogle = document.createElement('option');
+        optGoogle.value = 'google_hd';
+        optGoogle.textContent = '🌐 Google 雲端真人高音質 (HD)';
+        DOM.voiceSelect.appendChild(optGoogle);
+
+        // Option 4+: Other local voices
         jpVoices.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v.name;
-          opt.textContent = `${v.name} (${v.lang})`;
-          DOM.voiceSelect.appendChild(opt);
+          if (!v.name.includes('Nanami') && !v.name.includes('Keita')) {
+            const opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = `💻 ${v.name}`;
+            DOM.voiceSelect.appendChild(opt);
+          }
         });
-        if (jpVoices.length > 0) state.currentVoice = jpVoices[0];
+
+        // Set current voice
+        if (state.selectedVoiceType && DOM.voiceSelect.querySelector(`option[value="${state.selectedVoiceType}"]`)) {
+          DOM.voiceSelect.value = state.selectedVoiceType;
+        } else if (nanami) {
+          DOM.voiceSelect.value = nanami.name;
+          state.currentVoice = nanami;
+        } else {
+          DOM.voiceSelect.value = 'google_hd';
+        }
       }
-      populateVoices();
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = populateVoices;
+
+      function getVoicePriority(v) {
+        let score = 0;
+        if (v.name.includes('Nanami')) score += 50;
+        if (v.name.includes('Keita')) score += 40;
+        if (v.name.includes('Natural') || v.name.includes('Online')) score += 30;
+        if (v.name.includes('Google')) score += 20;
+        if (v.name.includes('Desktop') || v.name.includes('Haruka')) score -= 20;
+        return score;
+      }
+
+      if ('speechSynthesis' in window) {
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+          speechSynthesis.onvoiceschanged = populateVoices;
+        }
       }
     }
 
     function speakText(text, onEndCallback) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
       if (!text) return;
       const cleanText = text.replace(/<[^>]+>/g, '').trim();
+
+      // Stop previous speech
+      if (state.currentAudioObj) {
+        state.currentAudioObj.pause();
+        state.currentAudioObj = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      const voiceChoice = DOM.voiceSelect.value;
+
+      // Case 1: Google Cloud HD Natural Speech (High fidelity lifelike audio)
+      if (voiceChoice === 'google_hd') {
+        const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=' + encodeURIComponent(cleanText);
+        const audio = new Audio(audioUrl);
+        state.currentAudioObj = audio;
+        audio.playbackRate = state.playbackRate;
+
+        state.isPlaying = true;
+        updatePlayerStatus(true);
+
+        audio.onended = () => {
+          state.isPlaying = false;
+          updatePlayerStatus(false);
+          state.currentAudioObj = null;
+          if (onEndCallback) onEndCallback();
+        };
+
+        audio.onerror = () => {
+          // Fallback to SpeechSynthesis
+          speakViaSpeechSynthesis(cleanText, onEndCallback);
+        };
+
+        audio.play().catch(() => {
+          speakViaSpeechSynthesis(cleanText, onEndCallback);
+        });
+        return;
+      }
+
+      // Case 2: Microsoft Edge Natural Voices via SpeechSynthesis
+      speakViaSpeechSynthesis(cleanText, onEndCallback);
+    }
+
+    function speakViaSpeechSynthesis(cleanText, onEndCallback) {
+      if (!('speechSynthesis' in window)) return;
+
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ja-JP';
       utterance.rate = state.playbackRate;
-      if (state.currentVoice) utterance.voice = state.currentVoice;
+
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVal = DOM.voiceSelect.value;
+      let matchedVoice = voices.find(v => v.name === selectedVal);
+
+      // If selected edge_nanami or edge_keita fallback
+      if (!matchedVoice) {
+        if (selectedVal === 'edge_nanami') {
+          matchedVoice = voices.find(v => (v.name.includes('Nanami') || v.name.includes('Natural')) && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+        } else if (selectedVal === 'edge_keita') {
+          matchedVoice = voices.find(v => v.name.includes('Keita') && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+        }
+      }
+
+      // If still not matched, find any natural/online voice
+      if (!matchedVoice) {
+        matchedVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online')) && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+      }
+
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
 
       utterance.onstart = () => {
         state.isPlaying = true;
@@ -2304,7 +2541,13 @@
 
     function togglePlayPause() {
       if (state.isPlaying) {
-        window.speechSynthesis.cancel();
+        if (state.currentAudioObj) {
+          state.currentAudioObj.pause();
+          state.currentAudioObj = null;
+        }
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
         state.isPlaying = false;
         updatePlayerStatus(false);
       } else {
@@ -2688,14 +2931,72 @@
       return Math.max(10, Math.round(((maxLen - dist) / maxLen) * 100));
     }
 
-    function importCustomContent() {
-      const title = DOM.customImportTitle.value.trim() || '自訂雙語教材';
+    /* ==========================================================================
+       ONLINE GOOGLE TRANSLATION & CUSTOM INPUT ENGINE
+       ========================================================================== */
+    async function translateSingleJapanese(text) {
+      if (!text || !text.trim()) return '';
+      try {
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=' + encodeURIComponent(text.trim());
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data && data[0]) {
+          return data[0].map(item => item[0]).join('');
+        }
+      } catch (e) {
+        console.warn('Translation API error:', e);
+      }
+      return '';
+    }
+
+    async function handleAutoTranslateTextarea() {
       const raw = DOM.customImportText.value.trim();
       if (!raw) {
-        showToast('請先貼上雙語文字或字幕內容！');
+        showToast('請先貼上日文文字！');
         return;
       }
-      const parsedSentences = parseBilingualOrSubtitleText(raw);
+
+      DOM.importTranslateStatus.style.display = 'block';
+      DOM.btnAutoTranslateTextarea.disabled = true;
+
+      // Extract lines or sentences
+      const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+      let translatedPairs = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        DOM.importTranslateStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在翻譯第 ${i + 1} / ${lines.length} 行...`;
+        const jpLine = lines[i];
+        
+        // If line already has delimiter, keep it
+        if (jpLine.includes('|') || jpLine.includes('\t')) {
+          translatedPairs.push(jpLine);
+          continue;
+        }
+
+        const zh = await translateSingleJapanese(jpLine);
+        translatedPairs.push(`${jpLine} | ${zh || '（繁體中文翻譯）'}`);
+      }
+
+      DOM.customImportText.value = translatedPairs.join('\n');
+      DOM.importTranslateStatus.style.display = 'none';
+      DOM.btnAutoTranslateTextarea.disabled = false;
+      showToast('✨ 日文已全部自動生成繁體中文翻譯！');
+    }
+
+    async function importCustomContent() {
+      const title = DOM.customImportTitle.value.trim() || '自訂日語教材';
+      const raw = DOM.customImportText.value.trim();
+      if (!raw) {
+        showToast('請先貼上日文文字或字幕內容！');
+        return;
+      }
+
+      DOM.importTranslateStatus.style.display = 'block';
+      DOM.importTranslateStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在智慧解析並生成中文對照...';
+
+      const parsedSentences = await parseBilingualOrSubtitleText(raw);
+      DOM.importTranslateStatus.style.display = 'none';
+
       if (parsedSentences.length === 0) {
         showToast('未能辨識出有效句子，請檢查格式！');
         return;
@@ -2711,41 +3012,69 @@
 
       loadCorpus(customKey);
       closeAllModals();
-      showToast(`成功解析並載入 ${parsedSentences.length} 個雙語句子！`);
+      showToast(`成功載入 ${parsedSentences.length} 個中日雙語句子！`);
     }
 
-    function parseBilingualOrSubtitleText(text) {
+    async function parseBilingualOrSubtitleText(text) {
       const sentences = [];
+
+      // Case 1: SRT Format
       if (text.includes('-->')) {
         const blocks = text.split(/\n\s*\n/);
-        blocks.forEach(block => {
+        for (let block of blocks) {
           const lines = block.trim().split('\n');
           if (lines.length >= 3) {
             const contentLines = lines.slice(2).map(l => l.trim()).filter(l => l);
             if (contentLines.length >= 2) {
               sentences.push(buildSentenceItem(contentLines[0], contentLines[1]));
             } else if (contentLines.length === 1) {
-              sentences.push(buildSentenceItem(contentLines[0], '（暫無中文翻譯）'));
+              const zh = await translateSingleJapanese(contentLines[0]);
+              sentences.push(buildSentenceItem(contentLines[0], zh || '（暫無中文翻譯）'));
             }
           }
-        });
+        }
         if (sentences.length > 0) return sentences;
       }
 
+      // Case 2: Pipe or Tab Separated: "JP | ZH"
       const rawLines = text.split('\n').map(l => l.trim()).filter(l => l);
-      let isDelimited = false;
-      rawLines.forEach(line => {
-        if (line.includes('|') || line.includes('\t')) {
-          isDelimited = true;
-          const parts = line.includes('|') ? line.split('|') : line.split('\t');
-          sentences.push(buildSentenceItem(parts[0].trim(), parts[1] ? parts[1].trim() : ''));
-        }
-      });
-      if (isDelimited && sentences.length > 0) return sentences;
+      let hasDelimited = rawLines.some(l => l.includes('|') || l.includes('\t'));
 
+      if (hasDelimited) {
+        for (let line of rawLines) {
+          if (line.includes('|') || line.includes('\t')) {
+            const parts = line.includes('|') ? line.split('|') : line.split('\t');
+            sentences.push(buildSentenceItem(parts[0].trim(), parts[1] ? parts[1].trim() : ''));
+          } else {
+            const zh = await translateSingleJapanese(line);
+            sentences.push(buildSentenceItem(line, zh));
+          }
+        }
+        return sentences;
+      }
+
+      // Case 3: Alternating Lines or Pure Japanese Text
+      // Check if user pasted pure Japanese text (e.g. all lines contain Japanese)
+      const allJp = rawLines.every(l => /[\u3040-\u309F\u30A0-\u30FF]/.test(l));
+
+      if (allJp) {
+        // Pure Japanese: translate each line automatically!
+        for (let i = 0; i < rawLines.length; i++) {
+          const jp = rawLines[i];
+          const zh = await translateSingleJapanese(jp);
+          sentences.push(buildSentenceItem(jp, zh || '（暫無中文翻譯）'));
+        }
+        return sentences;
+      }
+
+      // Alternating
       for (let i = 0; i < rawLines.length; i += 2) {
         const jp = rawLines[i];
-        const zh = rawLines[i + 1] || '（暫無中文翻譯）';
+        let zh = rawLines[i + 1];
+        if (!zh || /[\u3040-\u309F\u30A0-\u30FF]/.test(zh)) {
+          // Both are Japanese or zh missing -> translate
+          zh = await translateSingleJapanese(jp);
+        }
         sentences.push(buildSentenceItem(jp, zh));
       }
       return sentences;
@@ -2889,26 +3218,28 @@
           document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           state.playbackRate = parseFloat(btn.dataset.speed);
+          if (state.currentAudioObj) state.currentAudioObj.playbackRate = state.playbackRate;
           showToast(`語速已設定為 ${state.playbackRate}x`);
         });
       });
 
       DOM.voiceSelect.addEventListener('change', (e) => {
-        const name = e.target.value;
-        const voices = window.speechSynthesis.getVoices();
-        const found = voices.find(v => v.name === name);
-        if (found) {
-          state.currentVoice = found;
-          showToast(`已選擇發音人：${found.name}`);
-        }
+        state.selectedVoiceType = e.target.value;
+        localStorage.setItem('trancy_voice_type', state.selectedVoiceType);
+        showToast(`已選擇語音：${DOM.voiceSelect.options[DOM.voiceSelect.selectedIndex].text}`);
       });
 
       DOM.btnToggleTheme.addEventListener('click', () => {
         applyTheme(state.theme === 'dark' ? 'light' : 'dark');
       });
 
+      // Modals
       DOM.btnOpenCustomInput.addEventListener('click', () => {
         DOM.modalCustomInput.classList.add('open');
+      });
+
+      DOM.btnOpenImmersiveGuide.addEventListener('click', () => {
+        DOM.modalImmersiveGuide.classList.add('open');
       });
 
       DOM.btnOpenShortcuts.addEventListener('click', () => {
@@ -2919,7 +3250,50 @@
         btn.addEventListener('click', () => closeAllModals());
       });
 
+      DOM.btnAutoTranslateTextarea.addEventListener('click', handleAutoTranslateTextarea);
       DOM.btnConfirmImport.addEventListener('click', importCustomContent);
+
+      // Bookmarklet copy
+      DOM.btnCopyBookmarklet.addEventListener('click', () => {
+        const code = "javascript:(function(){if(document.getElementById('trancy-ext-toolbar')){alert('Trancy雙語遮蔽工具列已在運行中！');return;}const s=document.createElement('script');s.src='https://fobeetsai.github.io/japanese-reader/trancy_extension/content.js';const c=document.createElement('link');c.rel='stylesheet';c.href='https://fobeetsai.github.io/japanese-reader/trancy_extension/content.css';document.head.appendChild(c);document.head.appendChild(s);})();";
+        navigator.clipboard.writeText(code);
+        showToast('已複製書籤代碼！可新增至瀏覽器書籤使用');
+      });
+
+      // Fetch URL Article
+      DOM.btnFetchArticleUrl.addEventListener('click', async () => {
+        const url = DOM.inputArticleUrl.value.trim();
+        if (!url) {
+          showToast('請輸入有效網址！');
+          return;
+        }
+        showToast('正在透過代理抓取網頁正文...');
+        try {
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const resp = await fetch(proxyUrl);
+          const data = await resp.json();
+          if (data && data.contents) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.contents, 'text/html');
+            const paragraphs = Array.from(doc.querySelectorAll('article p, p'))
+              .map(p => p.innerText.trim())
+              .filter(t => t.length > 8 && /[\u3040-\u309F\u30A0-\u30FF]/.test(t));
+
+            if (paragraphs.length > 0) {
+              DOM.customImportTitle.value = doc.title || '網頁正文擷取';
+              DOM.customImportText.value = paragraphs.slice(0, 20).join('\n');
+              closeAllModals();
+              DOM.modalCustomInput.classList.add('open');
+              showToast(`成功擷取 ${paragraphs.length} 段日文！請點擊自動生成中文`);
+            } else {
+              showToast('該網頁正文過於複雜，建議直接反白複製貼入');
+            }
+          }
+        } catch (err) {
+          showToast('擷取失敗，可能是目標網站有跨域防護');
+        }
+      });
+
       DOM.btnExportAnki.addEventListener('click', exportToAnkiTSV);
       DOM.btnClearVocab.addEventListener('click', () => {
         if (confirm('確定要清空所有收藏的句子與單字嗎？')) {
@@ -2958,6 +3332,7 @@
 
     function closeAllModals() {
       DOM.modalCustomInput.classList.remove('open');
+      DOM.modalImmersiveGuide.classList.remove('open');
       DOM.modalShortcuts.classList.remove('open');
     }
 
