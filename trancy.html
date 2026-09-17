@@ -998,6 +998,16 @@
       color: #ffffff;
     }
 
+    /* Content Pane Views */
+    .view-content-pane {
+      display: none;
+    }
+
+    .view-content-pane.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
     /* Practice sections */
     .practice-section {
       display: none;
@@ -1470,8 +1480,8 @@
           <button class="view-tab-btn" data-view="shadowing">
             <i class="fa-solid fa-microphone-lines"></i> 影子跟讀
           </button>
-          <button class="view-tab-btn" data-view="vocab">
-            <i class="fa-solid fa-star"></i> 生詞本 (<span id="starred-count-badge">0</span>)
+          <button class="view-tab-btn" data-view="vocab" id="btn-tab-vocab" title="查看收藏的句子與生詞庫">
+            <i class="fa-solid fa-star" style="color: #fbbf24;"></i> ⭐ 收藏與生詞本 (<span id="starred-count-badge">0</span>)
           </button>
         </nav>
       </div>
@@ -1591,7 +1601,10 @@
           <h2 class="stream-title" id="corpus-display-title">日常生活實戰會話 (Daily Japanese)</h2>
           <span class="stream-counter" id="corpus-total-counter">共 15 句</span>
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-action-pill" id="btn-quick-goto-vocab" style="background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;" title="直接前往收藏本與生詞抽認卡">
+            <i class="fa-solid fa-star"></i> 查看收藏與生詞 (<span id="starred-meta-counter">0</span>)
+          </button>
           <button class="btn-action-pill" id="btn-play-all">
             <i class="fa-solid fa-play"></i> 全篇連續朗讀
           </button>
@@ -2357,12 +2370,24 @@
       }
     }
 
-    function showToast(message) {
-      DOM.toastMsg.textContent = message;
+    let toastTimeout = null;
+    function showToast(message, duration = 2500, onClick = null) {
+      DOM.toastMsg.innerHTML = message;
       DOM.toast.classList.add('show');
-      setTimeout(() => {
+      if (onClick) {
+        DOM.toast.style.cursor = 'pointer';
+        DOM.toast.onclick = () => {
+          onClick();
+          DOM.toast.classList.remove('show');
+        };
+      } else {
+        DOM.toast.style.cursor = 'default';
+        DOM.toast.onclick = null;
+      }
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         DOM.toast.classList.remove('show');
-      }, 2500);
+      }, duration);
     }
 
     /* ==========================================================================
@@ -3075,7 +3100,9 @@
         showToast('已從收藏移除');
       } else {
         state.starredSentences.push(s);
-        showToast('已加入生詞本收藏 ⭐');
+        showToast(`⭐ 已成功收藏此句！<br><span style="text-decoration: underline; font-weight: bold; font-size: 0.9rem; color: #818cf8;">👉 點此立即前往【⭐ 收藏與生詞本】查看</span>`, 4000, () => {
+          switchView('vocab');
+        });
       }
       localStorage.setItem('trancy_starred_sentences', JSON.stringify(state.starredSentences));
       updateStarredBadge();
@@ -3099,7 +3126,9 @@
 
     function updateStarredBadge() {
       const count = state.starredSentences.length + state.starredVocab.length;
-      DOM.starredCountBadge.textContent = count;
+      if (DOM.starredCountBadge) DOM.starredCountBadge.textContent = count;
+      const metaCounter = document.getElementById('starred-meta-counter');
+      if (metaCounter) metaCounter.textContent = count;
     }
 
     function renderVocabList() {
@@ -3107,8 +3136,16 @@
       if (state.starredSentences.length === 0 && state.starredVocab.length === 0) {
         DOM.vocabListContainer.innerHTML = `
           <div style="text-align: center; padding: 48px 20px; color: var(--text-tertiary);">
-            <i class="fa-regular fa-star" style="font-size: 2.5rem; margin-bottom: 12px; color: #818cf8;"></i>
-            <p>目前尚無收藏項目！在字幕模式點擊星星 ⭐ 或點選單字即可收藏到此處。</p>
+            <i class="fa-solid fa-star" style="font-size: 3rem; margin-bottom: 16px; color: #fbbf24;"></i>
+            <h3 style="color: var(--text-primary); margin-bottom: 8px;">目前尚無收藏項目</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; max-width: 520px; margin: 0 auto 20px;">
+              在「雙語字幕」學習模式時：<br>
+              • 點擊句子右上角的 <b>⭐ 星星</b> 即可收藏句子。<br>
+              • 點擊 <b>📖 辭典</b> 或句子中的單字，可將重點單字與文法加入複習庫！
+            </p>
+            <button class="btn-action-pill primary" onclick="window.trancyApp.switchView('subtitles')">
+              <i class="fa-solid fa-arrow-left"></i> 前往雙語字幕去收藏
+            </button>
           </div>
         `;
         return;
@@ -3118,7 +3155,7 @@
         const titleH = document.createElement('h3');
         titleH.style.margin = '16px 0 10px';
         titleH.style.fontSize = '1.05rem';
-        titleH.innerHTML = `<i class="fa-solid fa-bookmark" style="color: #818cf8;"></i> 收藏的句子 (${state.starredSentences.length})`;
+        titleH.innerHTML = `<i class="fa-solid fa-bookmark" style="color: #fbbf24;"></i> 收藏的句子 (${state.starredSentences.length} 句)`;
         DOM.vocabListContainer.appendChild(titleH);
 
         state.starredSentences.forEach((s, idx) => {
@@ -3126,14 +3163,19 @@
           item.className = 'sentence-card';
           item.style.marginBottom = '10px';
           item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <div style="font-family: var(--font-jp); font-size: 1.15rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${s.jp}</div>
-                <div style="color: var(--text-chinese); font-size: 0.92rem;">${s.zh}</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+              <div style="flex: 1;">
+                <div style="font-family: var(--font-jp); font-size: 1.15rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; line-height: 1.5;">${s.jp}</div>
+                <div style="color: var(--text-chinese); font-size: 0.92rem; line-height: 1.4;">${s.zh}</div>
               </div>
-              <button class="btn-tool active-star" onclick="window.trancyApp.removeStarSentence(${idx})">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+              <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                <button class="btn-tool" onclick="window.trancyApp.speakText('${s.jp.replace(/'/g, "\\'")}')" title="朗讀發音">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button class="btn-tool active-star" onclick="window.trancyApp.removeStarSentence(${idx})" title="從收藏中移除">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </div>
           `;
           DOM.vocabListContainer.appendChild(item);
@@ -3144,7 +3186,7 @@
         const titleW = document.createElement('h3');
         titleW.style.margin = '24px 0 10px';
         titleW.style.fontSize = '1.05rem';
-        titleW.innerHTML = `<i class="fa-solid fa-font" style="color: #34d399;"></i> 收藏的單字 (${state.starredVocab.length})`;
+        titleW.innerHTML = `<i class="fa-solid fa-font" style="color: #34d399;"></i> 收藏的單字 (${state.starredVocab.length} 個)`;
         DOM.vocabListContainer.appendChild(titleW);
 
         state.starredVocab.forEach((v, idx) => {
@@ -3152,16 +3194,25 @@
           item.className = 'sentence-card';
           item.style.marginBottom = '10px';
           item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <span style="font-family: var(--font-jp); font-size: 1.2rem; font-weight: 700; margin-right: 8px;">${v.word}</span>
-                <span style="color: #818cf8; font-size: 0.9rem; margin-right: 8px;">[${v.reading || ''}]</span>
-                <span class="dict-tag dict-tag-jlpt" style="margin-right: 8px;">${v.jlpt || 'N3'}</span>
-                <span style="color: var(--text-chinese); font-size: 0.92rem;">${v.meaning || ''}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                <span style="font-family: var(--font-jp); font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">${v.word}</span>
+                <span style="color: #818cf8; font-size: 0.9rem;">[${v.reading || ''}]</span>
+                <span class="dict-tag dict-tag-jlpt">${v.jlpt || 'N3'}</span>
+                <span class="dict-tag">${v.pos || '詞彙'}</span>
+                <span style="color: var(--text-chinese); font-size: 0.92rem; margin-left: 4px;">${v.meaning || ''}</span>
               </div>
-              <button class="btn-tool active-star" onclick="window.trancyApp.removeStarVocab(${idx})">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-tool" onclick="window.trancyApp.speakText('${v.word.replace(/'/g, "\\'")}')" title="朗讀發音">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <a href="https://cjjc.weblio.jp/content/${encodeURIComponent(v.word)}" target="_blank" class="btn-tool" title="Weblio 辭典" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-book"></i>
+                </a>
+                <button class="btn-tool active-star" onclick="window.trancyApp.removeStarVocab(${idx})" title="從生詞本移除">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </div>
           `;
           DOM.vocabListContainer.appendChild(item);
@@ -3176,9 +3227,14 @@
         localStorage.setItem('trancy_starred_vocab', JSON.stringify(state.starredVocab));
         updateStarredBadge();
         renderVocabList();
-        showToast(`已將「${vocabObj.word}」加入生詞複習庫 🎓`);
+        showToast(`🎓 已將「${vocabObj.word}」加入複習庫！<br><span style="text-decoration: underline; font-weight: bold; font-size: 0.9rem; color: #818cf8;">👉 點此立即前往【⭐ 收藏與生詞本】抽認卡</span>`, 4000, () => {
+          switchView('vocab');
+          startFlashcardQuiz();
+        });
       } else {
-        showToast(`「${vocabObj.word}」已在生詞複習庫中！`);
+        showToast(`「${vocabObj.word}」已在生詞複習庫中！點此查看`, 3000, () => {
+          switchView('vocab');
+        });
       }
     }
 
@@ -3620,6 +3676,30 @@
       return { jp: jp, zh: zh, furigana: jp, tokens: tokens };
     }
 
+    function switchView(viewId) {
+      document.querySelectorAll('.view-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === viewId);
+      });
+      const subPane = document.getElementById('view-subtitles');
+      const dicPane = document.getElementById('view-dictation');
+      const shaPane = document.getElementById('view-shadowing');
+      const vocPane = document.getElementById('view-vocab');
+
+      if (subPane) subPane.classList.toggle('active', viewId === 'subtitles');
+      if (dicPane) dicPane.classList.toggle('active', viewId === 'dictation');
+      if (shaPane) shaPane.classList.toggle('active', viewId === 'shadowing');
+      if (vocPane) vocPane.classList.toggle('active', viewId === 'vocab');
+
+      if (viewId === 'vocab') {
+        renderVocabList();
+      } else if (viewId === 'dictation') {
+        loadDictationSentence(state.currentSentenceIdx);
+      } else if (viewId === 'shadowing') {
+        loadShadowingSentence(state.currentSentenceIdx);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function setupEventListeners() {
       DOM.maskSegmentedBar.addEventListener('click', (e) => {
         const btn = e.target.closest('.mask-option-btn');
@@ -3650,19 +3730,16 @@
 
       document.querySelectorAll('.view-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const viewId = btn.dataset.view;
-          document.getElementById('view-subtitles').classList.toggle('active', viewId === 'subtitles');
-          document.getElementById('view-dictation').classList.toggle('active', viewId === 'dictation');
-          document.getElementById('view-shadowing').classList.toggle('active', viewId === 'shadowing');
-          document.getElementById('view-vocab').classList.toggle('active', viewId === 'vocab');
-
-          if (viewId === 'vocab') renderVocabList();
-          else if (viewId === 'dictation') loadDictationSentence(state.currentSentenceIdx);
-          else if (viewId === 'shadowing') loadShadowingSentence(state.currentSentenceIdx);
+          switchView(btn.dataset.view);
         });
       });
+
+      const btnQuickVocab = document.getElementById('btn-quick-goto-vocab');
+      if (btnQuickVocab) {
+        btnQuickVocab.addEventListener('click', () => {
+          switchView('vocab');
+        });
+      }
 
       DOM.sentencesStream.addEventListener('click', (e) => {
         const token = e.target.closest('.jp-token');
@@ -3979,6 +4056,7 @@
     }
 
     window.trancyApp = {
+      switchView: (viewId) => switchView(viewId),
       speakText: (text) => speakText(text),
       addVocabToReview: (word, reading, meaning, jlpt, pos) => {
         addVocabToReview({ word, reading, meaning, jlpt, pos });

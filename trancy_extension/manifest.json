@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "storage",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "scripting"
   ],
   "host_permissions": [
     "https://*/*",

@@ -499,17 +499,30 @@
     return '';
   }
 
-  // Auto-init toolbar when Japanese content is detected
-  if (JP_REGEX.test(document.body.innerText || '')) {
-    injectToolbar();
+  function toggleToolbar() {
+    const existing = document.getElementById('trancy-ext-toolbar');
+    if (existing) {
+      if (existing.style.display === 'none') {
+        existing.style.display = 'flex';
+      } else {
+        existing.style.display = 'none';
+      }
+    } else {
+      injectToolbar();
+    }
   }
+
+  // NOTE: The toolbar will NEVER automatically appear when loading a webpage.
+  // It will ONLY appear when the user explicitly clicks the extension APP icon!
 
   // Extension runtime messaging listener
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
       if (req.action === 'toggle-toolbar') {
-        injectToolbar();
-        sendResponse({ status: 'ok' });
+        toggleToolbar();
+        const existing = document.getElementById('trancy-ext-toolbar');
+        const isVisible = existing && existing.style.display !== 'none';
+        sendResponse({ status: 'ok', visible: isVisible });
       }
     });
   }
