@@ -1550,10 +1550,14 @@
         <span class="toolbar-label" style="margin-left: 6px;">
           <i class="fa-solid fa-book-bookmark"></i> 教材庫:
         </span>
-        <button class="corpus-select-btn" id="btn-corpus-menu">
-          <span id="current-corpus-name">🗣️ 日常生活實戰會話</span>
-          <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem;"></i>
-        </button>
+        <div class="corpus-control-wrap" style="display: flex; align-items: center; gap: 6px;">
+          <select class="furigana-select" id="select-corpus-dropdown" style="max-width: 260px; font-weight: 600; cursor: pointer;" title="下拉查看並切換教材">
+            <!-- Populated dynamically by JS -->
+          </select>
+          <button class="btn-tool-danger" id="btn-delete-corpus" title="刪除當前自訂教材" style="display: none; padding: 5px 9px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; cursor: pointer; font-size: 0.8rem; font-weight: 600; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-trash-can"></i> 刪除
+          </button>
+        </div>
       </div>
 
     </div>
@@ -1681,27 +1685,99 @@
       </div>
     </section>
 
-    <!-- VIEW 4: VOCABULARY NOTEBOOK -->
+    <!-- VIEW 4: VOCABULARY & REVIEW CENTER (生詞與文法複習特訓中心) -->
     <section id="view-vocab" class="practice-section">
-      <div style="max-width: 960px; margin: 0 auto;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+      <div style="max-width: 980px; margin: 0 auto;">
+        
+        <!-- Header & Toolbar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 style="font-size: 1.4rem;">⭐ 我的學習生詞本與收藏句</h2>
-            <p style="color: var(--text-tertiary); font-size: 0.86rem;">在閱讀或字幕模式中點擊星星收藏的重點句子與單字</p>
+            <h2 style="font-size: 1.45rem; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-graduation-cap" style="color: #10b981;"></i> 生詞與文法複習特訓中心
+            </h2>
+            <p style="color: var(--text-tertiary); font-size: 0.86rem; margin-top: 4px;">
+              包含已加入複習的生詞、收藏句與文法筆記，支援抽認卡自測與聽力複習
+            </p>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-action-pill" id="btn-export-anki">
-              <i class="fa-solid fa-file-export"></i> 匯出 Anki 格式 (.tsv)
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-action-pill active" id="btn-review-view-list" style="padding: 6px 12px;">
+              <i class="fa-solid fa-list-check"></i> 清單列表
             </button>
-            <button class="btn-action-pill" id="btn-clear-vocab">
-              <i class="fa-solid fa-trash-can"></i> 清空收藏
+            <button class="btn-action-pill" id="btn-review-view-card" style="padding: 6px 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); color: #34d399; border-color: rgba(16, 185, 129, 0.4);">
+              <i class="fa-solid fa-clone"></i> 🎴 抽認卡自測
+            </button>
+            <button class="btn-action-pill" id="btn-export-anki">
+              <i class="fa-solid fa-file-export"></i> 匯出 Anki (.tsv)
+            </button>
+            <button class="btn-action-pill" id="btn-clear-vocab" style="color: #f87171;">
+              <i class="fa-solid fa-trash-can"></i> 清空
             </button>
           </div>
         </div>
 
+        <!-- Mode A: Flashcard Quiz Mode Container (Hidden by default) -->
+        <div id="review-flashcard-mode" style="display: none; margin-bottom: 24px;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px; text-align: center;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--text-tertiary); font-size: 0.88rem;">
+              <span id="flashcard-progress">卡片 1 / 1</span>
+              <span style="font-size: 0.78rem;">點擊卡片翻面或按空白鍵</span>
+            </div>
+
+            <div class="flashcard-box" id="flashcard-card-box" style="perspective: 1000px; height: 260px; cursor: pointer; margin-bottom: 20px;">
+              <div class="flashcard-inner" id="flashcard-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; border-radius: var(--radius-lg);">
+                
+                <!-- Front -->
+                <div class="flashcard-face flashcard-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius-lg); border: 2px solid var(--border-focus); background: var(--bg-surface-elevated); padding: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: var(--shadow-lg);">
+                  <span class="dict-tag dict-tag-jlpt" id="fc-front-tag" style="margin-bottom: 12px;">日語自測</span>
+                  <div id="fc-front-text" style="font-family: var(--font-jp); font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; max-width: 90%; line-height: 1.5;">
+                    いらっしゃいませ
+                  </div>
+                  <div style="color: var(--text-muted); font-size: 0.84rem;">
+                    👆 點擊卡片翻面查看釋義與文法
+                  </div>
+                </div>
+
+                <!-- Back -->
+                <div class="flashcard-face flashcard-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg); border-radius: var(--radius-lg); border: 2px solid #10b981; background: linear-gradient(145deg, var(--bg-surface), rgba(16, 185, 129, 0.08)); padding: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: var(--shadow-lg);">
+                  <div id="fc-back-reading" style="font-family: var(--font-jp); font-size: 1.15rem; color: #818cf8; font-weight: 600; margin-bottom: 8px;">
+                    [いらっしゃいませ]
+                  </div>
+                  <div id="fc-back-meaning" style="font-size: 1.25rem; font-weight: 700; color: #34d399; margin-bottom: 10px;">
+                    歡迎光臨
+                  </div>
+                  <div id="fc-back-grammar" style="font-size: 0.86rem; color: var(--text-secondary); max-width: 85%; line-height: 1.5;">
+                    日常店內招呼語
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Flashcard Control Buttons -->
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+              <button class="btn-action-pill" id="btn-fc-prev">
+                <i class="fa-solid fa-arrow-left"></i> 上一張
+              </button>
+              <button class="btn-action-pill" id="btn-fc-speak" style="background: rgba(99, 102, 241, 0.2);">
+                <i class="fa-solid fa-volume-high"></i> 朗讀發音
+              </button>
+              <button class="btn-action-pill" id="btn-fc-flip" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">
+                <i class="fa-solid fa-rotate"></i> 翻面
+              </button>
+              <button class="btn-action-pill" id="btn-fc-next">
+                下一張 <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Mode B: List View Container -->
         <div id="vocab-list-container">
           <!-- Rendered by JS -->
         </div>
+
       </div>
     </section>
 
@@ -1796,15 +1872,77 @@
       日文、日本語。日本國使用的主要語言。
     </div>
     <div class="dict-actions">
-      <button class="btn-dict-act" id="btn-pop-voice">
+      <button class="btn-dict-act" id="btn-pop-voice" title="真人朗讀">
         <i class="fa-solid fa-volume-high"></i> 發音
       </button>
-      <button class="btn-dict-act" id="btn-pop-star">
-        <i class="fa-solid fa-star"></i> 收藏單字
+      <button class="btn-dict-act" id="btn-pop-add-review" style="color: #34d399;" title="加入生詞複習庫">
+        <i class="fa-solid fa-graduation-cap"></i> 加入複習
       </button>
-      <a href="#" target="_blank" class="btn-dict-act" id="btn-pop-moji">
-        <i class="fa-solid fa-arrow-up-right-from-square"></i> MOJi 辭書
+      <button class="btn-dict-act" id="btn-pop-star" title="收藏標星">
+        <i class="fa-solid fa-star"></i> 收藏
+      </button>
+      <a href="#" target="_blank" class="btn-dict-act" id="btn-pop-moji" title="開啟 MOJi 辭書深度查詢">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> MOJi
       </a>
+      <a href="#" target="_blank" class="btn-dict-act" id="btn-pop-weblio" title="開啟 Weblio 日中辭典">
+        <i class="fa-solid fa-book"></i> Weblio
+      </a>
+    </div>
+  </div>
+
+  <!-- MODAL: LINKED DICTIONARY & GRAMMAR BREAKDOWN (連動辭典與文法解析) -->
+  <div class="trancy-modal-backdrop" id="modal-grammar-dict">
+    <div class="trancy-modal-card grammar-modal-card" style="max-width: 780px;">
+      <div class="modal-head">
+        <h3 class="modal-title">
+          <i class="fa-solid fa-book-open" style="color: #818cf8;"></i> 句子連動辭典、單字拆解與文法精析
+        </h3>
+        <button class="modal-close-btn" data-close="modal-grammar-dict">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+        
+        <!-- Section 1: Japanese & Chinese Sentence -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 12px;">
+            <div id="grammar-modal-jp" style="font-family: var(--font-jp); font-size: 1.35rem; font-weight: 700; color: var(--text-primary); line-height: 1.6;">
+              <!-- Ruby JP text -->
+            </div>
+            <button class="btn-action-pill" id="btn-grammar-modal-speak" style="padding: 5px 12px; white-space: nowrap;">
+              <i class="fa-solid fa-volume-high"></i> 朗讀
+            </button>
+          </div>
+          <div id="grammar-modal-zh" style="font-size: 1.05rem; color: #818cf8; font-weight: 600;">
+            <!-- ZH text -->
+          </div>
+        </div>
+
+        <!-- Section 2: Key Grammar Points -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+          <h4 style="font-size: 1rem; color: #34d399; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 核心文法與句型結構分析
+          </h4>
+          <div id="grammar-modal-points">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Section 3: Word Dictionary Breakdown -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px;">
+          <h4 style="font-size: 1rem; color: #a78bfa; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-spell-check"></i> 句子單字連動辭典拆解
+          </h4>
+          <div id="grammar-modal-vocab-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-foot" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <button class="btn-action-pill" id="btn-grammar-modal-add-review" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
+          <i class="fa-solid fa-graduation-cap"></i> ➕ 將本句與單字加入複習庫
+        </button>
+        <button class="btn-action-pill" data-close="modal-grammar-dict">關閉</button>
+      </div>
     </div>
   </div>
 
@@ -2084,7 +2222,9 @@
       dictationIdx: 0,
       dictationHintLevel: 0,
       speechRecognizer: null,
-      isRecording: false
+      isRecording: false,
+      flashcardIndex: 0,
+      currentModalSentence: null
     };
 
     const DOM = {
@@ -2108,7 +2248,8 @@
       furiganaSelect: document.getElementById('furigana-mode-select'),
       btnPlayAll: document.getElementById('btn-play-all'),
       btnInvertAllMask: document.getElementById('btn-toggle-all-cards-mask'),
-      btnCorpusMenu: document.getElementById('btn-corpus-menu'),
+      selectCorpusDropdown: document.getElementById('select-corpus-dropdown'),
+      btnDeleteCorpus: document.getElementById('btn-delete-corpus'),
       dictPopover: document.getElementById('word-dict-popover'),
       dictWord: document.getElementById('dict-pop-word'),
       dictReading: document.getElementById('dict-pop-reading'),
@@ -2117,8 +2258,17 @@
       dictPos: document.getElementById('dict-pop-pos'),
       dictMeaning: document.getElementById('dict-pop-meaning'),
       btnPopVoice: document.getElementById('btn-pop-voice'),
+      btnPopAddReview: document.getElementById('btn-pop-add-review'),
       btnPopStar: document.getElementById('btn-pop-star'),
       btnPopMoji: document.getElementById('btn-pop-moji'),
+      btnPopWeblio: document.getElementById('btn-pop-weblio'),
+      modalGrammarDict: document.getElementById('modal-grammar-dict'),
+      grammarModalJp: document.getElementById('grammar-modal-jp'),
+      grammarModalZh: document.getElementById('grammar-modal-zh'),
+      grammarModalPoints: document.getElementById('grammar-modal-points'),
+      grammarModalVocabGrid: document.getElementById('grammar-modal-vocab-grid'),
+      btnGrammarModalSpeak: document.getElementById('btn-grammar-modal-speak'),
+      btnGrammarModalAddReview: document.getElementById('btn-grammar-modal-add-review'),
       dictationZh: document.getElementById('dictation-zh-prompt'),
       dictationInput: document.getElementById('dictation-user-input'),
       dictationPlay: document.getElementById('btn-dictation-play'),
@@ -2139,6 +2289,21 @@
       shadowingSttResult: document.getElementById('shadowing-stt-result'),
       btnShadowingNext: document.getElementById('btn-shadowing-next'),
       vocabListContainer: document.getElementById('vocab-list-container'),
+      reviewFlashcardMode: document.getElementById('review-flashcard-mode'),
+      flashcardCardBox: document.getElementById('flashcard-card-box'),
+      flashcardInner: document.getElementById('flashcard-inner'),
+      flashcardProgress: document.getElementById('flashcard-progress'),
+      fcFrontTag: document.getElementById('fc-front-tag'),
+      fcFrontText: document.getElementById('fc-front-text'),
+      fcBackReading: document.getElementById('fc-back-reading'),
+      fcBackMeaning: document.getElementById('fc-back-meaning'),
+      fcBackGrammar: document.getElementById('fc-back-grammar'),
+      btnFcPrev: document.getElementById('btn-fc-prev'),
+      btnFcNext: document.getElementById('btn-fc-next'),
+      btnFcFlip: document.getElementById('btn-fc-flip'),
+      btnFcSpeak: document.getElementById('btn-fc-speak'),
+      btnReviewViewList: document.getElementById('btn-review-view-list'),
+      btnReviewViewCard: document.getElementById('btn-review-view-card'),
       btnExportAnki: document.getElementById('btn-export-anki'),
       btnClearVocab: document.getElementById('btn-clear-vocab'),
       modalCustomInput: document.getElementById('modal-custom-input'),
@@ -2161,7 +2326,9 @@
     };
 
     function init() {
+      initCustomCorpora();
       applyTheme(state.theme);
+      renderCorpusDropdown();
       loadCorpus(state.currentCorpusKey);
       initSpeechSynthesis();
       initSpeechRecognition();
@@ -2366,6 +2533,90 @@
       }
     }
 
+    function initCustomCorpora() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('trancy_custom_corpora') || '{}');
+        Object.keys(saved).forEach(k => {
+          PRESET_CORPORA[k] = saved[k];
+        });
+      } catch (e) {}
+    }
+
+    function renderCorpusDropdown() {
+      if (!DOM.selectCorpusDropdown) return;
+      DOM.selectCorpusDropdown.innerHTML = '';
+
+      const presetGroup = document.createElement('optgroup');
+      presetGroup.label = '🌟 官方精選實戰教材';
+
+      const presetKeys = ['daily', 'construction', 'business', 'anime', 'news', 'jlpt'];
+      presetKeys.forEach(key => {
+        if (PRESET_CORPORA[key]) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = `${PRESET_CORPORA[key].name} (${PRESET_CORPORA[key].sentences.length}句)`;
+          presetGroup.appendChild(opt);
+        }
+      });
+      DOM.selectCorpusDropdown.appendChild(presetGroup);
+
+      const customKeys = Object.keys(PRESET_CORPORA).filter(k => k.startsWith('custom_'));
+      if (customKeys.length > 0) {
+        const customGroup = document.createElement('optgroup');
+        customGroup.label = '📁 我的自訂教材庫';
+        customKeys.forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = `${PRESET_CORPORA[key].name} (${PRESET_CORPORA[key].sentences.length}句)`;
+          customGroup.appendChild(opt);
+        });
+        DOM.selectCorpusDropdown.appendChild(customGroup);
+      }
+
+      const importOpt = document.createElement('option');
+      importOpt.value = '__new_import__';
+      importOpt.textContent = '➕ 匯入/貼上新日語教材...';
+      DOM.selectCorpusDropdown.appendChild(importOpt);
+
+      if (PRESET_CORPORA[state.currentCorpusKey]) {
+        DOM.selectCorpusDropdown.value = state.currentCorpusKey;
+      } else {
+        DOM.selectCorpusDropdown.value = 'daily';
+      }
+      updateDeleteButtonVisibility();
+    }
+
+    function updateDeleteButtonVisibility() {
+      if (!DOM.btnDeleteCorpus) return;
+      if (state.currentCorpusKey && state.currentCorpusKey.startsWith('custom_')) {
+        DOM.btnDeleteCorpus.style.display = 'inline-flex';
+      } else {
+        DOM.btnDeleteCorpus.style.display = 'none';
+      }
+    }
+
+    function deleteActiveCorpus() {
+      const activeKey = state.currentCorpusKey;
+      if (!activeKey || !activeKey.startsWith('custom_')) {
+        showToast('官方精選教材不可刪除！');
+        return;
+      }
+      const data = PRESET_CORPORA[activeKey];
+      const name = data ? data.name : '該教材';
+      if (!confirm(`確定要從教材庫中刪除「${name}」嗎？\n刪除後將無法復原。`)) {
+        return;
+      }
+
+      delete PRESET_CORPORA[activeKey];
+      const saved = JSON.parse(localStorage.getItem('trancy_custom_corpora') || '{}');
+      delete saved[activeKey];
+      localStorage.setItem('trancy_custom_corpora', JSON.stringify(saved));
+
+      showToast(`已成功刪除教材「${name}」！`);
+      loadCorpus('daily');
+      renderCorpusDropdown();
+    }
+
     function loadCorpus(corpusKey) {
       const data = PRESET_CORPORA[corpusKey] || PRESET_CORPORA.daily;
       state.currentCorpusKey = corpusKey;
@@ -2374,8 +2625,11 @@
       state.currentSentenceIdx = 0;
 
       DOM.corpusTitle.textContent = data.name;
-      DOM.currentCorpusName.textContent = data.name;
+      if (DOM.currentCorpusName) DOM.currentCorpusName.textContent = data.name;
       DOM.corpusCounter.textContent = `共 ${state.sentences.length} 句`;
+
+      if (DOM.selectCorpusDropdown) DOM.selectCorpusDropdown.value = corpusKey;
+      updateDeleteButtonVisibility();
 
       renderSentencesStream();
       highlightActiveSentence(0);
@@ -2405,6 +2659,12 @@
               </button>
               <button class="btn-tool btn-tool-toggle-mask" data-idx="${idx}" title="獨立切換此句遮蔽">
                 <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn-tool btn-tool-dict" data-idx="${idx}" title="連動辭典與文法解析">
+                <i class="fa-solid fa-book-open"></i>
+              </button>
+              <button class="btn-tool btn-tool-add-review ${isStarred ? 'active-star' : ''}" data-idx="${idx}" title="加入生詞複習庫">
+                <i class="fa-solid fa-graduation-cap"></i>
               </button>
               <button class="btn-tool btn-tool-star ${isStarred ? 'active-star' : ''}" data-idx="${idx}" title="收藏此句">
                 <i class="fa-solid fa-star"></i>
@@ -2620,20 +2880,23 @@
       const meaning = tokenEl.dataset.meaning || '暫無釋義';
 
       DOM.dictWord.textContent = word;
-      DOM.dictReading.textContent = reading;
+      DOM.dictReading.textContent = reading ? `[${reading}]` : '';
       DOM.dictPos.textContent = pos;
       DOM.dictJlpt.textContent = `JLPT ${jlpt}`;
       DOM.dictRomaji.textContent = reading || word;
       DOM.dictMeaning.textContent = meaning;
       DOM.btnPopMoji.href = `https://www.mojidict.com/search?searchTerm=${encodeURIComponent(word)}`;
+      if (DOM.btnPopWeblio) {
+        DOM.btnPopWeblio.href = `https://cjjc.weblio.jp/content/${encodeURIComponent(word)}`;
+      }
 
       const rect = tokenEl.getBoundingClientRect();
       let top = rect.bottom + 8;
       let left = rect.left;
 
-      if (left + 330 > window.innerWidth) left = window.innerWidth - 340;
+      if (left + 340 > window.innerWidth) left = window.innerWidth - 350;
       if (left < 10) left = 10;
-      if (top + 220 > window.innerHeight) top = rect.top - 210;
+      if (top + 230 > window.innerHeight) top = rect.top - 220;
 
       DOM.dictPopover.style.top = `${top}px`;
       DOM.dictPopover.style.left = `${left}px`;
@@ -2643,6 +2906,11 @@
         e.stopPropagation();
         speakText(word);
       };
+      DOM.btnPopAddReview.onclick = (e) => {
+        e.stopPropagation();
+        toggleStarVocab({ word, reading, pos, jlpt, meaning });
+        showToast(`已將單字「${word}」加入生詞複習庫 🎓`);
+      };
       DOM.btnPopStar.onclick = (e) => {
         e.stopPropagation();
         toggleStarVocab({ word, reading, pos, jlpt, meaning });
@@ -2651,6 +2919,151 @@
 
     function hideWordDictionary() {
       DOM.dictPopover.style.display = 'none';
+    }
+
+    function showSentenceGrammarAndDict(idx) {
+      if (idx < 0 || idx >= state.sentences.length) return;
+      const s = state.sentences[idx];
+      state.currentModalSentence = s;
+
+      DOM.grammarModalJp.innerHTML = formatJapaneseHtml(s);
+      DOM.grammarModalZh.textContent = s.zh;
+
+      // Render Grammar Points
+      DOM.grammarModalPoints.innerHTML = '';
+      const pts = extractGrammarPoints(s);
+      pts.forEach(p => {
+        const item = document.createElement('div');
+        item.style.borderLeft = '4px solid #818cf8';
+        item.style.background = 'rgba(99, 102, 241, 0.08)';
+        item.style.padding = '10px 14px';
+        item.style.borderRadius = '0 8px 8px 0';
+        item.style.marginBottom = '10px';
+        item.innerHTML = `
+          <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-lightbulb"></i> ${p.title}
+          </div>
+          <div style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6;">
+            ${p.desc}
+          </div>
+        `;
+        DOM.grammarModalPoints.appendChild(item);
+      });
+
+      // Render Vocab Chips Grid
+      DOM.grammarModalVocabGrid.innerHTML = '';
+      const tokens = (s.tokens && s.tokens.length > 0) ? s.tokens : buildFallbackTokens(s.jp);
+      tokens.forEach(tok => {
+        const word = tok[0];
+        const reading = tok[1] || '';
+        const meaning = tok[2] || '點擊外部辭典查看詳細釋義與例句';
+        const pos = tok[3] || '詞彙';
+        const jlpt = tok[4] || 'N3';
+
+        const chip = document.createElement('div');
+        chip.style.background = 'var(--bg-surface)';
+        chip.style.border = '1px solid var(--border-subtle)';
+        chip.style.borderRadius = 'var(--radius-md)';
+        chip.style.padding = '12px';
+        chip.style.display = 'flex';
+        chip.style.flexDirection = 'column';
+        chip.style.justifyContent = 'space-between';
+        chip.innerHTML = `
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+              <span style="font-family: var(--font-jp); font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">${word}</span>
+              <span style="font-size: 0.85rem; color: #818cf8; font-weight: 600;">${reading ? `[${reading}]` : ''}</span>
+            </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 6px;">
+              <span class="dict-tag dict-tag-jlpt" style="font-size: 0.72rem;">${jlpt}</span>
+              <span class="dict-tag" style="font-size: 0.72rem;">${pos}</span>
+            </div>
+            <div style="font-size: 0.88rem; color: var(--text-chinese); line-height: 1.45; margin-bottom: 10px;">
+              ${meaning}
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: flex-end; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+            <button class="btn-tool" onclick="window.trancyApp.speakText('${word}')" title="朗讀發音" style="width: 28px; height: 28px; font-size: 0.75rem;">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <button class="btn-tool" onclick="window.trancyApp.addVocabToReview('${word}', '${reading}', '${meaning}', '${jlpt}', '${pos}')" title="加入生詞複習庫" style="width: 28px; height: 28px; font-size: 0.75rem; color: #10b981;">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </button>
+            <a href="https://www.mojidict.com/search?searchTerm=${encodeURIComponent(word)}" target="_blank" class="btn-tool" title="MOJi 辭書" style="width: 28px; height: 28px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+            <a href="https://cjjc.weblio.jp/content/${encodeURIComponent(word)}" target="_blank" class="btn-tool" title="Weblio 日中辭典" style="width: 28px; height: 28px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+              <i class="fa-solid fa-book"></i>
+            </a>
+          </div>
+        `;
+        DOM.grammarModalVocabGrid.appendChild(chip);
+      });
+
+      DOM.btnGrammarModalSpeak.onclick = () => speakText(s.jp);
+      DOM.btnGrammarModalAddReview.onclick = () => {
+        toggleStarSentence(idx);
+        showToast('已將整句與文法筆記加入複習庫！⭐');
+      };
+
+      DOM.modalGrammarDict.classList.add('open');
+    }
+
+    function extractGrammarPoints(s) {
+      const pts = [];
+      const text = s.jp;
+
+      if (s.grammar) {
+        pts.push({ title: '句型與文法重點', desc: s.grammar });
+      }
+
+      if (text.includes('お召し上がり') || (text.includes('お') && text.includes('になり'))) {
+        pts.push({ title: '尊敬語 (お+動詞連用形+になる / なさる)', desc: '抬高對方的動作，日本服務業與商務招待顧客時之必備敬語句型。' });
+      }
+      if (text.includes('申します') || text.includes('お送りした') || text.includes('いただきます')) {
+        pts.push({ title: '謙讓語 (申す / いただく / お〜する)', desc: '壓低自身動作以向對方表示最高敬意與謙遜之商務日語。' });
+      }
+      if (text.includes('てから') || text.includes('でから')) {
+        pts.push({ title: '動作時間順序 (動詞て形 + から)', desc: '表示「在完成前項動作之後，才能進行後項動作」，具備明確嚴格的先後順序。' });
+      }
+      if (text.includes('に伴い') || text.includes('にともない')) {
+        pts.push({ title: '伴隨變化 (名詞 / 動詞辭書形 + に伴い)', desc: 'JLPT N2 必備文法：隨著某種趨勢或狀態的進展，相應發生了後項的全局變化。' });
+      }
+      if (text.includes('すべく') || text.includes('べく')) {
+        pts.push({ title: '目的意志 (動詞辭書形 + べく)', desc: 'JLPT N1 文法：相當於「〜するために」，屬於書面與演說中表示強烈目的之硬語。' });
+      }
+      if (text.includes('にあろうとも') || text.includes('うとも') || text.includes('ようとも')) {
+        pts.push({ title: '極限假定讓步 (〜にあろうとも)', desc: 'JLPT N1 文法：相當於「たとえ〜であっても」，無論處在多麼嚴峻的條件下，後項意志絕不動搖。' });
+      }
+      if (text.includes('にとどまらず')) {
+        pts.push({ title: '範圍不限 (〜にとどまらず)', desc: 'JLPT N1 文法：不僅止於眼前的事物，其影響更延伸到更廣泛的領域。' });
+      }
+      if (text.includes('からこそ')) {
+        pts.push({ title: '唯一正當理由強調 (〜からこそ)', desc: '表示「正因為有此外界無法忽視的因素」，強調該理由具備不可取代性。' });
+      }
+      if (text.includes('なければならない') || text.includes('なければなら')) {
+        pts.push({ title: '義務必備句型 (動詞ない形 + ければならない)', desc: '表示「必須、不得不做某事」，在工程規範與生活自律中極為常用。' });
+      }
+      if (text.includes('合っています') || text.includes('進んでいます') || text.includes('ています')) {
+        pts.push({ title: '狀態維持與進行 (動詞て形 + います)', desc: '表示動作正在進行中，或者某動作完成後呈現的持續客觀狀態。' });
+      }
+      if (text.includes('てください') || text.includes('でお待ちください')) {
+        pts.push({ title: '請託指示句型 (〜てください / お〜ください)', desc: '禮貌請求對方配合指示或行動之標準禮貌體。' });
+      }
+      if (text.includes('こと！') || text.endsWith('こと')) {
+        pts.push({ title: '工程規章與告示命令 (動詞辭書形 + こと)', desc: '日本安全手冊、工安告示與規約中的命令規範標記。' });
+      }
+
+      if (pts.length === 0) {
+        pts.push({ title: '長句接續與助詞關係分析', desc: '包含格助詞（が/を/に/で/と/から/まで）之修飾關係，展現日語主語、賓語與謂語之自然層次。' });
+      }
+
+      return pts;
+    }
+
+    function buildFallbackTokens(jpText) {
+      const segs = jpText.split(/([、。！？\s]+)/).filter(s => s && s.trim());
+      return segs.map(s => [s, '', '', '詞彙', 'N3']);
     }
 
     function toggleStarSentence(idx) {
@@ -2754,6 +3167,118 @@
           DOM.vocabListContainer.appendChild(item);
         });
       }
+    }
+
+    function addVocabToReview(vocabObj) {
+      const exists = state.starredVocab.some(item => item.word === vocabObj.word);
+      if (!exists) {
+        state.starredVocab.push(vocabObj);
+        localStorage.setItem('trancy_starred_vocab', JSON.stringify(state.starredVocab));
+        updateStarredBadge();
+        renderVocabList();
+        showToast(`已將「${vocabObj.word}」加入生詞複習庫 🎓`);
+      } else {
+        showToast(`「${vocabObj.word}」已在生詞複習庫中！`);
+      }
+    }
+
+    function getReviewItems() {
+      const items = [];
+      state.starredVocab.forEach(v => {
+        items.push({
+          type: 'vocab',
+          front: v.word,
+          frontTag: `${v.jlpt || 'N3'} · ${v.pos || '詞彙'}`,
+          backReading: v.reading ? `[${v.reading}]` : '',
+          backMeaning: v.meaning || '暫無釋義',
+          backNote: '生詞複習'
+        });
+      });
+      state.starredSentences.forEach(s => {
+        items.push({
+          type: 'sentence',
+          front: s.jp,
+          frontTag: '⭐ 句子複習',
+          backReading: s.furigana ? s.furigana.replace(/<[^>]+>/g, '') : '',
+          backMeaning: s.zh,
+          backNote: s.grammar ? `文法：${s.grammar}` : '核心句子結構'
+        });
+      });
+      return items;
+    }
+
+    let isFlashcardFlipped = false;
+
+    function startFlashcardQuiz() {
+      state.flashcardIndex = 0;
+      if (DOM.reviewFlashcardMode) DOM.reviewFlashcardMode.style.display = 'block';
+      if (DOM.vocabListContainer) DOM.vocabListContainer.style.display = 'none';
+      if (DOM.btnReviewViewCard) DOM.btnReviewViewCard.classList.add('active');
+      if (DOM.btnReviewViewList) DOM.btnReviewViewList.classList.remove('active');
+      renderFlashcard();
+    }
+
+    function showVocabListView() {
+      if (DOM.reviewFlashcardMode) DOM.reviewFlashcardMode.style.display = 'none';
+      if (DOM.vocabListContainer) DOM.vocabListContainer.style.display = 'block';
+      if (DOM.btnReviewViewList) DOM.btnReviewViewList.classList.add('active');
+      if (DOM.btnReviewViewCard) DOM.btnReviewViewCard.classList.remove('active');
+      renderVocabList();
+    }
+
+    function renderFlashcard() {
+      const items = getReviewItems();
+      isFlashcardFlipped = false;
+      if (DOM.flashcardInner) DOM.flashcardInner.style.transform = 'rotateY(0deg)';
+
+      if (items.length === 0) {
+        if (DOM.flashcardProgress) DOM.flashcardProgress.textContent = '卡片 0 / 0';
+        if (DOM.fcFrontTag) DOM.fcFrontTag.textContent = '無內容';
+        if (DOM.fcFrontText) DOM.fcFrontText.textContent = '尚未加入任何單字或句子';
+        if (DOM.fcBackReading) DOM.fcBackReading.textContent = '';
+        if (DOM.fcBackMeaning) DOM.fcBackMeaning.textContent = '請先在學習過程中點擊 ⭐ 或 📖 辭典按鈕加入複習庫';
+        if (DOM.fcBackGrammar) DOM.fcBackGrammar.textContent = '';
+        return;
+      }
+
+      if (state.flashcardIndex < 0) state.flashcardIndex = items.length - 1;
+      if (state.flashcardIndex >= items.length) state.flashcardIndex = 0;
+
+      const current = items[state.flashcardIndex];
+      if (DOM.flashcardProgress) DOM.flashcardProgress.textContent = `卡片 ${state.flashcardIndex + 1} / ${items.length}`;
+      if (DOM.fcFrontTag) DOM.fcFrontTag.textContent = current.frontTag;
+      if (DOM.fcFrontText) DOM.fcFrontText.textContent = current.front;
+      if (DOM.fcBackReading) DOM.fcBackReading.textContent = current.backReading;
+      if (DOM.fcBackMeaning) DOM.fcBackMeaning.textContent = current.backMeaning;
+      if (DOM.fcBackGrammar) DOM.fcBackGrammar.textContent = current.backNote;
+    }
+
+    function flipFlashcard() {
+      isFlashcardFlipped = !isFlashcardFlipped;
+      if (DOM.flashcardInner) {
+        DOM.flashcardInner.style.transform = isFlashcardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+      }
+    }
+
+    function prevFlashcard() {
+      const items = getReviewItems();
+      if (items.length === 0) return;
+      state.flashcardIndex = (state.flashcardIndex - 1 + items.length) % items.length;
+      renderFlashcard();
+    }
+
+    function nextFlashcard() {
+      const items = getReviewItems();
+      if (items.length === 0) return;
+      state.flashcardIndex = (state.flashcardIndex + 1) % items.length;
+      renderFlashcard();
+    }
+
+    function speakCurrentFlashcard() {
+      const items = getReviewItems();
+      if (items.length === 0) return;
+      const current = items[state.flashcardIndex];
+      speakText(current.front);
     }
 
     function exportToAnkiTSV() {
@@ -3007,6 +3532,15 @@
         sentences: parsedSentences
       };
 
+      try {
+        const saved = JSON.parse(localStorage.getItem('trancy_custom_corpora') || '{}');
+        saved[customKey] = PRESET_CORPORA[customKey];
+        localStorage.setItem('trancy_custom_corpora', JSON.stringify(saved));
+      } catch (e) {
+        console.error('儲存自訂教材失敗', e);
+      }
+
+      renderCorpusDropdown();
       loadCorpus(customKey);
       closeAllModals();
       showToast(`成功載入 ${parsedSentences.length} 個中日雙語句子！`);
@@ -3097,13 +3631,22 @@
         setFuriganaMode(e.target.value);
       });
 
-      DOM.btnCorpusMenu.addEventListener('click', () => {
-        const keys = Object.keys(PRESET_CORPORA);
-        const currentIdx = keys.indexOf(state.currentCorpusKey);
-        const nextIdx = (currentIdx + 1) % keys.length;
-        loadCorpus(keys[nextIdx]);
-        showToast(`已載入：${PRESET_CORPORA[keys[nextIdx]].name}`);
-      });
+      if (DOM.selectCorpusDropdown) {
+        DOM.selectCorpusDropdown.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (val === '__new_import__') {
+            DOM.modalCustomInput.classList.add('open');
+            DOM.selectCorpusDropdown.value = state.currentCorpusKey;
+          } else if (val) {
+            loadCorpus(val);
+            showToast(`已切換教材：${PRESET_CORPORA[val]?.name || val}`);
+          }
+        });
+      }
+
+      if (DOM.btnDeleteCorpus) {
+        DOM.btnDeleteCorpus.addEventListener('click', deleteActiveCorpus);
+      }
 
       document.querySelectorAll('.view-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -3141,6 +3684,22 @@
           e.stopPropagation();
           const card = maskToggleBtn.closest('.sentence-card');
           card.classList.toggle('revealed-temp');
+          return;
+        }
+
+        const dictBtn = e.target.closest('.btn-tool-dict');
+        if (dictBtn) {
+          e.stopPropagation();
+          const idx = parseInt(dictBtn.dataset.idx, 10);
+          showSentenceGrammarAndDict(idx);
+          return;
+        }
+
+        const addReviewBtn = e.target.closest('.btn-tool-add-review');
+        if (addReviewBtn) {
+          e.stopPropagation();
+          const idx = parseInt(addReviewBtn.dataset.idx, 10);
+          toggleStarSentence(idx);
           return;
         }
 
@@ -3322,6 +3881,28 @@
         }
       });
 
+      if (DOM.btnReviewViewList) {
+        DOM.btnReviewViewList.addEventListener('click', showVocabListView);
+      }
+      if (DOM.btnReviewViewCard) {
+        DOM.btnReviewViewCard.addEventListener('click', startFlashcardQuiz);
+      }
+      if (DOM.flashcardCardBox) {
+        DOM.flashcardCardBox.addEventListener('click', flipFlashcard);
+      }
+      if (DOM.btnFcFlip) {
+        DOM.btnFcFlip.addEventListener('click', flipFlashcard);
+      }
+      if (DOM.btnFcPrev) {
+        DOM.btnFcPrev.addEventListener('click', prevFlashcard);
+      }
+      if (DOM.btnFcNext) {
+        DOM.btnFcNext.addEventListener('click', nextFlashcard);
+      }
+      if (DOM.btnFcSpeak) {
+        DOM.btnFcSpeak.addEventListener('click', speakCurrentFlashcard);
+      }
+
       DOM.dictationPlay.addEventListener('click', () => speakText(state.sentences[state.dictationIdx].jp));
       DOM.dictationCheck.addEventListener('click', checkDictationAnswer);
       DOM.dictationHint.addEventListener('click', provideDictationHint);
@@ -3348,6 +3929,7 @@
       DOM.modalCustomInput.classList.remove('open');
       DOM.modalImmersiveGuide.classList.remove('open');
       DOM.modalShortcuts.classList.remove('open');
+      if (DOM.modalGrammarDict) DOM.modalGrammarDict.classList.remove('open');
     }
 
     function handleKeyboardShortcuts(e) {
@@ -3397,6 +3979,10 @@
     }
 
     window.trancyApp = {
+      speakText: (text) => speakText(text),
+      addVocabToReview: (word, reading, meaning, jlpt, pos) => {
+        addVocabToReview({ word, reading, meaning, jlpt, pos });
+      },
       removeStarSentence: (idx) => {
         state.starredSentences.splice(idx, 1);
         localStorage.setItem('trancy_starred_sentences', JSON.stringify(state.starredSentences));
