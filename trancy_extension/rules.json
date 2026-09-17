@@ -18,7 +18,7 @@
       ]
     },
     "condition": {
-      "urlFilter": "wss://speech.platform.bing.com/*",
+      "urlFilter": "||speech.platform.bing.com/",
       "resourceTypes": ["websocket"]
     }
   },
@@ -35,7 +35,7 @@
       ]
     },
     "condition": {
-      "urlFilter": "https://translate.google.com/translate_tts*",
+      "urlFilter": "||translate.google.com/translate_tts*",
       "resourceTypes": ["xmlhttprequest", "media", "sub_frame"]
     }
   }
