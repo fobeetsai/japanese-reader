@@ -347,3 +347,224 @@ body.trancy-ext-mask-zh-active .trancy-orig-jp {
   color: #ffffff !important;
   transform: scale(1.12) !important;
 }
+
+/* ==========================================================================
+   PARAGRAPH SELECTION & HOVER QUICK TRANSLATE
+   ========================================================================== */
+
+/* 1. Global Floating Paragraph Hover Button */
+#trancy-hover-marker {
+  position: absolute;
+  z-index: 2147483646;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  color: #c7d2fe;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(8px);
+}
+
+#trancy-hover-marker:hover {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+  transform: scale(1.06);
+}
+
+/* 2. Pick-to-Translate Mode Highlighting */
+body.trancy-pick-mode-active {
+  cursor: crosshair !important;
+}
+
+.trancy-pick-target-hover {
+  outline: 2px dashed #818cf8 !important;
+  outline-offset: 3px !important;
+  background: rgba(99, 102, 241, 0.06) !important;
+  border-radius: 4px !important;
+  cursor: crosshair !important;
+}
+
+/* 3. Text Selection Quick Trigger Bubble */
+#trancy-selection-trigger {
+  position: absolute;
+  z-index: 2147483647;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: trancyPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#trancy-selection-trigger:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.6);
+}
+
+/* 4. Text Selection Translation Card */
+#trancy-selection-card {
+  position: absolute;
+  z-index: 2147483647;
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(99, 102, 241, 0.25);
+  max-width: 380px;
+  min-width: 260px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  animation: trancyPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes trancyPopIn {
+  0% { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.trancy-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.trancy-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trancy-card-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  line-height: 1;
+}
+
+.trancy-card-close:hover {
+  color: #ffffff;
+}
+
+.trancy-card-orig {
+  font-size: 13px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px 8px;
+  border-radius: 6px;
+  max-height: 70px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.trancy-card-trans {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 4px 2px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.trancy-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.trancy-card-btn {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.trancy-card-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #6366f1;
+  color: #ffffff;
+}
+
+.trancy-card-btn.primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: #ffffff;
+}
+
+/* Copy button inside injected line */
+.trancy-zh-copy-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #6366f1 !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  margin-left: 6px !important;
+  opacity: 0.6 !important;
+  transition: opacity 0.15s !important;
+}
+
+.trancy-zh-copy-btn:hover {
+  opacity: 1 !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Loading status animation */
+.trancy-translating-pulse {
+  animation: trancyPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes trancyPulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.4; }
+}
+

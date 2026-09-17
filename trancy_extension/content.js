@@ -15,11 +15,21 @@
     voice: localStorage.getItem('trancy_speech_voice') || 'nanami',
     speed: parseFloat(localStorage.getItem('trancy_speech_rate') || '1.0'),
     isTranslating: false,
-    translatedCount: 0
+    translatedCount: 0,
+    isPickMode: false,
+    currentSelection: null
   };
 
   const processedElements = new WeakSet();
   let currentAudio = null;
+
+  // UI Component Singletons
+  let hoverMarkerEl = null;
+  let selectionTriggerEl = null;
+  let selectionCardEl = null;
+  let lastHoveredBlock = null;
+  let hoverTimer = null;
+  let currentPickHoverEl = null;
 
   // --------------------------------------------------------------------------
   // TTS Engine (Microsoft Edge Neural Voices + Google Cloud HD + Stepless Speed)
@@ -119,6 +129,7 @@
       <button class="trancy-btn-pill" data-action="mask-jp" title="遮蔽日文原文（懸停或點擊解開）">遮日</button>
       <button class="trancy-btn-pill" data-action="mask-zh" title="遮蔽中文譯文（懸停或點擊解開）">遮中</button>
       <button class="trancy-btn-pill" data-action="mask-both" title="日中雙向遮蔽">雙遮</button>
+      <button class="trancy-btn-pill" id="trancy-btn-pick" title="切換點選模式：點選網頁任意段落直接翻譯">🎯 點選段落</button>
       <button class="trancy-btn-pill primary" id="trancy-btn-translate">✨ 翻譯本頁</button>
       
       <!-- Settings Button -->
@@ -201,6 +212,22 @@
       });
     });
 
+    // Pick-to-Translate Button
+    const pickBtn = document.getElementById('trancy-btn-pick');
+    pickBtn.addEventListener('click', () => {
+      state.isPickMode = !state.isPickMode;
+      if (state.isPickMode) {
+        pickBtn.classList.add('active');
+        document.body.classList.add('trancy-pick-mode-active');
+        pickBtn.textContent = '🎯 點選中(點段落)';
+      } else {
+        pickBtn.classList.remove('active');
+        document.body.classList.remove('trancy-pick-mode-active');
+        pickBtn.textContent = '🎯 點選段落';
+        clearPickHover();
+      }
+    });
+
     document.getElementById('trancy-btn-translate').addEventListener('click', translatePage);
 
     // Settings Toggle
@@ -278,7 +305,9 @@
     // Close button
     document.getElementById('trancy-btn-close').addEventListener('click', () => {
       bar.remove();
-      document.body.classList.remove('trancy-ext-mask-jp-active', 'trancy-ext-mask-zh-active');
+      document.body.classList.remove('trancy-ext-mask-jp-active', 'trancy-ext-mask-zh-active', 'trancy-pick-mode-active');
+      state.isPickMode = false;
+      clearPickHover();
     });
   }
 
@@ -384,17 +413,436 @@
     }
   }
 
-  // --------------------------------------------------------------------------
-  // Pure Leaf Block Selection & Immersive Translation
-  // --------------------------------------------------------------------------
-  // Checks if element is a pure leaf text block without nested block children
-  function isPureLeafTextBlock(el) {
-    if (!el || el.nodeType !== 1) return false;
-    // Disallow containers that contain other paragraphs or structural containers
-    const nestedBlocks = el.querySelector('p, h1, h2, h3, h4, h5, h6, blockquote, dt, dd, li, table, pre, article, section, header, footer, nav');
-    return !nestedBlocks;
+  function updateTranslateBtnCount() {
+    const btn = document.getElementById('trancy-btn-translate');
+    if (btn && !state.isTranslating) {
+      btn.textContent = `✨ 已譯 (${state.translatedCount}段)`;
+    }
   }
 
+  // --------------------------------------------------------------------------
+  // Robust Multi-Fallback Translation Engine
+  // --------------------------------------------------------------------------
+  async function fetchTranslation(text) {
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (!trimmed) return '';
+
+    // Route 1: Google GTX Client (ja -> zh-TW)
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURIComponent(trimmed)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data[0]) {
+          const translated = data[0].map(item => item[0]).filter(Boolean).join('');
+          if (translated) return translated;
+        }
+      }
+    } catch (e) {
+      console.warn('Google GTX sl=ja error:', e);
+    }
+
+    // Route 2: Google GTX Client Fallback (auto -> zh-TW)
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURIComponent(trimmed)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data[0]) {
+          const translated = data[0].map(item => item[0]).filter(Boolean).join('');
+          if (translated) return translated;
+        }
+      }
+    } catch (e) {
+      console.warn('Google GTX sl=auto error:', e);
+    }
+
+    // Route 3: MyMemory Free Translation Mirror (Backup)
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=ja|zh-TW`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.responseData && data.responseData.translatedText) {
+          return data.responseData.translatedText;
+        }
+      }
+    } catch (e) {
+      console.warn('MyMemory fallback error:', e);
+    }
+
+    return '';
+  }
+
+  // --------------------------------------------------------------------------
+  // Intelligent Leaf Text Block Detection
+  // --------------------------------------------------------------------------
+  function isLeafLikeTextBlock(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'SELECT', 'BUTTON', 'SVG'].includes(el.tagName)) return false;
+    if (el.closest('#trancy-ext-toolbar, #trancy-selection-card, #trancy-hover-marker, .trancy-injected-zh')) return false;
+
+    // Disallow parent containers that have nested paragraphs or headings
+    const hasNestedMajorBlocks = el.querySelector('p, h1, h2, h3, h4, h5, h6, blockquote, dt, dd, li, article, section');
+    if (hasNestedMajorBlocks) return false;
+
+    const text = (el.innerText || el.textContent || '').trim();
+    return text.length >= 3 && JP_REGEX.test(text);
+  }
+
+  function findTargetParagraph(el) {
+    let curr = el;
+    while (curr && curr !== document.body) {
+      if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'DT', 'DD', 'LI'].includes(curr.tagName)) {
+        const text = (curr.innerText || curr.textContent || '').trim();
+        if (text.length >= 2 && JP_REGEX.test(text)) return curr;
+      }
+      if (curr.tagName === 'DIV' && isLeafLikeTextBlock(curr)) {
+        return curr;
+      }
+      curr = curr.parentElement;
+    }
+    return null;
+  }
+
+  // --------------------------------------------------------------------------
+  // Single Paragraph Translation Engine
+  // --------------------------------------------------------------------------
+  async function translateSingleElement(el, customText = null) {
+    if (!el || el.nodeType !== 1) return null;
+    if (el.closest('#trancy-ext-toolbar, #trancy-selection-card, #trancy-hover-marker')) return null;
+
+    // Check if already translated
+    if (processedElements.has(el)) {
+      const next = el.nextElementSibling;
+      if (next && next.classList.contains('trancy-injected-zh')) {
+        next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return next;
+      }
+    }
+
+    const text = customText || (el.innerText || el.textContent || '').trim();
+    if (!text || text.length < 2 || !JP_REGEX.test(text)) return null;
+
+    processedElements.add(el);
+    el.classList.add('trancy-orig-jp');
+    el.title = '日文原文（懸停或點擊解開遮蔽）';
+
+    // Click on Japanese to reveal if masked
+    el.addEventListener('click', () => {
+      if (state.maskMode === 'mask-jp' || state.maskMode === 'mask-both') {
+        el.classList.toggle('trancy-revealed');
+      }
+    });
+
+    // Temporary loading placeholder
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'trancy-injected-zh trancy-translating-pulse';
+    loadingDiv.innerHTML = '<span style="font-size:12px;opacity:0.75;">⏳ 正在翻譯此段...</span>';
+    el.parentNode.insertBefore(loadingDiv, el.nextSibling);
+
+    try {
+      const zh = await fetchTranslation(text);
+      if (!zh) {
+        loadingDiv.remove();
+        processedElements.delete(el);
+        return null;
+      }
+
+      const zhDiv = document.createElement('div');
+      zhDiv.className = 'trancy-injected-zh';
+
+      // TTS Button
+      const ttsBtn = document.createElement('button');
+      ttsBtn.className = 'trancy-speak-btn';
+      ttsBtn.title = '真人自然語音朗讀此段';
+      ttsBtn.innerHTML = '🔊';
+      ttsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakJapanese(text);
+      });
+      zhDiv.appendChild(ttsBtn);
+
+      // Translation Text
+      const textSpan = document.createElement('span');
+      textSpan.textContent = zh;
+      zhDiv.appendChild(textSpan);
+
+      // Copy Button
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'trancy-zh-copy-btn';
+      copyBtn.title = '複製譯文';
+      copyBtn.innerHTML = '📋';
+      copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(zh).then(() => {
+          copyBtn.innerHTML = '✅';
+          setTimeout(() => { copyBtn.innerHTML = '📋'; }, 1500);
+        });
+      });
+      zhDiv.appendChild(copyBtn);
+
+      // Click on Chinese to reveal if masked
+      zhDiv.addEventListener('click', () => {
+        if (state.maskMode === 'mask-zh' || state.maskMode === 'mask-both') {
+          zhDiv.classList.toggle('trancy-revealed');
+        }
+      });
+
+      loadingDiv.replaceWith(zhDiv);
+      state.translatedCount++;
+      updateTranslateBtnCount();
+      return zhDiv;
+    } catch (err) {
+      console.warn('translateSingleElement failed:', err);
+      loadingDiv.remove();
+      processedElements.delete(el);
+      return null;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Hover Quick-Translate Marker ([🌐 譯此段])
+  // --------------------------------------------------------------------------
+  function setupHoverMarker() {
+    hoverMarkerEl = document.createElement('div');
+    hoverMarkerEl.id = 'trancy-hover-marker';
+    hoverMarkerEl.innerHTML = '<span>🌐</span> 譯此段';
+    document.body.appendChild(hoverMarkerEl);
+
+    hoverMarkerEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (lastHoveredBlock) {
+        translateSingleElement(lastHoveredBlock);
+        hoverMarkerEl.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (state.isPickMode) return;
+      if (hoverMarkerEl.contains(e.target)) return;
+
+      const target = findTargetParagraph(e.target);
+      if (target && !processedElements.has(target)) {
+        lastHoveredBlock = target;
+        clearTimeout(hoverTimer);
+        const rect = target.getBoundingClientRect();
+        if (rect.width > 30 && rect.height > 12) {
+          const top = rect.top + window.scrollY + 2;
+          const left = Math.min(window.innerWidth - 85, rect.right + window.scrollX - 75);
+          hoverMarkerEl.style.top = `${top}px`;
+          hoverMarkerEl.style.left = `${left}px`;
+          hoverMarkerEl.style.display = 'inline-flex';
+        }
+      } else {
+        hoverTimer = setTimeout(() => {
+          if (!hoverMarkerEl.matches(':hover')) {
+            hoverMarkerEl.style.display = 'none';
+          }
+        }, 350);
+      }
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // Point-and-Click Translation Mode (🎯 點選翻譯)
+  // --------------------------------------------------------------------------
+  function clearPickHover() {
+    if (currentPickHoverEl) {
+      currentPickHoverEl.classList.remove('trancy-pick-target-hover');
+      currentPickHoverEl = null;
+    }
+  }
+
+  function setupPickModeListener() {
+    document.addEventListener('mousemove', (e) => {
+      if (!state.isPickMode) return;
+      if (e.target.closest('#trancy-ext-toolbar')) {
+        clearPickHover();
+        return;
+      }
+      const target = findTargetParagraph(e.target);
+      if (target && target !== currentPickHoverEl) {
+        clearPickHover();
+        currentPickHoverEl = target;
+        currentPickHoverEl.classList.add('trancy-pick-target-hover');
+      } else if (!target) {
+        clearPickHover();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!state.isPickMode) return;
+      if (e.target.closest('#trancy-ext-toolbar')) return;
+
+      const target = findTargetParagraph(e.target);
+      if (target) {
+        e.preventDefault();
+        e.stopPropagation();
+        translateSingleElement(target);
+      }
+    }, true);
+  }
+
+  // --------------------------------------------------------------------------
+  // Mouse Text Selection Quick Translation Bubble & Card
+  // --------------------------------------------------------------------------
+  function setupSelectionFeature() {
+    // 1. Floating Bubble Trigger
+    selectionTriggerEl = document.createElement('div');
+    selectionTriggerEl.id = 'trancy-selection-trigger';
+    selectionTriggerEl.innerHTML = '<span>🌐</span> 翻譯選段';
+    document.body.appendChild(selectionTriggerEl);
+
+    // 2. Floating Translation Card
+    selectionCardEl = document.createElement('div');
+    selectionCardEl.id = 'trancy-selection-card';
+    selectionCardEl.innerHTML = `
+      <div class="trancy-card-header">
+        <span class="trancy-card-title">🌐 Trancy 選段翻譯</span>
+        <button class="trancy-card-close" id="trancy-card-close-btn" title="關閉">✕</button>
+      </div>
+      <div class="trancy-card-orig" id="trancy-card-orig-box"></div>
+      <div class="trancy-card-trans" id="trancy-card-trans-box"></div>
+      <div class="trancy-card-actions">
+        <button class="trancy-card-btn" id="trancy-card-speak-btn">🔊 朗讀</button>
+        <button class="trancy-card-btn" id="trancy-card-copy-btn">📋 複製</button>
+        <button class="trancy-card-btn primary" id="trancy-card-insert-btn" title="將翻譯插入該段落下方，支援中日雙向遮蔽">📌 插入段落</button>
+      </div>
+    `;
+    document.body.appendChild(selectionCardEl);
+
+    const closeBtn = document.getElementById('trancy-card-close-btn');
+    closeBtn.addEventListener('click', () => {
+      selectionCardEl.style.display = 'none';
+    });
+
+    // Trigger Click Handler
+    selectionTriggerEl.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      selectionTriggerEl.style.display = 'none';
+      if (!state.currentSelection || !state.currentSelection.text) return;
+
+      const { text, rect, anchorNode } = state.currentSelection;
+      const origBox = document.getElementById('trancy-card-orig-box');
+      const transBox = document.getElementById('trancy-card-trans-box');
+      const speakBtn = document.getElementById('trancy-card-speak-btn');
+      const copyBtn = document.getElementById('trancy-card-copy-btn');
+      const insertBtn = document.getElementById('trancy-card-insert-btn');
+
+      origBox.textContent = text;
+      transBox.innerHTML = '<span class="trancy-translating-pulse" style="opacity:0.8;">⏳ 正在翻譯選取內容...</span>';
+
+      // Position Card
+      const cardTop = rect.bottom + window.scrollY + 8;
+      const cardLeft = Math.min(window.innerWidth - 390, Math.max(12, rect.left + window.scrollX));
+      selectionCardEl.style.top = `${cardTop}px`;
+      selectionCardEl.style.left = `${cardLeft}px`;
+      selectionCardEl.style.display = 'flex';
+
+      // Fetch Translation
+      const zh = await fetchTranslation(text);
+      transBox.textContent = zh || '(無法取得翻譯，請重試)';
+
+      // Action Handlers
+      speakBtn.onclick = () => speakJapanese(text);
+      copyBtn.onclick = () => {
+        if (zh) {
+          navigator.clipboard.writeText(zh).then(() => {
+            copyBtn.textContent = '✅ 已複製';
+            setTimeout(() => { copyBtn.textContent = '📋 複製'; }, 1500);
+          });
+        }
+      };
+
+      insertBtn.onclick = () => {
+        let parentBlock = anchorNode && (anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement);
+        parentBlock = findTargetParagraph(parentBlock) || parentBlock;
+
+        if (parentBlock && zh) {
+          const zhDiv = document.createElement('div');
+          zhDiv.className = 'trancy-injected-zh';
+
+          const ttsBtn = document.createElement('button');
+          ttsBtn.className = 'trancy-speak-btn';
+          ttsBtn.title = '真人自然語音朗讀';
+          ttsBtn.innerHTML = '🔊';
+          ttsBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            speakJapanese(text);
+          };
+          zhDiv.appendChild(ttsBtn);
+
+          const tSpan = document.createElement('span');
+          tSpan.textContent = zh;
+          zhDiv.appendChild(tSpan);
+
+          zhDiv.onclick = () => {
+            if (state.maskMode === 'mask-zh' || state.maskMode === 'mask-both') {
+              zhDiv.classList.toggle('trancy-revealed');
+            }
+          };
+
+          parentBlock.parentNode.insertBefore(zhDiv, parentBlock.nextSibling);
+          state.translatedCount++;
+          updateTranslateBtnCount();
+
+          insertBtn.textContent = '✅ 已插入';
+          setTimeout(() => {
+            selectionCardEl.style.display = 'none';
+            insertBtn.textContent = '📌 插入段落';
+          }, 800);
+        }
+      };
+    });
+
+    // Selection on MouseUp
+    document.addEventListener('mouseup', (e) => {
+      if (e.target.closest('#trancy-selection-trigger, #trancy-selection-card, #trancy-ext-toolbar')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) {
+          selectionTriggerEl.style.display = 'none';
+          return;
+        }
+
+        const selectedText = sel.toString().trim();
+        if (selectedText.length >= 2 && JP_REGEX.test(selectedText)) {
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+
+          if (rect.width > 0 && rect.height > 0) {
+            state.currentSelection = {
+              text: selectedText,
+              rect: rect,
+              anchorNode: sel.anchorNode
+            };
+
+            const triggerTop = rect.bottom + window.scrollY + 6;
+            const triggerLeft = Math.min(window.innerWidth - 120, Math.max(10, rect.left + window.scrollX));
+            selectionTriggerEl.style.top = `${triggerTop}px`;
+            selectionTriggerEl.style.left = `${triggerLeft}px`;
+            selectionTriggerEl.style.display = 'inline-flex';
+          }
+        } else {
+          selectionTriggerEl.style.display = 'none';
+        }
+      }, 30);
+    });
+
+    // Dismiss selection card on clicking outside
+    document.addEventListener('mousedown', (e) => {
+      if (!selectionCardEl.contains(e.target) && !selectionTriggerEl.contains(e.target)) {
+        selectionCardEl.style.display = 'none';
+      }
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // Full Page Translation (Broadened & Batching)
+  // --------------------------------------------------------------------------
   async function translatePage() {
     if (state.isTranslating) return;
     state.isTranslating = true;
@@ -402,76 +850,30 @@
     const btn = document.getElementById('trancy-btn-translate');
     if (btn) btn.textContent = '⏳ 翻譯中...';
 
-    // Only query specific leaf text blocks, NEVER large containers like article or div
-    const candidates = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, dt, dd, li');
+    // Broaden candidate selectors so articles inside div/sections are captured!
+    const candidates = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, dt, dd, li, div');
     const targetNodes = [];
 
     candidates.forEach(el => {
       if (processedElements.has(el)) return;
-      if (el.closest('#trancy-ext-toolbar')) return;
-      if (!isPureLeafTextBlock(el)) return;
+      if (el.closest('#trancy-ext-toolbar, #trancy-selection-card, #trancy-hover-marker, .trancy-injected-zh')) return;
+      if (!isLeafLikeTextBlock(el)) return;
 
       const text = (el.innerText || el.textContent || '').trim();
-      // Must have at least 4 characters, contain Japanese, and not already have injected translation
-      if (text.length >= 4 && JP_REGEX.test(text)) {
+      if (text.length >= 3 && JP_REGEX.test(text)) {
         targetNodes.push({ el, text });
       }
     });
 
-    // Translate up to 50 leaf blocks per batch
-    const batch = targetNodes.slice(0, 50);
-
-    for (let item of batch) {
-      const { el, text } = item;
-      processedElements.add(el);
-
-      // Mark the Japanese leaf element specifically
-      el.classList.add('trancy-orig-jp');
-      el.title = '日文原文（懸停或點擊解開遮蔽）';
-
-      // Click on Japanese to reveal if masked
-      el.addEventListener('click', (e) => {
-        if (state.maskMode === 'mask-jp' || state.maskMode === 'mask-both') {
-          el.classList.toggle('trancy-revealed');
-        }
-      });
-
-      try {
-        const zh = await fetchTranslation(text);
-        if (zh) {
-          const zhDiv = document.createElement('div');
-          zhDiv.className = 'trancy-injected-zh';
-
-          // TTS Button
-          const ttsBtn = document.createElement('button');
-          ttsBtn.className = 'trancy-speak-btn';
-          ttsBtn.title = '真人自然語音朗讀';
-          ttsBtn.innerHTML = '🔊';
-          ttsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            speakJapanese(text);
-          });
-          zhDiv.appendChild(ttsBtn);
-
-          // Translation Text Node
-          const textSpan = document.createElement('span');
-          textSpan.textContent = zh;
-          zhDiv.appendChild(textSpan);
-
-          // Click on Chinese to reveal if masked
-          zhDiv.addEventListener('click', () => {
-            if (state.maskMode === 'mask-zh' || state.maskMode === 'mask-both') {
-              zhDiv.classList.toggle('trancy-revealed');
-            }
-          });
-
-          // Insert translation directly as the NEXT sibling of the Japanese element
-          el.parentNode.insertBefore(zhDiv, el.nextSibling);
-          state.translatedCount++;
-        }
-      } catch (err) {
-        console.warn('Trancy translation error:', err);
+    // Translate in parallel batches of 5 to avoid slow serial delays or timeouts
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < targetNodes.length; i += BATCH_SIZE) {
+      const chunk = targetNodes.slice(i, i + BATCH_SIZE);
+      await Promise.all(chunk.map(item => translateSingleElement(item.el, item.text)));
+      if (btn) {
+        btn.textContent = `⏳ 翻譯中 (${Math.min(i + BATCH_SIZE, targetNodes.length)}/${targetNodes.length})`;
       }
+      await new Promise(r => setTimeout(r, 60));
     }
 
     state.isTranslating = false;
@@ -483,22 +885,9 @@
     }
   }
 
-  // Google Translate API with fallback
-  async function fetchTranslation(text) {
-    if (!text) return '';
-    try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data && data[0]) {
-        return data[0].map(item => item[0]).join('');
-      }
-    } catch (e) {
-      console.warn('Fetch translation error:', e);
-    }
-    return '';
-  }
-
+  // --------------------------------------------------------------------------
+  // Toolbar Visibility Control
+  // --------------------------------------------------------------------------
   function toggleToolbar() {
     const existing = document.getElementById('trancy-ext-toolbar');
     if (existing) {
@@ -512,10 +901,21 @@
     }
   }
 
-  // NOTE: The toolbar will NEVER automatically appear when loading a webpage.
-  // It will ONLY appear when the user explicitly clicks the extension APP icon!
+  // --------------------------------------------------------------------------
+  // Initialization & Runtime Message Dispatcher
+  // --------------------------------------------------------------------------
+  function init() {
+    setupHoverMarker();
+    setupPickModeListener();
+    setupSelectionFeature();
+  }
 
-  // Extension runtime messaging listener
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
       if (req.action === 'toggle-toolbar') {
