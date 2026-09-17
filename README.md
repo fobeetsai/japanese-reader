@@ -93,12 +93,37 @@
 
 ---
 
+9. **🌐 Trancy AI 雙語字幕與中日雙向遮蔽特訓站 (trancy.html)**
+   - 仿照 **Trancy AI Translator & Dual Subtitles** 理念打造的沉浸式中日雙語互動學習網頁版。
+   - **核心中日雙向遮蔽系統 (Bidirectional Masking)**：
+     - **全顯模式**：中日雙語同時呈現，沉浸對照。
+     - **遮蔽日文 (聽口回想)**：日文原文套用霧面遮罩，看中文翻譯練習回想日語表達或盲聽發音，游標懸停或點擊即時解鎖。
+     - **遮蔽中文 (讀解自測)**：中文譯文自動遮蔽，鍛鍊日語原文直接閱讀理解，不依賴母語中文。
+     - **雙向全遮 (盲聽特訓)**：中日雙語同時遮蔽，純聽 TTS 發音磨耳朵，聽完再點開檢核。
+     - **關鍵詞挖空 (Cloze/Filling)**：自動挖空重要詞彙與助詞，支援單詞點擊揭曉。
+     - **單句獨立遮蔽控制**：每句皆提供眼睛圖示開關，支援獨立遮蔽反轉。
+   - **雙語字幕撥放器 (Sentence Player)**：
+     - 真人日語 TTS 發音、語速調節（0.75x ~ 1.5x）、A-B 單句重複循環播放（`L` 鍵）。
+     - 連續自動播放（Auto-play Next），如觀看電影字幕般平滑跟隨滾動。
+   - **聽打填空 (Dictation)** 與 **影子跟讀 (Shadowing)**：
+     - 聽音鍵盤打字輸入，支援即時字元比對與提示。
+     - 語音麥克風辨識（Web Speech Recognition）與發音精準評分（80% ~ 100%）。
+   - **點擊懸浮詞典 (Floating Dictionary)**：
+     - 點選句中任意單字，即時展開假名讀音、羅馬音、詞性、JLPT 等級、中文繁體釋義與 MOJi 辭書一鍵查詢。
+   - **6 大精選中日教材庫 + 自訂文字 / SRT 字幕匯入**：
+     - 內建日常生活實戰、營造工程現場（大林組工安KY/打設配筋）、職場商務、動漫經典、NHK新聞、JLPT讀解。
+     - 支援貼上自訂雙語文本或 SRT / VTT 雙語字幕檔一鍵轉換。
+
+---
+
 ## 💻 離線與本機使用
 
 本系統為 **100% 純前端單一靜態 HTML** 架構，無須安裝 Python 或啟動後端：
 - **日文閱讀助手**：直接雙擊 `index.html` 或 `japanese_reader.html` 即可在瀏覽器開啟。
 - **單字抽認卡 APP**：直接雙擊 `flashcard.html` 即可在任何瀏覽器、手機或平板中使用。
+- **Trancy 雙語遮蔽特訓站**：直接雙擊 `trancy.html` 即可體驗沉浸雙向遮蔽與聽打跟讀。
 
 🌐 **線上體驗網址**：
 - 日文閱讀器：[https://fobeetsai.github.io/japanese-reader/](https://fobeetsai.github.io/japanese-reader/)
 - 單字抽認卡：[https://fobeetsai.github.io/japanese-reader/flashcard.html](https://fobeetsai.github.io/japanese-reader/flashcard.html)
+- Trancy 雙語遮蔽站：[https://fobeetsai.github.io/japanese-reader/trancy.html](https://fobeetsai.github.io/japanese-reader/trancy.html)
