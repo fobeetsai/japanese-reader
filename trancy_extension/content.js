@@ -11,6 +11,7 @@
   // State Management
   const state = {
     maskMode: 'all', // 'all', 'mask-jp', 'mask-zh', 'mask-both'
+    rubyMode: localStorage.getItem('trancy_ruby_mode') || 'show', // 'show', 'mask', 'hide'
     isPinned: localStorage.getItem('trancy_toolbar_pinned') === 'true',
     voice: localStorage.getItem('trancy_speech_voice') || 'nanami',
     speed: parseFloat(localStorage.getItem('trancy_speech_rate') || '1.0'),
@@ -20,8 +21,13 @@
     currentSelection: null
   };
 
+  // Set initial ruby mode on body
+  document.body.setAttribute('data-trancy-ruby', state.rubyMode);
+
   const processedElements = new WeakSet();
   let currentAudio = null;
+  let activeKaraokeInterval = null;
+  let currentKaraokeTokens = null;
 
   // UI Component Singletons
   let hoverMarkerEl = null;
@@ -32,20 +38,140 @@
   let currentPickHoverEl = null;
 
   // --------------------------------------------------------------------------
+  // Karaoke Highlighting Engine (隨著顏色朗讀)
+  // --------------------------------------------------------------------------
+  function clearActiveKaraoke() {
+    if (activeKaraokeInterval) {
+      clearInterval(activeKaraokeInterval);
+      activeKaraokeInterval = null;
+    }
+    if (currentKaraokeTokens) {
+      currentKaraokeTokens.forEach(token => {
+        token.classList.remove('trancy-karaoke-active', 'trancy-karaoke-passed');
+      });
+      currentKaraokeTokens = null;
+    }
+    document.querySelectorAll('.trancy-karaoke-active').forEach(el => el.classList.remove('trancy-karaoke-active'));
+    document.querySelectorAll('.trancy-karaoke-passed').forEach(el => el.classList.remove('trancy-karaoke-passed'));
+  }
+
+  function setupKaraokeTokens(targetEl, text) {
+    if (!targetEl) return null;
+    if (!window.TrancyFurigana) return null;
+
+    let words = targetEl.querySelectorAll('.trancy-karaoke-word');
+    if (!words || words.length === 0) {
+      targetEl.innerHTML = window.TrancyFurigana.toKaraokeHtml(text);
+      words = targetEl.querySelectorAll('.trancy-karaoke-word');
+    }
+
+    // Attach click-to-speak on individual words
+    words.forEach(wordSpan => {
+      wordSpan.onclick = (e) => {
+        e.stopPropagation();
+        const wordText = decodeURIComponent(wordSpan.dataset.surface || '');
+        if (wordText) {
+          speakJapanese(wordText, wordSpan);
+        }
+      };
+    });
+
+    return words;
+  }
+
+  function bindAudioKaraoke(audio, tokens, text) {
+    if (!audio || !tokens || tokens.length === 0) return;
+
+    const tokenList = Array.from(tokens);
+    currentKaraokeTokens = tokenList;
+
+    const lengths = tokenList.map(t => Math.max(1, decodeURIComponent(t.dataset.surface || '').length));
+    const totalLen = lengths.reduce((a, b) => a + b, 0);
+
+    // Compute cumulative ratios for word boundary progression
+    const cumulativeRatios = [];
+    let running = 0;
+    for (let i = 0; i < lengths.length; i++) {
+      running += lengths[i];
+      cumulativeRatios.push(running / totalLen);
+    }
+
+    let lastIdx = -1;
+
+    const updateHighlight = () => {
+      if (!audio || audio.paused || audio.ended) return;
+      const duration = (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) 
+        ? audio.duration 
+        : (totalLen * 0.28 / (state.speed || 1));
+      const currentTime = audio.currentTime || 0;
+      const currentRatio = Math.min(0.999, currentTime / duration);
+
+      let activeIdx = 0;
+      for (let i = 0; i < cumulativeRatios.length; i++) {
+        if (currentRatio <= cumulativeRatios[i]) {
+          activeIdx = i;
+          break;
+        }
+      }
+
+      if (activeIdx !== lastIdx) {
+        lastIdx = activeIdx;
+        tokenList.forEach((token, idx) => {
+          if (idx === activeIdx) {
+            token.classList.add('trancy-karaoke-active');
+            token.classList.remove('trancy-karaoke-passed');
+          } else if (idx < activeIdx) {
+            token.classList.remove('trancy-karaoke-active');
+            token.classList.add('trancy-karaoke-passed');
+          } else {
+            token.classList.remove('trancy-karaoke-active', 'trancy-karaoke-passed');
+          }
+        });
+      }
+    };
+
+    if (activeKaraokeInterval) clearInterval(activeKaraokeInterval);
+    activeKaraokeInterval = setInterval(updateHighlight, 35);
+
+    const onAudioEnd = () => {
+      if (activeKaraokeInterval) {
+        clearInterval(activeKaraokeInterval);
+        activeKaraokeInterval = null;
+      }
+      setTimeout(() => {
+        tokenList.forEach(t => t.classList.remove('trancy-karaoke-active', 'trancy-karaoke-passed'));
+        if (currentKaraokeTokens === tokenList) currentKaraokeTokens = null;
+      }, 400);
+    };
+
+    audio.addEventListener('ended', onAudioEnd, { once: true });
+    audio.addEventListener('pause', () => {
+      if (audio.currentTime >= (audio.duration - 0.15)) onAudioEnd();
+    }, { once: true });
+  }
+
+  // --------------------------------------------------------------------------
   // TTS Engine (Microsoft Edge Neural Voices + Google Cloud HD + Stepless Speed)
   // --------------------------------------------------------------------------
-  function speakJapanese(text) {
+  function speakJapanese(text, targetEl = null) {
     if (!text) return;
     const cleanText = text.trim();
     if (!cleanText) return;
 
-    // Stop ongoing audio
+    // Stop ongoing audio & reset previous highlights
     if (currentAudio) {
       currentAudio.pause();
       currentAudio = null;
     }
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
+    }
+    clearActiveKaraoke();
+
+    // Prepare Karaoke tokens if target element provided
+    let tokens = null;
+    if (targetEl) {
+      tokens = setupKaraokeTokens(targetEl, cleanText);
     }
 
     // Priority 1: Direct Edge Neural Audio synthesis from background service worker
@@ -57,28 +183,30 @@
         speed: state.speed
       }, (res) => {
         if (chrome.runtime.lastError) {
-          fallbackSpeech(cleanText);
+          fallbackSpeech(cleanText, tokens);
           return;
         }
         if (res && res.success && res.audioUrl) {
           currentAudio = new Audio(res.audioUrl);
           currentAudio.playbackRate = state.speed;
-          currentAudio.play().catch(() => fallbackSpeech(cleanText));
+          bindAudioKaraoke(currentAudio, tokens, cleanText);
+          currentAudio.play().catch(() => fallbackSpeech(cleanText, tokens));
         } else {
-          fallbackSpeech(cleanText);
+          fallbackSpeech(cleanText, tokens);
         }
       });
       return;
     }
 
-    fallbackSpeech(cleanText);
+    fallbackSpeech(cleanText, tokens);
   }
 
-  function fallbackSpeech(cleanText) {
+  function fallbackSpeech(cleanText, tokens = null) {
     // Mode A: Google Cloud HD Audio
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText.slice(0, 180))}`;
     currentAudio = new Audio(url);
     currentAudio.playbackRate = state.speed;
+    bindAudioKaraoke(currentAudio, tokens, cleanText);
     currentAudio.play().catch(() => {
       // Mode B: Web Speech API ONLY if it is a real Natural/Online voice (STRICTLY NO ROBOT HARUKA)
       if (!('speechSynthesis' in window)) return;
@@ -87,19 +215,55 @@
       utterance.rate = state.speed;
 
       const voices = window.speechSynthesis.getVoices();
-      // Match Nanami / Keita / Natural / Online
       let matchedVoice = voices.find(v => 
         (v.name.includes('Nanami') || v.name.includes('Keita') || v.name.includes('Natural') || v.name.includes('Online')) &&
         (v.lang.startsWith('ja') || v.lang.includes('JP'))
       );
 
-      // STRICT CHECK: If only robotic Haruka Desktop exists, DO NOT USE IT!
       if (!matchedVoice) {
         matchedVoice = voices.find(v => (v.lang.startsWith('ja') || v.lang.includes('JP')) && !v.name.includes('Desktop') && !v.name.includes('Haruka'));
       }
 
       if (matchedVoice) {
         utterance.voice = matchedVoice;
+
+        if (tokens && tokens.length > 0) {
+          const tokenList = Array.from(tokens);
+          currentKaraokeTokens = tokenList;
+
+          utterance.onboundary = (event) => {
+            const charIdx = event.charIndex || 0;
+            let acc = 0;
+            let activeIdx = 0;
+            for (let i = 0; i < tokenList.length; i++) {
+              const w = decodeURIComponent(tokenList[i].dataset.surface || '');
+              acc += Math.max(1, w.length);
+              if (acc > charIdx) {
+                activeIdx = i;
+                break;
+              }
+            }
+            tokenList.forEach((token, idx) => {
+              if (idx === activeIdx) {
+                token.classList.add('trancy-karaoke-active');
+                token.classList.remove('trancy-karaoke-passed');
+              } else if (idx < activeIdx) {
+                token.classList.remove('trancy-karaoke-active');
+                token.classList.add('trancy-karaoke-passed');
+              } else {
+                token.classList.remove('trancy-karaoke-active', 'trancy-karaoke-passed');
+              }
+            });
+          };
+
+          utterance.onend = () => {
+            setTimeout(() => {
+              tokenList.forEach(t => t.classList.remove('trancy-karaoke-active', 'trancy-karaoke-passed'));
+              if (currentKaraokeTokens === tokenList) currentKaraokeTokens = null;
+            }, 400);
+          };
+        }
+
         window.speechSynthesis.speak(utterance);
       }
     });
@@ -129,11 +293,12 @@
       <button class="trancy-btn-pill" data-action="mask-jp" title="遮蔽日文原文（懸停或點擊解開）">遮日</button>
       <button class="trancy-btn-pill" data-action="mask-zh" title="遮蔽中文譯文（懸停或點擊解開）">遮中</button>
       <button class="trancy-btn-pill" data-action="mask-both" title="日中雙向遮蔽">雙遮</button>
+      <button class="trancy-btn-pill ${state.rubyMode !== 'hide' ? 'active' : ''}" id="trancy-btn-ruby" title="假名標註：點擊循環切換 [全顯假名] / [遮蔽自測] / [隱藏假名]">🌸 標註假名</button>
       <button class="trancy-btn-pill" id="trancy-btn-pick" title="切換點選模式：點選網頁任意段落直接翻譯">🎯 點選段落</button>
       <button class="trancy-btn-pill primary" id="trancy-btn-translate">✨ 翻譯本頁</button>
       
       <!-- Settings Button -->
-      <button class="trancy-btn-icon" id="trancy-btn-settings" title="語音與無段語速設定">⚙️</button>
+      <button class="trancy-btn-icon" id="trancy-btn-settings" title="語音、假名與無段語速設定">⚙️</button>
       
       <!-- Pin / Lock Button -->
       <button class="trancy-btn-icon ${state.isPinned ? 'active' : ''}" id="trancy-btn-pin" title="${state.isPinned ? '已固定位置（點擊解鎖）' : '釘選固定位置'}">
@@ -154,6 +319,17 @@
             <option value="keita">👦 微軟 Keita (圭太・自然男聲)</option>
             <option value="google-hd">☁️ Google 真人高音質 (Cloud HD)</option>
             <option value="default">🌐 瀏覽器日語 (系統預設)</option>
+          </select>
+        </div>
+
+        <div class="trancy-setting-row">
+          <div class="trancy-setting-label">
+            <span>🌸 漢字假名標註</span>
+          </div>
+          <select class="trancy-select" id="trancy-select-ruby">
+            <option value="show">🌸 顯示假名 (小字平假名)</option>
+            <option value="mask">👁️ 假名遮蔽 (懸停揭示自測)</option>
+            <option value="hide">🚫 隱藏假名 (直讀訓練)</option>
           </select>
         </div>
 
@@ -202,6 +378,77 @@
 
     // --- Drag & Drop Functionality ---
     setupDraggable(bar);
+
+    // --- Furigana Ruby Mode Controller ---
+    const rubyBtn = document.getElementById('trancy-btn-ruby');
+    const rubySelect = document.getElementById('trancy-select-ruby');
+    if (rubySelect) rubySelect.value = state.rubyMode;
+
+    function applyRubyMode(mode) {
+      state.rubyMode = mode;
+      localStorage.setItem('trancy_ruby_mode', mode);
+      document.body.setAttribute('data-trancy-ruby', mode);
+      if (rubySelect) rubySelect.value = mode;
+      if (mode !== 'hide') {
+        annotateJapaneseParagraphs();
+      }
+      if (rubyBtn) {
+        if (mode === 'show') {
+          rubyBtn.textContent = '🌸 假名:開';
+          rubyBtn.classList.add('active');
+          rubyBtn.title = '目前模式：全顯假名（點擊切換為遮蔽自測）';
+        } else if (mode === 'mask') {
+          rubyBtn.textContent = '🌸 假名:遮蔽';
+          rubyBtn.classList.add('active');
+          rubyBtn.title = '目前模式：遮蔽自測（滑鼠懸停顯示，點擊切換為隱藏）';
+        } else {
+          rubyBtn.textContent = '🌸 假名:關';
+          rubyBtn.classList.remove('active');
+          rubyBtn.title = '目前模式：隱藏假名（點擊切換為全顯假名）';
+        }
+      }
+    }
+
+    function annotateJapaneseParagraphs() {
+      if (!window.TrancyFurigana) return;
+      const candidates = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, dt, dd, li, div');
+      candidates.forEach(el => {
+        if (el.closest('#trancy-ext-toolbar, #trancy-selection-card, #trancy-hover-marker, .trancy-injected-zh')) return;
+        if (!isLeafLikeTextBlock(el)) return;
+        if (el.querySelector('.trancy-ruby, .trancy-karaoke-word')) return;
+
+        const text = (el.innerText || el.textContent || '').trim();
+        if (text.length >= 2 && JP_REGEX.test(text) && window.TrancyFurigana.hasKanji(text)) {
+          el.innerHTML = window.TrancyFurigana.toKaraokeHtml(text);
+          el.querySelectorAll('.trancy-karaoke-word').forEach(wordSpan => {
+            wordSpan.onclick = (e) => {
+              e.stopPropagation();
+              const w = decodeURIComponent(wordSpan.dataset.surface || '');
+              if (w) speakJapanese(w, wordSpan);
+            };
+          });
+        }
+      });
+    }
+
+    if (rubyBtn) {
+      applyRubyMode(state.rubyMode);
+      rubyBtn.addEventListener('click', () => {
+        if (state.rubyMode === 'show') {
+          applyRubyMode('mask');
+        } else if (state.rubyMode === 'mask') {
+          applyRubyMode('hide');
+        } else {
+          applyRubyMode('show');
+        }
+      });
+    }
+
+    if (rubySelect) {
+      rubySelect.addEventListener('change', (e) => {
+        applyRubyMode(e.target.value);
+      });
+    }
 
     // --- Toolbar Event Listeners ---
     bar.querySelectorAll('button[data-action]').forEach(btn => {
@@ -529,8 +776,21 @@
     el.classList.add('trancy-orig-jp');
     el.title = '日文原文（懸停或點擊解開遮蔽）';
 
+    // Annotate Japanese paragraph with Furigana and Karaoke tokens
+    if (window.TrancyFurigana) {
+      el.innerHTML = window.TrancyFurigana.toKaraokeHtml(text);
+      el.querySelectorAll('.trancy-karaoke-word').forEach(wordSpan => {
+        wordSpan.onclick = (e) => {
+          e.stopPropagation();
+          const w = decodeURIComponent(wordSpan.dataset.surface || '');
+          if (w) speakJapanese(w, wordSpan);
+        };
+      });
+    }
+
     // Click on Japanese to reveal if masked
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.trancy-karaoke-word')) return;
       if (state.maskMode === 'mask-jp' || state.maskMode === 'mask-both') {
         el.classList.toggle('trancy-revealed');
       }
@@ -553,14 +813,14 @@
       const zhDiv = document.createElement('div');
       zhDiv.className = 'trancy-injected-zh';
 
-      // TTS Button
+      // TTS Button with synchronized Karaoke color reading
       const ttsBtn = document.createElement('button');
       ttsBtn.className = 'trancy-speak-btn';
-      ttsBtn.title = '真人自然語音朗讀此段';
+      ttsBtn.title = '真人自然語音朗讀（伴隨顏色同步高亮）';
       ttsBtn.innerHTML = '🔊';
       ttsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        speakJapanese(text);
+        speakJapanese(text, el);
       });
       zhDiv.appendChild(ttsBtn);
 
@@ -731,7 +991,18 @@
       const copyBtn = document.getElementById('trancy-card-copy-btn');
       const insertBtn = document.getElementById('trancy-card-insert-btn');
 
-      origBox.textContent = text;
+      if (window.TrancyFurigana) {
+        origBox.innerHTML = window.TrancyFurigana.toKaraokeHtml(text);
+        origBox.querySelectorAll('.trancy-karaoke-word').forEach(wordSpan => {
+          wordSpan.onclick = (e) => {
+            e.stopPropagation();
+            const w = decodeURIComponent(wordSpan.dataset.surface || '');
+            if (w) speakJapanese(w, wordSpan);
+          };
+        });
+      } else {
+        origBox.textContent = text;
+      }
       transBox.innerHTML = '<span class="trancy-translating-pulse" style="opacity:0.8;">⏳ 正在翻譯選取內容...</span>';
 
       // Position Card
@@ -746,7 +1017,7 @@
       transBox.textContent = zh || '(無法取得翻譯，請重試)';
 
       // Action Handlers
-      speakBtn.onclick = () => speakJapanese(text);
+      speakBtn.onclick = () => speakJapanese(text, origBox);
       copyBtn.onclick = () => {
         if (zh) {
           navigator.clipboard.writeText(zh).then(() => {
@@ -766,11 +1037,11 @@
 
           const ttsBtn = document.createElement('button');
           ttsBtn.className = 'trancy-speak-btn';
-          ttsBtn.title = '真人自然語音朗讀';
+          ttsBtn.title = '真人自然語音朗讀（伴隨顏色同步高亮）';
           ttsBtn.innerHTML = '🔊';
           ttsBtn.onclick = (ev) => {
             ev.stopPropagation();
-            speakJapanese(text);
+            speakJapanese(text, parentBlock);
           };
           zhDiv.appendChild(ttsBtn);
 

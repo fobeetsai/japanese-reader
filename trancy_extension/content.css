@@ -568,3 +568,105 @@ body.trancy-pick-mode-active {
   100% { opacity: 0.4; }
 }
 
+/* ==========================================================================
+   FURIGANA (RUBY) ANNOTATION ENGINE STYLES
+   ========================================================================== */
+ruby.trancy-ruby {
+  ruby-position: over !important;
+  ruby-align: center !important;
+  font-family: inherit;
+  display: inline-block;
+  line-height: 1.45;
+  text-indent: 0 !important;
+}
+
+rt.trancy-rt {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Meiryo", sans-serif !important;
+  font-size: 0.58em !important;
+  font-weight: 500 !important;
+  line-height: 1.1 !important;
+  color: #6366f1 !important;
+  letter-spacing: 0.02em;
+  user-select: none;
+  transition: all 0.2s ease;
+  display: block;
+  text-align: center;
+}
+
+/* Furigana Mode: MASK (Blur/Hide until hover or click - Self-Test Mode) */
+body[data-trancy-ruby="mask"] rt.trancy-rt {
+  filter: blur(4px) !important;
+  background: rgba(99, 102, 241, 0.25) !important;
+  border-radius: 3px !important;
+  color: transparent !important;
+  padding: 0 3px !important;
+}
+
+body[data-trancy-ruby="mask"] ruby.trancy-ruby:hover rt.trancy-rt,
+body[data-trancy-ruby="mask"] .trancy-orig-jp:hover rt.trancy-rt,
+body[data-trancy-ruby="mask"] #trancy-selection-card:hover rt.trancy-rt,
+body[data-trancy-ruby="mask"] .trancy-karaoke-word:hover rt.trancy-rt {
+  filter: none !important;
+  background: transparent !important;
+  color: #4f46e5 !important;
+}
+
+/* Furigana Mode: HIDE (Completely hidden) */
+body[data-trancy-ruby="hide"] rt.trancy-rt {
+  display: none !important;
+}
+
+/* ==========================================================================
+   KARAOKE SYNCHRONIZED COLOR-HIGHLIGHT READING (隨著顏色朗讀)
+   ========================================================================== */
+.trancy-karaoke-container {
+  display: inline;
+}
+
+.trancy-karaoke-word {
+  display: inline-block;
+  padding: 0 2px;
+  margin: 0 1px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  vertical-align: baseline;
+}
+
+.trancy-karaoke-word:hover {
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.4);
+}
+
+/* Glowing active karaoke reading highlight */
+.trancy-karaoke-word.trancy-karaoke-active {
+  background: #fef08a !important; /* Luminous Golden Amber */
+  color: #1e1b4b !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.85), 0 0 0 1px rgba(234, 179, 8, 0.6) !important;
+  font-weight: 700 !important;
+  transform: scale(1.08);
+  z-index: 5;
+}
+
+.trancy-karaoke-word.trancy-karaoke-active rt.trancy-rt {
+  color: #1e1b4b !important;
+  font-weight: 700 !important;
+  filter: none !important;
+}
+
+/* Passed tokens: soft elegant read state */
+.trancy-karaoke-word.trancy-karaoke-passed {
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.trancy-karaoke-word.trancy-karaoke-passed rt.trancy-rt {
+  color: #6366f1;
+}
+
+.trancy-karaoke-punct {
+  display: inline;
+}
+
+

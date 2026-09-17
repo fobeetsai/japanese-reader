@@ -658,6 +658,25 @@
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35);
     }
 
+    /* KARAOKE READING COLOR HIGHLIGHT (隨著顏色朗讀) */
+    .jp-token.karaoke-active {
+      background: #fef08a !important;
+      color: #1e1b4b !important;
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.9), 0 0 0 1px rgba(234, 179, 8, 0.7) !important;
+      transform: scale(1.08);
+      font-weight: 700;
+      z-index: 5;
+    }
+    .jp-token.karaoke-active rt {
+      color: #1e1b4b !important;
+      font-weight: 700 !important;
+      filter: none !important;
+    }
+    .jp-token.karaoke-passed {
+      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
     ruby {
       ruby-align: center;
       ruby-position: over;
@@ -2463,17 +2482,35 @@
       }
     }
 
-    function speakText(text, onEndCallback) {
+    let activeKaraokeTimer = null;
+
+    function clearSentenceKaraoke() {
+      if (activeKaraokeTimer) {
+        clearInterval(activeKaraokeTimer);
+        activeKaraokeTimer = null;
+      }
+      document.querySelectorAll('.jp-token.karaoke-active').forEach(el => el.classList.remove('karaoke-active'));
+      document.querySelectorAll('.jp-token.karaoke-passed').forEach(el => el.classList.remove('karaoke-passed'));
+    }
+
+    function speakText(text, onEndCallback, sentenceIdx = undefined) {
       if (!text) return;
       const cleanText = text.replace(/<[^>]+>/g, '').trim();
 
-      // Stop previous speech
+      // Stop previous speech & clear active karaoke highlights
       if (state.currentAudioObj) {
         state.currentAudioObj.pause();
         state.currentAudioObj = null;
       }
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+      }
+      clearSentenceKaraoke();
+
+      // Prepare target tokens for Karaoke highlighting
+      let tokens = [];
+      if (sentenceIdx !== undefined) {
+        tokens = Array.from(document.querySelectorAll(`#sentence-card-${sentenceIdx} .jp-token`));
       }
 
       const voiceChoice = DOM.voiceSelect ? DOM.voiceSelect.value : 'edge_nanami';
@@ -2500,14 +2537,44 @@
             state.isPlaying = true;
             updatePlayerStatus(true);
           };
+
+          if (tokens.length > 0) {
+            utterance.onboundary = (event) => {
+              const charIdx = event.charIndex || 0;
+              let acc = 0;
+              let activeIdx = 0;
+              for (let i = 0; i < tokens.length; i++) {
+                const w = tokens[i].dataset.word || tokens[i].textContent || '';
+                acc += Math.max(1, w.length);
+                if (acc > charIdx) {
+                  activeIdx = i;
+                  break;
+                }
+              }
+              tokens.forEach((t, i) => {
+                if (i === activeIdx) {
+                  t.classList.add('karaoke-active');
+                  t.classList.remove('karaoke-passed');
+                } else if (i < activeIdx) {
+                  t.classList.remove('karaoke-active');
+                  t.classList.add('karaoke-passed');
+                } else {
+                  t.classList.remove('karaoke-active', 'karaoke-passed');
+                }
+              });
+            };
+          }
+
           utterance.onend = () => {
             state.isPlaying = false;
             updatePlayerStatus(false);
+            setTimeout(clearSentenceKaraoke, 400);
             if (onEndCallback) onEndCallback();
           };
           utterance.onerror = () => {
             state.isPlaying = false;
             updatePlayerStatus(false);
+            clearSentenceKaraoke();
           };
           window.speechSynthesis.speak(utterance);
           return;
@@ -2515,7 +2582,6 @@
       }
 
       // Path 2: Google Cloud Natural Japanese Native Audio
-      // With <meta name="referrer" content="no-referrer"> this streams authentic studio-quality human voice
       const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=' + encodeURIComponent(cleanText.slice(0, 180));
       const audio = new Audio(audioUrl);
       state.currentAudioObj = audio;
@@ -2524,10 +2590,50 @@
       state.isPlaying = true;
       updatePlayerStatus(true);
 
+      // Start Karaoke progression for audio element
+      if (tokens.length > 0) {
+        const lengths = tokens.map(t => Math.max(1, (t.dataset.word || t.textContent || '').length));
+        const totalLen = lengths.reduce((a, b) => a + b, 0);
+        const cumulative = [];
+        let running = 0;
+        for (let l of lengths) {
+          running += l;
+          cumulative.push(running / totalLen);
+        }
+
+        activeKaraokeTimer = setInterval(() => {
+          if (!audio || audio.paused || audio.ended) return;
+          const dur = (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) 
+            ? audio.duration 
+            : (totalLen * 0.28 / (state.playbackRate || 1));
+          const ratio = Math.min(0.999, (audio.currentTime || 0) / dur);
+
+          let activeIdx = 0;
+          for (let i = 0; i < cumulative.length; i++) {
+            if (ratio <= cumulative[i]) {
+              activeIdx = i;
+              break;
+            }
+          }
+          tokens.forEach((t, i) => {
+            if (i === activeIdx) {
+              t.classList.add('karaoke-active');
+              t.classList.remove('karaoke-passed');
+            } else if (i < activeIdx) {
+              t.classList.remove('karaoke-active');
+              t.classList.add('karaoke-passed');
+            } else {
+              t.classList.remove('karaoke-active', 'karaoke-passed');
+            }
+          });
+        }, 35);
+      }
+
       audio.onended = () => {
         state.isPlaying = false;
         updatePlayerStatus(false);
         state.currentAudioObj = null;
+        setTimeout(clearSentenceKaraoke, 400);
         if (onEndCallback) onEndCallback();
       };
 
@@ -2535,12 +2641,14 @@
         console.warn('Audio playback error:', err);
         state.isPlaying = false;
         updatePlayerStatus(false);
+        clearSentenceKaraoke();
       };
 
       audio.play().catch(e => {
         console.warn('Audio autoplay blocked or failed:', e);
         state.isPlaying = false;
         updatePlayerStatus(false);
+        clearSentenceKaraoke();
       });
     }
 
@@ -2818,7 +2926,7 @@
             showToast('已完成全篇朗讀！');
           }
         }
-      });
+      }, idx);
     }
 
     function togglePlayPause() {
@@ -2830,6 +2938,7 @@
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
         }
+        clearSentenceKaraoke();
         state.isPlaying = false;
         updatePlayerStatus(false);
       } else {
