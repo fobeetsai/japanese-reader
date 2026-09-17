@@ -1756,11 +1756,18 @@
 
       <!-- Right: Speed & Voice Selection (Prioritizing Edge Natural Voices & Google Cloud HD) -->
       <div class="player-right">
-        <div class="speed-pills">
-          <button class="btn-speed" data-speed="0.75">0.75x</button>
-          <button class="btn-speed active" data-speed="1.0">1.0x</button>
-          <button class="btn-speed" data-speed="1.25">1.25x</button>
-          <button class="btn-speed" data-speed="1.5">1.5x</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="speed-pills">
+            <button class="btn-speed" data-speed="0.75">0.75x</button>
+            <button class="btn-speed active" data-speed="1.0">1.0x</button>
+            <button class="btn-speed" data-speed="1.25">1.25x</button>
+            <button class="btn-speed" data-speed="1.5">1.5x</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-card); padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border-color);" title="無段數語速微調 (0.50x ~ 2.00x)">
+            <i class="fa-solid fa-gauge-high" style="font-size: 0.72rem; color: var(--text-muted);"></i>
+            <input type="range" id="input-stepless-speed" min="0.5" max="2.0" step="0.05" value="1.0" style="width: 65px; height: 4px; accent-color: var(--primary); cursor: pointer;">
+            <span id="speed-slider-label" style="font-size: 0.72rem; font-family: monospace; font-weight: 700; color: var(--primary); min-width: 34px;">1.00x</span>
+          </div>
         </div>
 
         <select class="furigana-select" id="select-jp-voice" style="max-width: 220px; font-size: 0.78rem;">
@@ -3213,11 +3220,28 @@
         showToast('已反轉所有遮蔽卡片');
       });
 
+      const steplessSpeedInput = document.getElementById('input-stepless-speed');
+      const speedSliderLabel = document.getElementById('speed-slider-label');
+
+      if (steplessSpeedInput && speedSliderLabel) {
+        steplessSpeedInput.addEventListener('input', (e) => {
+          const rate = parseFloat(e.target.value);
+          state.playbackRate = rate;
+          speedSliderLabel.textContent = rate.toFixed(2) + 'x';
+          document.querySelectorAll('.btn-speed').forEach(b => {
+            b.classList.toggle('active', parseFloat(b.dataset.speed) === rate);
+          });
+          if (state.currentAudioObj) state.currentAudioObj.playbackRate = state.playbackRate;
+        });
+      }
+
       document.querySelectorAll('.btn-speed').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           state.playbackRate = parseFloat(btn.dataset.speed);
+          if (steplessSpeedInput) steplessSpeedInput.value = state.playbackRate;
+          if (speedSliderLabel) speedSliderLabel.textContent = state.playbackRate.toFixed(2) + 'x';
           if (state.currentAudioObj) state.currentAudioObj.playbackRate = state.playbackRate;
           showToast(`語速已設定為 ${state.playbackRate}x`);
         });

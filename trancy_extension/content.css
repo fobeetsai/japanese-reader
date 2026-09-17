@@ -2,19 +2,19 @@
    TRANCY DUAL IMMERSIVE EXTENSION - CONTENT STYLES
    ========================================================================== */
 
-/* Floating Top Toolbar */
+/* Floating Movable Toolbar */
 #trancy-ext-toolbar {
   position: fixed;
-  top: 16px;
-  right: 20px;
+  top: 18px;
+  right: 24px;
   z-index: 2147483647;
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.25);
   border-radius: 12px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -22,14 +22,54 @@
   color: #f8fafc;
   font-size: 13px;
   user-select: none;
-  transition: all 0.25s ease;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#trancy-ext-toolbar.trancy-dragging {
+  opacity: 0.85;
+  box-shadow: 0 16px 40px rgba(99, 102, 241, 0.5);
+  cursor: grabbing !important;
 }
 
 #trancy-ext-toolbar:hover {
   border-color: #6366f1;
-  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.35);
 }
 
+/* Drag Handle */
+.trancy-drag-handle {
+  cursor: grab;
+  color: #94a3b8;
+  font-size: 15px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.trancy-drag-handle:hover {
+  color: #c7d2fe;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.trancy-ext-toolbar-locked .trancy-drag-handle {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Brand Label */
+.trancy-brand-tag {
+  font-weight: 800;
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  margin-right: 2px;
+}
+
+/* Pill Buttons */
 .trancy-btn-pill {
   border: none;
   background: rgba(255, 255, 255, 0.08);
@@ -41,8 +81,9 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .trancy-btn-pill:hover {
@@ -56,75 +97,253 @@
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
-/* Injected Chinese Translation Line */
-.trancy-injected-zh {
-  display: block;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
-  border-left: 3px solid #6366f1;
-  padding: 4px 10px;
-  border-radius: 0 6px 6px 0;
-  font-size: 0.93em;
-  line-height: 1.6;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-  position: relative;
-  transition: all 0.2s ease;
+.trancy-btn-pill.primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  font-weight: 700;
 }
 
-/* Mask Japanese (遮蔽日文原文) */
-.trancy-ext-mask-jp-active .trancy-orig-jp {
-  filter: blur(7px) !important;
-  opacity: 0.35 !important;
-  user-select: none !important;
-  transition: filter 0.2s ease, opacity 0.2s ease;
-  position: relative;
+.trancy-btn-pill.primary:hover {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
 
-.trancy-ext-mask-jp-active .trancy-orig-jp:hover,
-.trancy-ext-mask-jp-active .trancy-orig-jp.trancy-revealed {
-  filter: none !important;
-  opacity: 1 !important;
-  user-select: text !important;
-}
-
-/* Mask Chinese (遮蔽中文譯文) */
-.trancy-ext-mask-zh-active .trancy-injected-zh {
-  filter: blur(7px) !important;
-  opacity: 0.3 !important;
-  user-select: none !important;
-  transition: filter 0.2s ease, opacity 0.2s ease;
+/* Icon Buttons */
+.trancy-btn-icon {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 5px 7px;
+  border-radius: 6px;
   cursor: pointer;
-}
-
-.trancy-ext-mask-zh-active .trancy-injected-zh:hover,
-.trancy-ext-mask-zh-active .trancy-injected-zh.trancy-revealed {
-  filter: none !important;
-  opacity: 1 !important;
-  user-select: text !important;
-}
-
-/* TTS Speak Button next to paragraph */
-.trancy-speak-btn {
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  transition: all 0.15s;
+}
+
+.trancy-btn-icon:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.trancy-btn-icon.active {
   color: #818cf8;
-  font-size: 11px;
-  margin-left: 6px;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Settings Dropdown Card */
+#trancy-settings-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  background: #0f172a;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(99, 102, 241, 0.25);
+  padding: 14px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 2147483647;
+  color: #f1f5f9;
+  font-size: 12px;
+}
+
+#trancy-settings-popover.show {
+  display: flex;
+}
+
+.trancy-setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trancy-setting-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.trancy-setting-val {
+  color: #818cf8;
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.trancy-select {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #f8fafc;
+  padding: 6px 8px;
+  font-size: 12px;
+  outline: none;
   cursor: pointer;
-  vertical-align: middle;
-  transition: all 0.15s ease;
+}
+
+.trancy-select:focus {
+  border-color: #6366f1;
+}
+
+/* Stepless Range Slider */
+.trancy-range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #334155;
+  outline: none;
+  cursor: pointer;
+  margin: 6px 0;
+}
+
+.trancy-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #818cf8;
+  box-shadow: 0 0 6px rgba(129, 140, 248, 0.8);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.trancy-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.trancy-speed-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.trancy-speed-preset-btn {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 11px;
+  padding: 3px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.trancy-speed-preset-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #c7d2fe;
+}
+
+/* ==========================================================================
+   IMMERSIVE BILINGUAL INJECTION & MASKING STYLES
+   ========================================================================== */
+
+/* Chinese Translation Line */
+.trancy-injected-zh {
+  display: block !important;
+  margin-top: 6px !important;
+  margin-bottom: 12px !important;
+  color: #4338ca !important;
+  background: #eef2ff !important;
+  border-left: 4px solid #6366f1 !important;
+  padding: 6px 12px !important;
+  border-radius: 0 8px 8px 0 !important;
+  font-size: 0.95em !important;
+  line-height: 1.6 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+  clear: both !important;
+  transition: filter 0.2s ease, opacity 0.2s ease !important;
+  /* Always clear and sharp by default */
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .trancy-injected-zh {
+    color: #a5b4fc !important;
+    background: rgba(30, 27, 75, 0.65) !important;
+    border-left-color: #818cf8 !important;
+  }
+}
+
+/* Original Japanese Container */
+.trancy-orig-jp {
+  transition: filter 0.2s ease, opacity 0.2s ease !important;
+}
+
+/* 1. MASK JAPANESE ONLY (遮日模式 - 遮蔽日文原文，絕不影響中文) */
+body.trancy-ext-mask-jp-active .trancy-orig-jp {
+  filter: blur(8px) !important;
+  opacity: 0.22 !important;
+  user-select: none !important;
+  cursor: pointer !important;
+}
+
+body.trancy-ext-mask-jp-active .trancy-orig-jp:hover,
+body.trancy-ext-mask-jp-active .trancy-orig-jp.trancy-revealed {
+  filter: none !important;
+  opacity: 1 !important;
+  user-select: text !important;
+}
+
+/* Ensure Chinese translation stays 100% visible and unblurred in mask-jp */
+body.trancy-ext-mask-jp-active .trancy-injected-zh {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 2. MASK CHINESE ONLY (遮中模式 - 遮蔽中文譯文，保留日文原文) */
+body.trancy-ext-mask-zh-active .trancy-injected-zh {
+  filter: blur(8px) !important;
+  opacity: 0.25 !important;
+  user-select: none !important;
+  cursor: pointer !important;
+}
+
+body.trancy-ext-mask-zh-active .trancy-injected-zh:hover,
+body.trancy-ext-mask-zh-active .trancy-injected-zh.trancy-revealed {
+  filter: none !important;
+  opacity: 1 !important;
+  user-select: text !important;
+}
+
+body.trancy-ext-mask-zh-active .trancy-orig-jp {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* TTS Speak Button */
+.trancy-speak-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 4px !important;
+  background: rgba(99, 102, 241, 0.18) !important;
+  border: 1px solid rgba(99, 102, 241, 0.35) !important;
+  color: #6366f1 !important;
+  font-size: 11px !important;
+  margin-right: 8px !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  transition: all 0.15s ease !important;
 }
 
 .trancy-speak-btn:hover {
-  background: #6366f1;
-  color: #fff;
-  transform: scale(1.1);
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  transform: scale(1.12) !important;
 }
