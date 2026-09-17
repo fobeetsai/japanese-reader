@@ -6,6 +6,7 @@
   <title>Trancy AI 雙語閱讀與中日雙向遮蔽特訓站 | Trancy Dual Subtitles & Cloze</title>
   
   <!-- Web App & PWA Meta -->
+  <meta name="referrer" content="no-referrer">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Trancy Dual">
@@ -2283,83 +2284,72 @@
         window.speechSynthesis.cancel();
       }
 
-      const voiceChoice = DOM.voiceSelect.value;
+      const voiceChoice = DOM.voiceSelect ? DOM.voiceSelect.value : 'edge_nanami';
 
-      // Case 1: Google Cloud HD Natural Speech (High fidelity lifelike audio)
-      if (voiceChoice === 'google_hd') {
-        const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=' + encodeURIComponent(cleanText);
-        const audio = new Audio(audioUrl);
-        state.currentAudioObj = audio;
-        audio.playbackRate = state.playbackRate;
-
-        state.isPlaying = true;
-        updatePlayerStatus(true);
-
-        audio.onended = () => {
-          state.isPlaying = false;
-          updatePlayerStatus(false);
-          state.currentAudioObj = null;
-          if (onEndCallback) onEndCallback();
-        };
-
-        audio.onerror = () => {
-          // Fallback to SpeechSynthesis
-          speakViaSpeechSynthesis(cleanText, onEndCallback);
-        };
-
-        audio.play().catch(() => {
-          speakViaSpeechSynthesis(cleanText, onEndCallback);
-        });
-        return;
-      }
-
-      // Case 2: Microsoft Edge Natural Voices via SpeechSynthesis
-      speakViaSpeechSynthesis(cleanText, onEndCallback);
-    }
-
-    function speakViaSpeechSynthesis(cleanText, onEndCallback) {
-      if (!('speechSynthesis' in window)) return;
-
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'ja-JP';
-      utterance.rate = state.playbackRate;
-
-      const voices = window.speechSynthesis.getVoices();
-      const selectedVal = DOM.voiceSelect.value;
-      let matchedVoice = voices.find(v => v.name === selectedVal);
-
-      // If selected edge_nanami or edge_keita fallback
-      if (!matchedVoice) {
-        if (selectedVal === 'edge_nanami') {
-          matchedVoice = voices.find(v => (v.name.includes('Nanami') || v.name.includes('Natural')) && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-        } else if (selectedVal === 'edge_keita') {
+      // Path 1: If browser has genuine Edge Natural Voice in Web Speech API
+      if (voiceChoice !== 'google_hd' && 'speechSynthesis' in window) {
+        const voices = window.speechSynthesis.getVoices();
+        let matchedVoice = null;
+        if (voiceChoice === 'edge_nanami') {
+          matchedVoice = voices.find(v => (v.name.includes('Nanami') || (v.name.includes('Natural') && !v.name.includes('Keita'))) && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+        } else if (voiceChoice === 'edge_keita') {
           matchedVoice = voices.find(v => v.name.includes('Keita') && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+        } else {
+          matchedVoice = voices.find(v => v.name === voiceChoice && !v.name.includes('Desktop') && !v.name.includes('Haruka'));
+        }
+
+        // If genuine natural voice found on system (e.g. running in Edge)
+        if (matchedVoice) {
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.voice = matchedVoice;
+          utterance.lang = 'ja-JP';
+          utterance.rate = state.playbackRate;
+          utterance.onstart = () => {
+            state.isPlaying = true;
+            updatePlayerStatus(true);
+          };
+          utterance.onend = () => {
+            state.isPlaying = false;
+            updatePlayerStatus(false);
+            if (onEndCallback) onEndCallback();
+          };
+          utterance.onerror = () => {
+            state.isPlaying = false;
+            updatePlayerStatus(false);
+          };
+          window.speechSynthesis.speak(utterance);
+          return;
         }
       }
 
-      // If still not matched, find any natural/online voice
-      if (!matchedVoice) {
-        matchedVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online')) && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-      }
+      // Path 2: Google Cloud Natural Japanese Native Audio
+      // With <meta name="referrer" content="no-referrer"> this streams authentic studio-quality human voice
+      const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=' + encodeURIComponent(cleanText.slice(0, 180));
+      const audio = new Audio(audioUrl);
+      state.currentAudioObj = audio;
+      audio.playbackRate = state.playbackRate;
 
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      }
+      state.isPlaying = true;
+      updatePlayerStatus(true);
 
-      utterance.onstart = () => {
-        state.isPlaying = true;
-        updatePlayerStatus(true);
-      };
-      utterance.onend = () => {
+      audio.onended = () => {
         state.isPlaying = false;
         updatePlayerStatus(false);
+        state.currentAudioObj = null;
         if (onEndCallback) onEndCallback();
       };
-      utterance.onerror = () => {
+
+      audio.onerror = (err) => {
+        console.warn('Audio playback error:', err);
         state.isPlaying = false;
         updatePlayerStatus(false);
       };
-      window.speechSynthesis.speak(utterance);
+
+      audio.play().catch(e => {
+        console.warn('Audio autoplay blocked or failed:', e);
+        state.isPlaying = false;
+        updatePlayerStatus(false);
+      });
     }
 
     function updatePlayerStatus(playing) {

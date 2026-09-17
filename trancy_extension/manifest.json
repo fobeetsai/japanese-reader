@@ -1,16 +1,30 @@
 {
   "manifest_version": 3,
-  "name": "Trancy Dual - 中日雙語沉浸翻譯與雙向遮蔽",
-  "version": "1.0.0",
-  "description": "在任何日文網頁上提供中日雙語對照、日文/中文雙向遮蔽自測、微軟 Edge 自然語音朗讀與單字查詞。",
+  "name": "Trancy Dual - 中日雙語沉浸翻譯與微軟Edge自然語音",
+  "version": "1.1.0",
+  "description": "在任何日文網頁上提供中日雙語對照、日文/中文雙向遮蔽自測、微軟 Edge Nanami/Keita 真人自然語音朗讀與無段數語速調節。",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "https://*/*",
-    "http://*/*"
+    "http://*/*",
+    "wss://speech.platform.bing.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "edge_rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Trancy Dual 沉浸雙語遮蔽"

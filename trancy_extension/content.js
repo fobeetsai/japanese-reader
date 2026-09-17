@@ -22,7 +22,7 @@
   let currentAudio = null;
 
   // --------------------------------------------------------------------------
-  // TTS Engine (Microsoft Edge Natural Voices + Google Cloud HD + Stepless Speed)
+  // TTS Engine (Microsoft Edge Neural Voices + Google Cloud HD + Stepless Speed)
   // --------------------------------------------------------------------------
   function speakJapanese(text) {
     if (!text) return;
@@ -38,72 +38,61 @@
       window.speechSynthesis.cancel();
     }
 
-    // Mode 1: Google Cloud HD Real Human Voice
-    if (state.voice === 'google-hd') {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText.slice(0, 200))}&tl=ja&client=tw-ob`;
-      currentAudio = new Audio(url);
-      currentAudio.playbackRate = state.speed;
-      currentAudio.play().catch(() => {
-        speakViaWebSpeech(cleanText);
+    // Priority 1: Direct Edge Neural Audio synthesis from background service worker
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({
+        action: 'synthesize_speech',
+        text: cleanText,
+        voice: state.voice,
+        speed: state.speed
+      }, (res) => {
+        if (chrome.runtime.lastError) {
+          fallbackSpeech(cleanText);
+          return;
+        }
+        if (res && res.success && res.audioUrl) {
+          currentAudio = new Audio(res.audioUrl);
+          currentAudio.playbackRate = state.speed;
+          currentAudio.play().catch(() => fallbackSpeech(cleanText));
+        } else {
+          fallbackSpeech(cleanText);
+        }
       });
       return;
     }
 
-    // Mode 2: Web Speech API (Edge Natural Voices: Nanami / Keita)
-    speakViaWebSpeech(cleanText);
+    fallbackSpeech(cleanText);
   }
 
-  function speakViaWebSpeech(cleanText) {
-    if (!('speechSynthesis' in window)) {
-      // Fallback to Google Cloud HD if Web Speech is unsupported
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText.slice(0, 200))}&tl=ja&client=tw-ob`;
-      currentAudio = new Audio(url);
-      currentAudio.playbackRate = state.speed;
-      currentAudio.play().catch(e => console.warn('Audio fallback error:', e));
-      return;
-    }
+  function fallbackSpeech(cleanText) {
+    // Mode A: Google Cloud HD Audio
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText.slice(0, 180))}`;
+    currentAudio = new Audio(url);
+    currentAudio.playbackRate = state.speed;
+    currentAudio.play().catch(() => {
+      // Mode B: Web Speech API ONLY if it is a real Natural/Online voice (STRICTLY NO ROBOT HARUKA)
+      if (!('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'ja-JP';
+      utterance.rate = state.speed;
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'ja-JP';
-    utterance.rate = state.speed;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    let matchedVoice = null;
-
-    if (state.voice === 'nanami') {
-      matchedVoice = voices.find(v => v.name.includes('Nanami') && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-    } else if (state.voice === 'keita') {
-      matchedVoice = voices.find(v => v.name.includes('Keita') && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-    }
-
-    // If specific voice not found, find any Natural / Online Japanese voice
-    if (!matchedVoice && state.voice !== 'default') {
-      matchedVoice = voices.find(v => 
+      const voices = window.speechSynthesis.getVoices();
+      // Match Nanami / Keita / Natural / Online
+      let matchedVoice = voices.find(v => 
         (v.name.includes('Nanami') || v.name.includes('Keita') || v.name.includes('Natural') || v.name.includes('Online')) &&
         (v.lang.startsWith('ja') || v.lang.includes('JP'))
       );
-    }
 
-    // If still no natural voice on this browser (e.g. Chrome on Windows with only robotic SAPI Haruka Desktop),
-    // automatically fallback to Google Cloud HD to ensure natural audio!
-    if (!matchedVoice && voices.some(v => v.name.includes('Desktop') && v.lang.startsWith('ja'))) {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText.slice(0, 200))}&tl=ja&client=tw-ob`;
-      currentAudio = new Audio(url);
-      currentAudio.playbackRate = state.speed;
-      currentAudio.play().catch(e => console.warn('Cloud audio error:', e));
-      return;
-    }
+      // STRICT CHECK: If only robotic Haruka Desktop exists, DO NOT USE IT!
+      if (!matchedVoice) {
+        matchedVoice = voices.find(v => (v.lang.startsWith('ja') || v.lang.includes('JP')) && !v.name.includes('Desktop') && !v.name.includes('Haruka'));
+      }
 
-    if (!matchedVoice) {
-      matchedVoice = voices.find(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
-    }
-
-    if (matchedVoice) {
-      utterance.voice = matchedVoice;
-    }
-
-    window.speechSynthesis.speak(utterance);
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+        window.speechSynthesis.speak(utterance);
+      }
+    });
   }
 
   // Preload browser voices
