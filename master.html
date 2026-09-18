@@ -3008,15 +3008,16 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
    閱讀高手 (Reading Master) 全方位工作台專屬樣式
    ========================================================================== */
 
-/* 頂部工作台模式切換導航 */
+/* 頂部工作台模式切換導航頁籤 */
 .master-nav-wrap {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.06);
-    padding: 4px;
-    border-radius: 12px;
-    margin-left: 14px;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.07);
+    padding: 5px;
+    border-radius: 14px;
+    margin-left: 12px;
+    flex-wrap: wrap;
 }
 [data-theme="dark"] .master-nav-wrap {
     background: rgba(255, 255, 255, 0.08);
@@ -3024,26 +3025,26 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 .master-tab-btn {
     border: none;
     background: transparent;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.88rem;
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-muted);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
 }
 .master-tab-btn:hover {
     color: var(--primary);
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(99, 102, 241, 0.12);
 }
 .master-tab-btn.active {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
 }
 
 /* 核心四大視圖面板 */
@@ -3052,18 +3053,18 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     animation: fadeInPane 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .master-view-pane.active {
-    display: block;
+    display: block !important;
 }
 @keyframes fadeInPane {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* 沉浸雙語卡片流樣式 */
+/* 沉浸雙語卡片流樣式 (Trancy) */
 .trancy-stream-container {
-    max-width: 1060px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding-bottom: 90px;
+    padding-bottom: 110px;
 }
 .trancy-stream-toolbar {
     background: var(--bg-card);
@@ -3082,20 +3083,20 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 18px 22px;
-    margin-bottom: 14px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     position: relative;
 }
 .trancy-card:hover {
     border-color: #6366f1;
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 6px 22px rgba(99, 102, 241, 0.18);
 }
 .trancy-card.active-playing {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 8px 24px rgba(139, 92, 246, 0.2);
-    background: linear-gradient(180deg, var(--bg-card), rgba(99, 102, 241, 0.03));
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.45), 0 8px 24px rgba(139, 92, 246, 0.2) !important;
+    background: linear-gradient(180deg, var(--bg-card), rgba(99, 102, 241, 0.04));
 }
 .trancy-card-header {
     display: flex;
@@ -3104,30 +3105,30 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     margin-bottom: 12px;
 }
 .trancy-idx-tag {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 800;
     color: #6366f1;
     background: rgba(99, 102, 241, 0.12);
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 9999px;
 }
 .trancy-card-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 .trancy-btn-action {
     background: var(--bg-sub);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     transition: all 0.15s;
 }
 .trancy-btn-action:hover {
@@ -3136,10 +3137,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     border-color: #6366f1;
 }
 .trancy-btn-action.btn-deep-analyze {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(168, 85, 247, 0.14));
     border-color: rgba(99, 102, 241, 0.35);
     color: #6366f1;
-    font-weight: 700;
+    font-weight: 800;
 }
 .trancy-btn-action.btn-deep-analyze:hover {
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -3147,23 +3148,43 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 }
 .trancy-card-jp {
     font-family: var(--font-jp);
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     line-height: 2.3;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: var(--text-main);
 }
 .trancy-card-zh {
-    font-size: 1.02rem;
+    font-size: 1.05rem;
     color: var(--text-muted);
     line-height: 1.7;
     border-top: 1px dashed var(--border-color);
-    padding-top: 8px;
+    padding-top: 10px;
+}
+.btn-action-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.btn-action-pill:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
 }
 
 /* 雙向遮蔽效果 */
 .mask-active-jp .trancy-card-jp {
-    filter: blur(7px);
-    opacity: 0.3;
+    filter: blur(8px);
+    opacity: 0.25;
     user-select: none;
     transition: filter 0.2s, opacity 0.2s;
     cursor: pointer;
@@ -3174,8 +3195,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     opacity: 1;
 }
 .mask-active-zh .trancy-card-zh {
-    filter: blur(7px);
-    opacity: 0.3;
+    filter: blur(8px);
+    opacity: 0.25;
     user-select: none;
     transition: filter 0.2s, opacity 0.2s;
     cursor: pointer;
@@ -3186,51 +3207,56 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     opacity: 1;
 }
 
-/* KARAOKE 卡拉OK 隨讀變色高亮 */
-.jp-token.karaoke-active, .karaoke-active {
+/* KARAOKE 卡拉OK 隨讀變色高亮 (文字隨著朗讀逐字變色) */
+.jp-token.karaoke-active, .word-token.karaoke-active, .karaoke-active {
     background: #fef08a !important;
     color: #1e1b4b !important;
-    box-shadow: 0 0 14px rgba(250, 204, 21, 0.9), 0 0 0 1px rgba(234, 179, 8, 0.7) !important;
-    transform: scale(1.08);
-    font-weight: 700;
+    box-shadow: 0 0 16px rgba(250, 204, 21, 0.95), 0 0 0 2px rgba(234, 179, 8, 0.8) !important;
+    transform: scale(1.1);
+    font-weight: 800;
     border-radius: 4px;
     z-index: 5;
+    display: inline-block;
+    transition: transform 0.1s, background-color 0.1s;
 }
-.jp-token.karaoke-active rt {
+.jp-token.karaoke-active rt, .word-token.karaoke-active rt {
     color: #1e1b4b !important;
-    font-weight: 700;
+    font-weight: 800;
     filter: none !important;
 }
-.jp-token.karaoke-passed, .karaoke-passed {
-    color: #818cf8;
-    background: rgba(99, 102, 241, 0.1);
+.jp-token.karaoke-passed, .word-token.karaoke-passed, .karaoke-passed {
+    color: #6366f1 !important;
+    background: rgba(99, 102, 241, 0.12) !important;
 }
 
 /* 跟讀與影子訓練專用樣式 */
 .shadowing-master-card {
-    max-width: 900px;
+    max-width: 960px;
     margin: 0 auto 30px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 28px;
+    padding: 32px;
     box-shadow: var(--shadow-md);
     text-align: center;
+    padding-bottom: 110px;
 }
 .shadowing-display-box {
     background: var(--bg-sub);
     border-radius: var(--radius-md);
-    padding: 24px;
+    padding: 30px;
     margin-bottom: 24px;
+    border: 1px solid var(--border-color);
 }
 .shadowing-jp-large {
     font-family: var(--font-jp);
-    font-size: 1.65rem;
-    line-height: 2.2;
-    margin-bottom: 12px;
+    font-size: 1.75rem;
+    line-height: 2.3;
+    margin-bottom: 16px;
+    color: var(--text-main);
 }
 .shadowing-zh-hint {
-    font-size: 1.15rem;
+    font-size: 1.18rem;
     color: var(--text-muted);
 }
 .shadowing-controls {
@@ -3276,16 +3302,16 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(15, 23, 42, 0.94);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border-top: 1px solid rgba(99, 102, 241, 0.35);
     padding: 10px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.45);
     color: #f8fafc;
 }
 .audio-bar-left {
@@ -3329,27 +3355,29 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
+    padding: 8px;
+    border-radius: 8px;
     transition: all 0.15s;
 }
 .btn-player-icon:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
 }
 .btn-player-icon.active {
     color: #818cf8;
+    background: rgba(99, 102, 241, 0.2);
 }
 .audio-voice-select {
     background: #1e293b;
-    border: 1px solid rgba(99, 102, 241, 0.4);
+    border: 1px solid rgba(99, 102, 241, 0.45);
     color: #f8fafc;
     border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 0.82rem;
+    padding: 6px 12px;
+    font-size: 0.85rem;
     outline: none;
+    font-weight: 600;
 }
 
 </style>
@@ -3409,83 +3437,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     </button>
                 </nav>
             </div>
-
-            <!-- Reading Control Toolbar in Header -->
-            <div class="header-toolbar">
-                <!-- Japanese Original Mode Switch (中日雙向翻譯練習) -->
-                <div class="control-pill-group" title="日文原文顯示模式 (中日雙向翻譯自測練習)">
-                    <span class="group-label"><i class="fa-solid fa-file-lines"></i> 原文:</span>
-                    <button class="pill-btn active" id="btnJpShow" data-mode="show" title="正常顯示日文原文">顯示</button>
-                    <button class="pill-btn" id="btnJpMask" data-mode="mask" title="【中翻日練習模式】日文原文預設遮蔽模糊，看中文練習翻譯，游標移過或點擊揭示">遮蔽自測</button>
-                </div>
-
-                <!-- Furigana Mode Switch -->
-                <div class="control-pill-group" title="振假名讀音顯示模式">
-                    <span class="group-label"><i class="fa-solid fa-font"></i> 假名:</span>
-                    <button class="pill-btn active" id="btnRubyShow" data-mode="show" title="顯示漢字上方平假名讀音">顯示</button>
-                    <button class="pill-btn" id="btnRubyHide" data-mode="hide" title="完全隱藏假名讀音，訓練漢字直讀">隱藏</button>
-                    <button class="pill-btn" id="btnRubyMask" data-mode="mask" title="【遮蔽測驗模式】讀音預設遮蔽，滑鼠懸浮或點擊時揭示">遮蔽自測</button>
-                </div>
-
-                <!-- Vocabulary Level Color Switch -->
-                <div class="control-pill-group" title="JLPT 單字色彩標註開關">
-                    <span class="group-label"><i class="fa-solid fa-palette"></i> 單字:</span>
-                    <button class="pill-btn active" id="btnToggleWordColors" title="依 JLPT N1~N5 分顏色標示單字">分級著色</button>
-                </div>
-
-                <!-- Grammar Pattern Switch -->
-                <div class="control-pill-group" title="941 條文法句型標註開關">
-                    <span class="group-label"><i class="fa-solid fa-highlighter"></i> 文型:</span>
-                    <button class="pill-btn active" id="btnToggleGrammar" title="高亮標註文章中符合《絵でわかる日本語》之文法">文法標註</button>
-                </div>
-
-                <!-- Particle Mode Switch (助詞遮蔽測驗) -->
-                <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
-                <!-- Particle & Grammar Masking Mode Switch (階層遮蔽自測) -->
-                <div class="control-pill-group" title="助詞與文型階層遮蔽自測模式：可按格助詞、副助詞、複合助詞、文型句型進行單項或全文挖空自測">
-                    <span class="group-label"><i class="fa-solid fa-shapes"></i> 語法自測:</span>
-                    <button class="pill-btn active" id="btnGrammarShow" data-mode="show" title="正常顯示所有助詞與文型">顯示</button>
-                    <button class="pill-btn" id="btnGrammarMaskAll" data-mode="mask-all" title="【全部遮蔽】遮蔽全文所有格助詞、副助詞、複合助詞與文型">全部遮蔽</button>
-                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-case" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-adverbial" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-compound" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
-                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-sentence" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
-                    <button id="btnParticleShow" style="display:none;"></button>
-                    <button id="btnParticleMask" style="display:none;"></button>
-                </div>
-
-                <!-- Translation Mode Switch -->
-                <div class="control-pill-group" title="中文翻譯顯示模式">
-                    <span class="group-label"><i class="fa-solid fa-language"></i> 翻譯:</span>
-                    <button class="pill-btn active" id="btnTransShow" data-mode="show" title="全文顯示繁體中文翻譯對照">顯示</button>
-                    <button class="pill-btn" id="btnTransHide" data-mode="hide" title="完全隱藏中文翻譯，專注日文沉浸閱讀">隱藏</button>
-                    <button class="pill-btn" id="btnTransMask" data-mode="mask" title="【遮蔽測驗模式】中文預設遮蔽模糊，滑鼠懸浮或點擊即可揭示">遮蔽自測</button>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="header-actions">
-                    <button class="action-btn" id="btnOpenParticleQuizTop" title="開啟全篇日文助詞測驗挑戰與換句話說特訓">
-                        <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
-                        <span>助詞特訓</span>
-                    </button>
-                    <a href="flashcard.html" class="action-btn" id="btnWordReview" style="text-decoration: none; display: inline-flex; align-items: center;" title="進入 Anki 智慧單字抽認卡複習 APP (支援網頁、iOS、iPad、跨裝置同步)">
-                        <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
-                        <span>單字抽認卡 🎴</span>
-                    </a>
-                    <a href="trancy.html" class="action-btn" id="btnTrancyDual" style="text-decoration: none; display: inline-flex; align-items: center;" title="進入 Trancy AI 雙語字幕與中日雙向遮蔽互動網頁版">
-                        <i class="fa-solid fa-closed-captioning text-purple-500"></i>
-                        <span>Trancy 雙語遮蔽 🌐</span>
-                    </a>
-                    <button class="action-btn" id="btnOpenNotebook" title="我的生詞與文法筆記本">
-                        <i class="fa-solid fa-star text-amber-400"></i>
-                        <span>筆記本 (<strong id="notebookCount">0</strong>)</span>
-                    </button>
-                    <button class="action-btn icon-only" id="btnThemeToggle" title="切換深色/淺色模式">
-                        <i class="fa-solid fa-moon" id="themeIcon"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
     </header>
 
     <!-- Main Workspace Container -->
@@ -3801,7 +3752,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             <div class="trancy-stream-container">
                 <div class="trancy-stream-toolbar">
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-eye-slash"></i> 雙向遮蔽:</span>
+                        <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-eye-slash"></i> 雙向遮蔽:</span>
                         <div class="btn-group" id="trancyMaskGroup">
                             <button class="pill-btn active" data-tmask="all">全顯</button>
                             <button class="pill-btn" data-tmask="mask-jp" title="遮蔽日文原文（懸停或點擊解開）">遮日</button>
@@ -3831,9 +3782,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
              ========================================================================== -->
         <section class="master-view-pane" id="paneShadowing">
             <div class="shadowing-master-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <span class="badge-jlpt badge-n2" id="shadowingIndexBadge">第 1 句 / 共 0 句</span>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 10px;">
                         <button class="tool-btn" id="btnShadowPrev"><i class="fa-solid fa-backward-step"></i> 上一句</button>
                         <button class="tool-btn" id="btnShadowNext">下一句 <i class="fa-solid fa-forward-step"></i></button>
                     </div>
@@ -3850,29 +3801,29 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
                 <!-- Controls -->
                 <div class="shadowing-controls">
-                    <button class="btn-primary-action" id="btnShadowListen" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem;">
+                    <button class="btn-action-pill" id="btnShadowListen" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 1.05rem; padding: 10px 22px;">
                         <i class="fa-solid fa-volume-high"></i> 聆聽原聲 (伴隨變色)
                     </button>
                     <button class="btn-mic-record" id="btnShadowMic" title="點擊開始錄音，再次點擊結束">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <button class="btn-primary-action" id="btnShadowPlayRec" style="background: #10b981; font-size: 1rem; display: none;">
+                    <button class="btn-action-pill" id="btnShadowPlayRec" style="background: #10b981; color: #fff; font-size: 1.05rem; padding: 10px 22px; display: none;">
                         <i class="fa-solid fa-play"></i> 回放我的錄音
                     </button>
                 </div>
-                <div id="shadowRecTimer" style="font-size: 0.9rem; color: #ef4444; font-weight: 700; display: none;">
-                    ● 正在錄音中...
+                <div id="shadowRecTimer" style="font-size: 0.95rem; color: #ef4444; font-weight: 800; display: none; margin-bottom: 12px;">
+                    ● 正在錄音中...請大聲朗讀！再次點擊麥克風結束
                 </div>
 
                 <!-- 聽打填空特訓模組 -->
                 <div style="margin-top: 36px; padding-top: 24px; border-top: 1px dashed var(--border-color);">
-                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: var(--text-main);"><i class="fa-solid fa-keyboard"></i> 聽打克漏字挑戰</h3>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px;">聽取發音後，在輸入框中打出正確日語句子，檢驗假名與聽力：</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; max-width: 600px; margin: 0 auto;">
-                        <input type="text" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.05rem; outline: none;">
-                        <button class="tool-btn btn-quiz-accent" id="btnCheckDictation">驗證答案</button>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 10px; color: var(--text-main);"><i class="fa-solid fa-keyboard"></i> 聽打克漏字挑戰</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">聽取自然人聲發音後，在下方輸入聽到的日文句子：</p>
+                    <div style="display: flex; gap: 10px; justify-content: center; max-width: 650px; margin: 0 auto;">
+                        <input type="text" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.1rem; outline: none; background: var(--bg-body); color: var(--text-main);">
+                        <button class="tool-btn btn-quiz-accent" id="btnCheckDictation" style="padding: 10px 18px; font-weight: 700;">驗證答案</button>
                     </div>
-                    <div id="dictationFeedback" style="margin-top: 10px; font-size: 0.92rem; font-weight: 700;"></div>
+                    <div id="dictationFeedback" style="margin-top: 14px; font-size: 1rem; font-weight: 700;"></div>
                 </div>
             </div>
         </section>
@@ -3881,10 +3832,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
              VIEW 4: 單字與文法複習中心 (REVIEW CENTER)
              ========================================================================== -->
         <section class="master-view-pane" id="paneReview">
-            <div style="max-width: 1060px; margin: 0 auto; padding-bottom: 90px;">
+            <div style="max-width: 1080px; margin: 0 auto; padding-bottom: 110px;">
                 <div class="trancy-stream-toolbar">
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <span style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);"><i class="fa-solid fa-book-bookmark text-amber-500"></i> 我的學習複習庫</span>
+                        <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);"><i class="fa-solid fa-book-bookmark" style="color: #f59e0b;"></i> 我的學習複習庫</span>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="pill-btn active" id="btnSubTabStarred">⭐ 收藏句 (<span id="revStarredCount">0</span>)</button>
@@ -8249,8 +8200,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 <i class="fa-solid fa-play" id="globalPlayIcon"></i>
             </button>
             <div>
-                <div style="font-size: 0.88rem; font-weight: 700; color: #fff;" id="playerStatusTitle">語音發音就緒</div>
-                <div style="font-size: 0.72rem; color: #94a3b8;" id="playerStatusSnippet">點選任意句子或單字即可發音</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #fff;" id="playerStatusTitle">語音發音就緒</div>
+                <div style="font-size: 0.76rem; color: #94a3b8;" id="playerStatusSnippet">點選任意句子或單字即可發音</div>
             </div>
         </div>
 
@@ -8272,11 +8223,750 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             <!-- 無段語速 -->
             <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 0.78rem; color: #cbd5e1;" id="globalRateLabel">1.0x</span>
-                <input type="range" id="globalRateSlider" min="0.5" max="2.0" step="0.05" value="1.0" style="width: 75px; accent-color: #6366f1; cursor: pointer;">
+                <span style="font-size: 0.8rem; color: #cbd5e1; font-weight: 700;" id="globalRateLabel">1.0x</span>
+                <input type="range" id="globalRateSlider" min="0.5" max="2.0" step="0.05" value="1.0" style="width: 80px; accent-color: #6366f1; cursor: pointer;">
             </div>
         </div>
     </div>
     
+<script id="masterInteractiveScript">
+
+    // ==========================================================================
+    // 閱讀高手 (Reading Master) 全方位工作台互動控制器
+    // ==========================================================================
+    (function() {
+        'use strict';
+
+        console.log('[閱讀高手] 控制核心啟動中...');
+
+        const masterState = {
+            activeView: 'deep', // 'deep', 'trancy', 'shadowing', 'review'
+            trancyMask: 'all',
+            currentAudio: null,
+            currentSentenceIdx: 0,
+            isPlaying: false,
+            isLoop: false,
+            isAutoPlay: true,
+            playbackRate: 1.0,
+            voice: localStorage.getItem('master_voice') || 'nanami',
+            starredSentences: JSON.parse(localStorage.getItem('master_starred_sentences') || '[]'),
+            mediaRecorder: null,
+            audioChunks: [],
+            recordedBlobUrl: null,
+            activeKaraokeTimer: null
+        };
+
+        // 取得當前文章的句子清單
+        function getSentences() {
+            if (typeof state !== 'undefined' && state.analyzedData && Array.isArray(state.analyzedData.sentences)) {
+                return state.analyzedData.sentences;
+            }
+            return [];
+        }
+
+        // --- 視圖模式切換 (文章深度解析 / 沉浸雙語 / 跟讀聽力 / 單字文法複習) ---
+        window.switchMasterView = function(viewId) {
+            console.log('[閱讀高手] 切換視圖至:', viewId);
+            masterState.activeView = viewId;
+
+            // 更新頁籤樣式
+            document.querySelectorAll('.master-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewId);
+            });
+
+            // 隱藏全部面版
+            document.querySelectorAll('.master-view-pane').forEach(p => p.classList.remove('active'));
+
+            const inputCard = document.getElementById('inputCard');
+
+            if (viewId === 'deep') {
+                const pane = document.getElementById('paneDeep');
+                if (pane) pane.classList.add('active');
+                if (inputCard) inputCard.style.display = '';
+            } else if (viewId === 'trancy') {
+                const pane = document.getElementById('paneTrancy');
+                if (pane) pane.classList.add('active');
+                if (inputCard) inputCard.style.display = 'none';
+                renderTrancyStream();
+            } else if (viewId === 'shadowing') {
+                const pane = document.getElementById('paneShadowing');
+                if (pane) pane.classList.add('active');
+                if (inputCard) inputCard.style.display = 'none';
+                updateShadowingCard(masterState.currentSentenceIdx);
+            } else if (viewId === 'review') {
+                const pane = document.getElementById('paneReview');
+                if (pane) pane.classList.add('active');
+                if (inputCard) inputCard.style.display = 'none';
+                renderReviewNotebook('starred');
+            }
+        };
+
+        // --- 自然真人語音引擎 (Edge Neural Voices + Google Cloud HD + Stepless Rate + 隨讀變色) ---
+        function clearKaraokeHighlights() {
+            if (masterState.activeKaraokeTimer) {
+                clearInterval(masterState.activeKaraokeTimer);
+                masterState.activeKaraokeTimer = null;
+            }
+            document.querySelectorAll('.karaoke-active').forEach(el => el.classList.remove('karaoke-active'));
+            document.querySelectorAll('.karaoke-passed').forEach(el => el.classList.remove('karaoke-passed'));
+        }
+
+        function speakWithKaraoke(text, containerEl, onEnd) {
+            if (!text) return;
+            const cleanText = text.replace(/<[^>]+>/g, '').trim();
+
+            if (masterState.currentAudio) {
+                masterState.currentAudio.pause();
+                masterState.currentAudio = null;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            clearKaraokeHighlights();
+
+            // 尋找高亮單詞 tokens
+            let tokens = [];
+            if (containerEl) {
+                tokens = Array.from(containerEl.querySelectorAll('.jp-token, .word-token, .trancy-karaoke-word'));
+            }
+
+            const voiceChoice = masterState.voice;
+            const rate = masterState.playbackRate;
+
+            updatePlayerBarStatus(true, cleanText);
+
+            // 方案 1: 若瀏覽器具備微軟自然語音 (例如 Edge 瀏覽器)
+            if (voiceChoice !== 'google-hd' && 'speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices();
+                let matchedVoice = voices.find(v => {
+                    const isJa = v.lang.startsWith('ja') || v.lang.includes('JP');
+                    if (voiceChoice === 'nanami') return isJa && (v.name.includes('Nanami') || (v.name.includes('Natural') && !v.name.includes('Keita')));
+                    if (voiceChoice === 'keita') return isJa && v.name.includes('Keita');
+                    return isJa && !v.name.includes('Desktop') && !v.name.includes('Haruka');
+                });
+
+                if (matchedVoice) {
+                    const u = new SpeechSynthesisUtterance(cleanText);
+                    u.voice = matchedVoice;
+                    u.lang = 'ja-JP';
+                    u.rate = rate;
+
+                    if (tokens.length > 0) {
+                        u.onboundary = (e) => {
+                            const charIdx = e.charIndex || 0;
+                            let acc = 0;
+                            let activeIdx = 0;
+                            for (let i = 0; i < tokens.length; i++) {
+                                const w = tokens[i].dataset.word || tokens[i].textContent || '';
+                                acc += Math.max(1, w.length);
+                                if (acc > charIdx) { activeIdx = i; break; }
+                            }
+                            applyTokenHighlight(tokens, activeIdx);
+                        };
+                    }
+
+                    u.onend = () => {
+                        updatePlayerBarStatus(false);
+                        setTimeout(clearKaraokeHighlights, 400);
+                        if (onEnd) onEnd();
+                    };
+                    u.onerror = () => {
+                        updatePlayerBarStatus(false);
+                        clearKaraokeHighlights();
+                    };
+                    window.speechSynthesis.speak(u);
+                    return;
+                }
+            }
+
+            // 方案 2: Google Cloud HD 自然人聲
+            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText.slice(0, 180))}`;
+            const audio = new Audio(audioUrl);
+            masterState.currentAudio = audio;
+            audio.playbackRate = rate;
+
+            if (tokens.length > 0) {
+                const lengths = tokens.map(t => Math.max(1, (t.dataset.word || t.textContent || '').length));
+                const totalLen = lengths.reduce((a, b) => a + b, 0);
+                const cumulative = [];
+                let sum = 0;
+                for (const l of lengths) { sum += l; cumulative.push(sum / totalLen); }
+
+                masterState.activeKaraokeTimer = setInterval(() => {
+                    if (!audio || audio.paused || audio.ended) return;
+                    const dur = (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) ? audio.duration : (totalLen * 0.28 / rate);
+                    const ratio = Math.min(0.999, (audio.currentTime || 0) / dur);
+                    let activeIdx = 0;
+                    for (let i = 0; i < cumulative.length; i++) {
+                        if (ratio <= cumulative[i]) { activeIdx = i; break; }
+                    }
+                    applyTokenHighlight(tokens, activeIdx);
+                }, 35);
+            }
+
+            audio.onended = () => {
+                updatePlayerBarStatus(false);
+                masterState.currentAudio = null;
+                setTimeout(clearKaraokeHighlights, 400);
+                if (onEnd) onEnd();
+            };
+            audio.onerror = () => {
+                updatePlayerBarStatus(false);
+                clearKaraokeHighlights();
+            };
+            audio.play().catch(() => updatePlayerBarStatus(false));
+        }
+
+        function applyTokenHighlight(tokens, activeIdx) {
+            tokens.forEach((t, i) => {
+                if (i === activeIdx) {
+                    t.classList.add('karaoke-active');
+                    t.classList.remove('karaoke-passed');
+                } else if (i < activeIdx) {
+                    t.classList.remove('karaoke-active');
+                    t.classList.add('karaoke-passed');
+                } else {
+                    t.classList.remove('karaoke-active', 'karaoke-passed');
+                }
+            });
+        }
+
+        function updatePlayerBarStatus(playing, snippet = '') {
+            masterState.isPlaying = playing;
+            const icon = document.getElementById('globalPlayIcon');
+            const title = document.getElementById('playerStatusTitle');
+            const snipEl = document.getElementById('playerStatusSnippet');
+            if (icon) icon.className = playing ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+            if (title) title.textContent = playing ? '正在流暢朗讀 (伴隨變色)...' : '語音發音就緒';
+            if (snipEl && snippet) snipEl.textContent = snippet.slice(0, 35) + (snippet.length > 35 ? '...' : '');
+        }
+
+        // 全域覆寫 speakJapanese
+        window.speakJapanese = function(text, targetEl = null) {
+            speakWithKaraoke(text, targetEl);
+        };
+
+        // --- 渲染 Trancy 沉浸雙語流 (View 2) ---
+        function renderTrancyStream() {
+            const stream = document.getElementById('trancySentencesStream');
+            if (!stream) return;
+
+            const sentences = getSentences();
+            if (!sentences || sentences.length === 0) {
+                stream.innerHTML = `
+                    <div style="text-align:center;padding:50px 20px;background:var(--bg-card);border-radius:16px;border:1px dashed var(--border-color);">
+                        <i class="fa-solid fa-book-open-reader" style="font-size:2.8rem;color:#6366f1;margin-bottom:14px;"></i>
+                        <h3 style="font-size:1.25rem;font-weight:800;margin-bottom:8px;color:var(--text-main);">尚未載入文章</h3>
+                        <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:20px;">請直接點選下方精選範例文摘，系統將全自動完成分句、假名與雙語對照：</p>
+                        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                            <button class="btn-action-pill" onclick="quickLoadSample(0)" style="background:linear-gradient(135deg, #6366f1, #8b5cf6);color:#fff;"><i class="fa-solid fa-sparkles"></i> 載入範例一 (NHK科技)</button>
+                            <button class="btn-action-pill" onclick="quickLoadSample(1)"><i class="fa-solid fa-sparkles"></i> 載入範例二 (JLPT讀解)</button>
+                            <button class="btn-action-pill" onclick="quickLoadSample(2)"><i class="fa-solid fa-sparkles"></i> 載入範例三 (桃太郎故事)</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            stream.innerHTML = '';
+            sentences.forEach((s, idx) => {
+                const card = document.createElement('div');
+                card.className = `trancy-card ${getTrancyMaskClass()} ${idx === masterState.currentSentenceIdx ? 'active-playing' : ''}`;
+                card.id = `trancy-card-${idx}`;
+                card.dataset.index = idx;
+
+                const isStarred = masterState.starredSentences.some(st => st.text === s.text);
+
+                // 將句子切為標籤以支援隨讀變色
+                let jpTokensHtml = '';
+                if (s.words && s.words.length > 0) {
+                    jpTokensHtml = s.words.map(w => {
+                        const surface = w.surface || '';
+                        const reading = w.reading || '';
+                        if (reading && reading !== surface && /[一-龯]/.test(surface)) {
+                            return `<span class="jp-token" data-word="${surface}"><ruby>${surface}<rt>${reading}</rt></ruby></span>`;
+                        }
+                        return `<span class="jp-token" data-word="${surface}">${surface}</span>`;
+                    }).join('');
+                } else {
+                    jpTokensHtml = s.text;
+                }
+
+                card.innerHTML = `
+                    <div class="trancy-card-header">
+                        <span class="trancy-idx-tag">#${idx + 1}</span>
+                        <div class="trancy-card-actions">
+                            <button class="trancy-btn-action trancy-play-btn" data-idx="${idx}" title="自然語音朗讀 (伴隨變色)">
+                                <i class="fa-solid fa-volume-high"></i> 朗讀
+                            </button>
+                            <button class="trancy-btn-action btn-deep-analyze" data-idx="${idx}" title="一鍵跳轉句解霸深度解析 (941文法與助詞)">
+                                <i class="fa-solid fa-microscope"></i> 深度解析
+                            </button>
+                            <button class="trancy-btn-action btn-star-card" data-idx="${idx}" title="收藏此句">
+                                <i class="fa-solid fa-star" style="${isStarred ? 'color:#fbbf24;' : ''}"></i>
+                            </button>
+                            <button class="trancy-btn-action trancy-copy-btn" data-idx="${idx}" title="複製雙語內容">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="trancy-card-jp">
+                        ${jpTokensHtml}
+                    </div>
+                    <div class="trancy-card-zh">
+                        ${s.translation || '(正在產生中文翻譯...)'}
+                    </div>
+                `;
+
+                // 點擊深度解析按鈕 -> 切換至 View 1 並展開句解霸
+                const deepBtn = card.querySelector('.btn-deep-analyze');
+                deepBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    switchMasterView('deep');
+                    setTimeout(() => {
+                        if (typeof selectSentence === 'function') selectSentence(idx);
+                        const targetRow = document.querySelector(`[data-sentence-idx="${idx}"]`);
+                        if (targetRow) targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                };
+
+                // 朗讀按鈕
+                const playBtn = card.querySelector('.trancy-play-btn');
+                playBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    playSentenceAt(idx);
+                };
+
+                // 收藏按鈕
+                const starBtn = card.querySelector('.btn-star-card');
+                starBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleStarSentence(s);
+                    const nowStarred = masterState.starredSentences.some(st => st.text === s.text);
+                    starBtn.innerHTML = `<i class="fa-solid fa-star" style="${nowStarred ? 'color:#fbbf24;' : ''}"></i>`;
+                };
+
+                // 複製按鈕
+                const copyBtn = card.querySelector('.trancy-copy-btn');
+                copyBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(`${s.text}\n${s.translation || ''}`).then(() => {
+                        if (typeof showToast === 'function') showToast('已複製雙語內容！');
+                    });
+                };
+
+                // 點擊卡片解開遮蔽
+                card.onclick = () => card.classList.toggle('revealed');
+
+                stream.appendChild(card);
+            });
+        }
+
+        function getTrancyMaskClass() {
+            if (masterState.trancyMask === 'mask-jp') return 'mask-active-jp';
+            if (masterState.trancyMask === 'mask-zh') return 'mask-active-zh';
+            if (masterState.trancyMask === 'mask-both') return 'mask-active-jp mask-active-zh';
+            return '';
+        }
+
+        // --- 播放第 idx 句 ---
+        function playSentenceAt(idx) {
+            const sentences = getSentences();
+            if (!sentences || idx < 0 || idx >= sentences.length) return;
+            masterState.currentSentenceIdx = idx;
+
+            // 高亮 Trancy 卡片
+            document.querySelectorAll('.trancy-card').forEach((c, i) => {
+                c.classList.toggle('active-playing', i === idx);
+            });
+
+            // 句解霸高亮
+            if (typeof selectSentence === 'function') selectSentence(idx);
+
+            const s = sentences[idx];
+            let activeContainer = document.querySelector(`#trancy-card-${idx} .trancy-card-jp`) || document.querySelector(`[data-sentence-idx="${idx}"]`);
+            if (masterState.activeView === 'shadowing') {
+                activeContainer = document.getElementById('shadowingJpDisplay');
+            }
+
+            speakWithKaraoke(s.text, activeContainer, () => {
+                if (masterState.isLoop) {
+                    setTimeout(() => playSentenceAt(idx), 600);
+                } else if (masterState.isAutoPlay) {
+                    if (idx + 1 < sentences.length) {
+                        setTimeout(() => playSentenceAt(idx + 1), 700);
+                    } else {
+                        if (typeof showToast === 'function') showToast('已完成全篇朗讀！');
+                    }
+                }
+            });
+        }
+
+        // --- 影子跟讀與口語特訓 (View 3) ---
+        function updateShadowingCard(idx) {
+            const sentences = getSentences();
+            if (!sentences || sentences.length === 0) {
+                const jpDisplay = document.getElementById('shadowingJpDisplay');
+                if (jpDisplay) jpDisplay.innerHTML = '<span style="color:var(--text-muted);font-size:1.1rem;">尚未載入文章，請先在「文章深度解析」載入文章</span>';
+                return;
+            }
+            if (idx < 0) idx = 0;
+            if (idx >= sentences.length) idx = sentences.length - 1;
+            masterState.currentSentenceIdx = idx;
+
+            const s = sentences[idx];
+            const badge = document.getElementById('shadowingIndexBadge');
+            const jpDisplay = document.getElementById('shadowingJpDisplay');
+            const zhDisplay = document.getElementById('shadowingZhDisplay');
+
+            if (badge) badge.textContent = `第 ${idx + 1} 句 / 共 ${sentences.length} 句`;
+
+            // 組裝帶有 jp-token 的日語文字以利隨讀變色
+            let jpTokensHtml = '';
+            if (s.words && s.words.length > 0) {
+                jpTokensHtml = s.words.map(w => {
+                    const surface = w.surface || '';
+                    const reading = w.reading || '';
+                    if (reading && reading !== surface && /[一-龯]/.test(surface)) {
+                        return `<span class="jp-token" data-word="${surface}"><ruby>${surface}<rt>${reading}</rt></ruby></span>`;
+                    }
+                    return `<span class="jp-token" data-word="${surface}">${surface}</span>`;
+                }).join('');
+            } else {
+                jpTokensHtml = s.text;
+            }
+
+            if (jpDisplay) jpDisplay.innerHTML = jpTokensHtml;
+            if (zhDisplay) zhDisplay.textContent = s.translation || '(無中文翻譯)';
+
+            const dictInput = document.getElementById('dictationInput');
+            if (dictInput) { dictInput.value = ''; dictInput.style.borderColor = 'var(--border-color)'; }
+            const dictFeed = document.getElementById('dictationFeedback');
+            if (dictFeed) dictFeed.innerHTML = '';
+        }
+
+        // --- 收藏句子與生詞庫 (View 4) ---
+        function toggleStarSentence(s) {
+            const idx = masterState.starredSentences.findIndex(st => st.text === s.text);
+            if (idx >= 0) {
+                masterState.starredSentences.splice(idx, 1);
+                if (typeof showToast === 'function') showToast('已自收藏庫移除');
+            } else {
+                masterState.starredSentences.push({
+                    text: s.text,
+                    translation: s.translation || '',
+                    date: new Date().toLocaleDateString()
+                });
+                if (typeof showToast === 'function') showToast('已收藏至複習庫 ⭐');
+            }
+            localStorage.setItem('master_starred_sentences', JSON.stringify(masterState.starredSentences));
+            updateReviewCounters();
+        }
+
+        function updateReviewCounters() {
+            const starCountEl = document.getElementById('revStarredCount');
+            const vocabCountEl = document.getElementById('revVocabCount');
+            if (starCountEl) starCountEl.textContent = masterState.starredSentences.length;
+            if (vocabCountEl && typeof state !== 'undefined' && state.notebook) {
+                vocabCountEl.textContent = (state.notebook.words || []).length;
+            }
+        }
+
+        function renderReviewNotebook(subTab = 'starred') {
+            updateReviewCounters();
+            const container = document.getElementById('reviewContainer');
+            if (!container) return;
+
+            document.getElementById('btnSubTabStarred')?.classList.toggle('active', subTab === 'starred');
+            document.getElementById('btnSubTabVocab')?.classList.toggle('active', subTab === 'vocab');
+            document.getElementById('btnSubTabGrammar')?.classList.toggle('active', subTab === 'grammar');
+
+            if (subTab === 'starred') {
+                if (masterState.starredSentences.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-muted);background:var(--bg-card);border-radius:14px;">尚未收藏句子，在閱讀或雙語模式點擊 ⭐ 即可收藏！</div>';
+                    return;
+                }
+                let html = '<div style="display:flex;flex-direction:column;gap:14px;">';
+                masterState.starredSentences.forEach((st, i) => {
+                    html += `
+                        <div class="trancy-card" style="margin-bottom:0;">
+                            <div class="trancy-card-header">
+                                <span class="trancy-idx-tag">#${i + 1} (${st.date})</span>
+                                <div>
+                                    <button class="trancy-btn-action" onclick="window.speakJapanese('${st.text.replace(/'/g, "\\'")}');"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
+                                </div>
+                            </div>
+                            <div class="trancy-card-jp" style="font-size:1.25rem;">${st.text}</div>
+                            <div class="trancy-card-zh">${st.translation}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            } else if (subTab === 'vocab') {
+                const words = (typeof state !== 'undefined' && state.notebook) ? (state.notebook.words || []) : [];
+                if (words.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-muted);background:var(--bg-card);border-radius:14px;">尚未加入生詞，在文章中點選單字並點擊 ⭐ 即可收藏！</div>';
+                    return;
+                }
+                let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;">';
+                words.forEach((w, i) => {
+                    html += `
+                        <div class="trancy-card" style="margin-bottom:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-weight:800;font-size:1.15rem;color:var(--text-main);">${w.surface || w.baseForm}</span>
+                                <button class="trancy-btn-action" onclick="window.speakJapanese('${w.surface || w.baseForm}');"><i class="fa-solid fa-volume-high"></i></button>
+                            </div>
+                            <div style="font-size:0.9rem;color:#6366f1;font-weight:700;">${w.reading || ''}</div>
+                            <div style="font-size:0.88rem;color:var(--text-muted);margin-top:6px;">${w.meaning || '文章生詞'}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            } else if (subTab === 'grammar') {
+                // 941 文法卡片
+                if (typeof GRAMMAR_DATA === 'undefined') {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;">文法庫載入中...</div>';
+                    return;
+                }
+                const sampleGrammars = GRAMMAR_DATA.slice(0, 30);
+                let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">';
+                sampleGrammars.forEach(g => {
+                    html += `
+                        <div class="trancy-card" style="margin-bottom:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span class="badge-jlpt badge-${(g.level || 'n2').toLowerCase()}">${g.level || 'N2'}</span>
+                                <span style="font-size:0.8rem;color:var(--text-muted);">#${g.id}</span>
+                            </div>
+                            <h4 style="font-size:1.1rem;font-weight:800;color:var(--text-main);margin-bottom:6px;">${g.title}</h4>
+                            <div style="font-size:0.85rem;color:#6366f1;margin-bottom:6px;">接續: ${g.form || '依句型'}</div>
+                            <div style="font-size:0.88rem;color:var(--text-muted);line-height:1.6;">${g.meaningZh || ''}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        }
+
+        // --- 快速載入範例文章 ---
+        window.quickLoadSample = function(sampleIdx) {
+            if (typeof SAMPLE_ARTICLES === 'undefined' || !SAMPLE_ARTICLES[sampleIdx]) return;
+            const a = SAMPLE_ARTICLES[sampleIdx];
+            if (typeof dom !== 'undefined' && dom.articleInput) {
+                dom.articleInput.value = a.content;
+                if (dom.inputCharCount) dom.inputCharCount.textContent = `已輸入 ${a.content.length} 字`;
+            }
+            if (typeof handleStartReadingClient === 'function') {
+                handleStartReadingClient();
+            }
+        };
+
+        // --- 綁定事件監聽器 ---
+        function initMasterListeners() {
+            console.log('[閱讀高手] 綁定所有互動按鈕監聽器...');
+
+            // 1. 頂部四大模式切換頁籤按鈕
+            document.querySelectorAll('.master-tab-btn').forEach(btn => {
+                btn.onclick = () => window.switchMasterView(btn.dataset.view);
+            });
+
+            // 2. 雙語遮蔽按鈕切換
+            document.querySelectorAll('#trancyMaskGroup button').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('#trancyMaskGroup button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    masterState.trancyMask = btn.dataset.tmask;
+                    renderTrancyStream();
+                };
+            });
+
+            // 3. 一鍵反轉所有遮蔽
+            const btnRevAll = document.getElementById('btnTrancyReverseAll');
+            if (btnRevAll) {
+                btnRevAll.onclick = () => {
+                    document.querySelectorAll('.trancy-card').forEach(c => c.classList.toggle('revealed'));
+                };
+            }
+
+            // 4. 全篇卡拉OK朗讀
+            const btnPlayAll = document.getElementById('btnTrancyPlayAll');
+            if (btnPlayAll) {
+                btnPlayAll.onclick = () => playSentenceAt(0);
+            }
+
+            // 5. 跟讀控制項
+            document.getElementById('btnShadowPrev')?.addEventListener('click', () => {
+                if (masterState.currentSentenceIdx > 0) updateShadowingCard(masterState.currentSentenceIdx - 1);
+            });
+            document.getElementById('btnShadowNext')?.addEventListener('click', () => {
+                const sentences = getSentences();
+                if (masterState.currentSentenceIdx + 1 < sentences.length) {
+                    updateShadowingCard(masterState.currentSentenceIdx + 1);
+                }
+            });
+            document.getElementById('btnShadowListen')?.addEventListener('click', () => {
+                const sentences = getSentences();
+                const s = sentences[masterState.currentSentenceIdx];
+                if (s) speakWithKaraoke(s.text, document.getElementById('shadowingJpDisplay'));
+            });
+
+            // 麥克風錄音
+            const micBtn = document.getElementById('btnShadowMic');
+            const playRecBtn = document.getElementById('btnShadowPlayRec');
+            const recTimer = document.getElementById('shadowRecTimer');
+
+            if (micBtn && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                micBtn.onclick = async () => {
+                    if (masterState.mediaRecorder && masterState.mediaRecorder.state === 'recording') {
+                        masterState.mediaRecorder.stop();
+                        micBtn.classList.remove('recording');
+                        if (recTimer) recTimer.style.display = 'none';
+                    } else {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            masterState.audioChunks = [];
+                            masterState.mediaRecorder = new MediaRecorder(stream);
+                            masterState.mediaRecorder.ondataavailable = (e) => masterState.audioChunks.push(e.data);
+                            masterState.mediaRecorder.onstop = () => {
+                                const blob = new Blob(masterState.audioChunks, { type: 'audio/webm' });
+                                masterState.recordedBlobUrl = URL.createObjectURL(blob);
+                                if (playRecBtn) {
+                                    playRecBtn.style.display = 'inline-flex';
+                                    playRecBtn.onclick = () => {
+                                        const audio = new Audio(masterState.recordedBlobUrl);
+                                        audio.play();
+                                    };
+                                }
+                                if (typeof showToast === 'function') showToast('🎉 錄音完成！點擊綠色按鈕回放對比');
+                            };
+                            masterState.mediaRecorder.start();
+                            micBtn.classList.add('recording');
+                            if (recTimer) recTimer.style.display = 'block';
+                        } catch (err) {
+                            if (typeof showToast === 'function') showToast('無法取得麥克風權限：' + err.message);
+                        }
+                    }
+                };
+            }
+
+            // 聽打填空驗證
+            document.getElementById('btnCheckDictation')?.addEventListener('click', () => {
+                const input = document.getElementById('dictationInput');
+                const feedback = document.getElementById('dictationFeedback');
+                const sentences = getSentences();
+                const s = sentences[masterState.currentSentenceIdx];
+                if (!input || !s) return;
+
+                const cleanUser = input.value.trim().replace(/[\s、。！？,.!?]/g, '');
+                const cleanTarget = s.text.trim().replace(/[\s、。！？,.!?]/g, '');
+
+                if (cleanUser === cleanTarget) {
+                    input.style.borderColor = '#10b981';
+                    feedback.innerHTML = '<span style="color:#10b981;">🎉 太棒了！聽力與假名拼寫完全正確！</span>';
+                } else {
+                    input.style.borderColor = '#ef4444';
+                    feedback.innerHTML = `<span style="color:#ef4444;">❌ 答案未完全對應，標準句子：${s.text}</span>`;
+                }
+            });
+
+            // 複習庫子分頁
+            document.getElementById('btnSubTabStarred')?.addEventListener('click', () => renderReviewNotebook('starred'));
+            document.getElementById('btnSubTabVocab')?.addEventListener('click', () => renderReviewNotebook('vocab'));
+            document.getElementById('btnSubTabGrammar')?.addEventListener('click', () => renderReviewNotebook('grammar'));
+
+            // 6. 全域音頻播放欄控制事件
+            document.getElementById('btnGlobalPlay')?.addEventListener('click', () => {
+                if (masterState.isPlaying) {
+                    if (masterState.currentAudio) masterState.currentAudio.pause();
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    updatePlayerBarStatus(false);
+                } else {
+                    playSentenceAt(masterState.currentSentenceIdx);
+                }
+            });
+
+            document.getElementById('btnGlobalPrev')?.addEventListener('click', () => {
+                if (masterState.currentSentenceIdx > 0) playSentenceAt(masterState.currentSentenceIdx - 1);
+            });
+            document.getElementById('btnGlobalNext')?.addEventListener('click', () => {
+                const sentences = getSentences();
+                if (masterState.currentSentenceIdx + 1 < sentences.length) {
+                    playSentenceAt(masterState.currentSentenceIdx + 1);
+                }
+            });
+            document.getElementById('btnGlobalLoop')?.addEventListener('click', (e) => {
+                masterState.isLoop = !masterState.isLoop;
+                e.currentTarget.classList.toggle('active', masterState.isLoop);
+                if (typeof showToast === 'function') showToast(masterState.isLoop ? '已開啟單句循環' : '已關閉單句循環');
+            });
+            document.getElementById('btnGlobalAutoNext')?.addEventListener('click', (e) => {
+                masterState.isAutoPlay = !masterState.isAutoPlay;
+                e.currentTarget.classList.toggle('active', masterState.isAutoPlay);
+                if (typeof showToast === 'function') showToast(masterState.isAutoPlay ? '已開啟自動連播' : '已關閉自動連播');
+            });
+
+            document.getElementById('globalVoiceSelect')?.addEventListener('change', (e) => {
+                masterState.voice = e.target.value;
+                localStorage.setItem('master_voice', masterState.voice);
+            });
+
+            document.getElementById('globalRateSlider')?.addEventListener('input', (e) => {
+                masterState.playbackRate = parseFloat(e.target.value);
+                const lbl = document.getElementById('globalRateLabel');
+                if (lbl) lbl.textContent = masterState.playbackRate.toFixed(2) + 'x';
+                if (masterState.currentAudio) masterState.currentAudio.playbackRate = masterState.playbackRate;
+            });
+
+            // 鍵盤快捷鍵 (Space 播放/暫停, J 上一句, K 下一句)
+            document.addEventListener('keydown', (e) => {
+                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    document.getElementById('btnGlobalPlay')?.click();
+                } else if (e.key === 'j' || e.key === 'J') {
+                    document.getElementById('btnGlobalPrev')?.click();
+                } else if (e.key === 'k' || e.key === 'K') {
+                    document.getElementById('btnGlobalNext')?.click();
+                }
+            });
+        }
+
+        // 核心 Hook: 監聽文章解析完成事件，全自動同步至另外三大視圖
+        const _origRenderReaderView = window.renderReaderView;
+        window.renderReaderView = function() {
+            if (typeof _origRenderReaderView === 'function') {
+                _origRenderReaderView.apply(this, arguments);
+            }
+            console.log('[閱讀高手] 偵測到文章解析完成，同步更新 Trancy 與跟讀視圖...');
+            renderTrancyStream();
+            updateShadowingCard(0);
+            updateReviewCounters();
+        };
+
+        // 頁面加載完成初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onInit);
+        } else {
+            onInit();
+        }
+
+        function onInit() {
+            initMasterListeners();
+
+            // 首次開啟時若未加載文章，自動載入範例文章一以供學生即時體驗
+            setTimeout(() => {
+                const sentences = getSentences();
+                if ((!sentences || sentences.length === 0) && typeof SAMPLE_ARTICLES !== 'undefined' && SAMPLE_ARTICLES.length > 0) {
+                    console.log('[閱讀高手] 自動預載入範例文章一...');
+                    window.quickLoadSample(0);
+                }
+            }, 350);
+        }
+
+    })();
+    
+</script>
 </body>
 </html>
