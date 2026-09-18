@@ -1826,31 +1826,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             const baseHira = kataToHira(baseReading);
             const surfaceReading = getInflectedSurfaceReading(surface, baseWord, baseHira);
             return createRubyHtml(surface, surfaceReading);
-        }}}
-
-            // 尋找尾部共同假名
-            let sLen = 0;
-            while (sLen < surface.length && sLen < readingHira.length &&
-                   surface[surface.length - 1 - sLen] === readingHira[readingHira.length - 1 - sLen]) {{
-                sLen++;
-            }}
-
-            // 尋找頭部共同假名
-            let pLen = 0;
-            while (pLen < (surface.length - sLen) && pLen < (readingHira.length - sLen) &&
-                   surface[pLen] === readingHira[pLen]) {{
-                pLen++;
-            }}
-
-            const prefix = surface.substring(0, pLen);
-            const kanji = surface.substring(pLen, surface.length - sLen);
-            const suffix = sLen > 0 ? surface.substring(surface.length - sLen) : '';
-            const rKanji = readingHira.substring(pLen, readingHira.length - sLen);
-
-            if (kanji && rKanji) {{
-                return `${{prefix}}<ruby>${{kanji}}<rt>${{rKanji}}</rt></ruby>${{suffix}}`;
-            }}
-            return `<ruby>${{surface}}<rt>${{readingHira}}</rt></ruby>`;
         }}
 
         // 編譯 941 條文法搜尋索引
@@ -2320,6 +2295,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
                     // A. 直接命中單字庫
                     if (JLPT_VOCAB && JLPT_VOCAB[sub]) {{
+                        if (sub === 'はい') {{
+                            const isStart = (i === 0 || /[、。！？!?\\s「」『』]/.test(text[i - 1]));
+                            const isEnd = (i + 2 >= textLen || /[、。！？!?\\s「」『』]/.test(text[i + 2]));
+                            if (!isStart && !isEnd) {{
+                                continue;
+                            }}
+                        }}
                         const [lvlNum, reading] = JLPT_VOCAB[sub];
                         const readingHira = kataToHira(reading);
                         const hasKanji = KANJI_REGEX.test(sub);
@@ -2343,14 +2325,15 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     if (baseWord && JLPT_VOCAB && JLPT_VOCAB[baseWord]) {{
                         const [lvlNum, baseReading] = JLPT_VOCAB[baseWord];
                         const baseReadingHira = kataToHira(baseReading);
+                        const surfaceReading = getInflectedSurfaceReading(sub, baseWord, baseReadingHira);
                         const hasKanji = KANJI_REGEX.test(sub);
                         tokens.push({{
                             surface: sub,
                             base_form: baseWord,
-                            reading: baseReadingHira,
+                            reading: surfaceReading,
                             jlpt: lvlNum ? `N${{lvlNum}}` : null,
                             is_kanji: hasKanji,
-                            ruby_html: makeRubyHtmlForInflected(sub, baseWord, baseReading),
+                            ruby_html: hasKanji ? createRubyHtml(sub, surfaceReading) : sub,
                             pos: baseWord.endsWith('い') ? '形容詞' : '動詞',
                             is_particle: false
                         }});
