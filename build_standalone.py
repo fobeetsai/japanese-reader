@@ -25,9 +25,38 @@ def build():
     compact_vocab = {}
     for word, entries in raw_vocab.items():
         if entries and isinstance(entries, list):
-            lvl = entries[0].get("level", 0)
-            reading = entries[0].get("reading", "")
-            compact_vocab[word] = [lvl, reading]
+            best_lvl = 0
+            best_reading = ""
+            for e in entries:
+                r = e.get("reading", "")
+                r_clean = re.sub(r'[（\(].*?[）\)]', '', r).strip()
+                if not r_clean:
+                    continue
+                lvl = e.get("level", 0)
+                if not best_reading or (lvl > 0 and (best_lvl == 0 or lvl > best_lvl)):
+                    best_lvl = lvl
+                    best_reading = r_clean
+            if not best_reading:
+                best_lvl = entries[0].get("level", 0)
+                best_reading = entries[0].get("reading", "")
+            compact_vocab[word] = [best_lvl, best_reading]
+
+    # 特殊高頻關鍵字正確讀音校正
+    compact_vocab['私'] = [5, 'わたし']
+    compact_vocab['わたし'] = [5, 'わたし']
+    compact_vocab['わたくし'] = [5, 'わたくし']
+    compact_vocab['はい'] = [5, 'はい']
+    compact_vocab['いま'] = [5, 'いま']
+    compact_vocab['今'] = [5, 'いま']
+    compact_vocab['明日'] = [5, 'あした']
+    compact_vocab['日本'] = [5, 'にほん']
+    compact_vocab['日本語'] = [5, 'にほんご']
+    compact_vocab['勉強'] = [5, 'べんきょう']
+    compact_vocab['学校'] = [5, 'がっこう']
+    compact_vocab['先生'] = [5, 'せんせい']
+    compact_vocab['友達'] = [5, 'ともだち']
+    compact_vocab['今日'] = [5, 'きょう']
+    compact_vocab['昨日'] = [5, 'きのう']
 
     # 注入常見動詞假名形、補助動詞與形式名詞，避免分詞零碎化
     supplemental_vocab = {
@@ -36,7 +65,12 @@ def build():
         'たい': [5, 'たい'], 'そうだ': [4, 'そうだ'], 'ようだ': [4, 'ようだ'], 'らしい': [4, 'らしい'],
         'わけ': [3, 'わけ'], 'もの': [4, 'もの'], 'ため': [4, 'ため'], 'よう': [4, 'よう'],
         'ところ': [4, 'ところ'], 'とおり': [4, 'とおり'], 'どおり': [4, 'どおり'], 'はず': [4, 'はず'],
-        'つもり': [4, 'つもり'], 'こと': [5, 'こと'], 'ほう': [5, 'ほう'], 'とき': [5, 'とき']
+        'つもり': [4, 'つもり'], 'こと': [5, 'こと'], 'ほう': [5, 'ほう'], 'とき': [5, 'とき'],
+        'ここ': [5, 'ここ'], 'そこ': [5, 'そこ'], 'あそこ': [5, 'あそこ'], 'どこ': [5, 'どこ'],
+        'いつ': [5, 'いつ'], 'なに': [5, 'なに'], 'なん': [5, 'なん'], 'だれ': [5, 'だれ'],
+        'どう': [5, 'どう'], 'なぜ': [4, 'なぜ'], 'とても': [5, 'とても'], 'もっと': [5, 'もっと'],
+        'いつも': [5, 'いつも'], 'たくさん': [5, 'たくさん'], 'すこし': [5, 'すこし'], 'ゆっくり': [5, 'ゆっくり'],
+        'あまり': [5, 'あまり'], 'ぜんぜん': [4, 'ぜんぜん'], 'たぶん': [4, 'たぶん'], 'たいてい': [4, 'たいてい']
     }
     for k, v in supplemental_vocab.items():
         if k not in compact_vocab:
@@ -94,26 +128,25 @@ def build():
 ruby {
     ruby-position: over !important;
     ruby-align: center !important;
-    display: inline-block !important;
+    display: inline-ruby !important;
     text-align: center !important;
     line-height: 1 !important;
-    margin: 0 1.5px !important;
+    margin: 0 1px !important;
     vertical-align: baseline !important;
     overflow: visible !important;
 }
 
 ruby rt {
-    font-size: 0.62em !important;
-    line-height: 1.2 !important;
-    color: #dc2626 !important;
+    font-size: 0.58em !important;
+    line-height: 1 !important;
+    color: #e11d48 !important;
     font-weight: 700 !important;
     font-family: var(--font-jp) !important;
-    display: block !important;
+    display: ruby-text !important;
     text-align: center !important;
-    margin-bottom: 0.32em !important;
+    margin-bottom: 0.25em !important;
     letter-spacing: 0 !important;
     user-select: none !important;
-    transform: translateY(-2px) !important;
 }
 
 .selected-sentence-text {
@@ -256,6 +289,18 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
     color: #6ee7b7;
 }
 
+.badge-active-on {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.35);
+}
+
+.badge-active-kun {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(5,150,105,0.35);
+}
+
 .reading-val-on {
     font-family: var(--font-jp);
     color: #2563eb;
@@ -275,6 +320,78 @@ body[data-trans-mode="mask"] .word-trans-val.revealed {
 
 [data-theme="dark"] .reading-val-kun {
     color: #34d399;
+}
+
+.reading-active-on {
+    font-weight: 800 !important;
+    color: #1d4ed8 !important;
+    background: rgba(37,99,235,0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+[data-theme="dark"] .reading-active-on {
+    color: #93c5fd !important;
+    background: rgba(59,130,246,0.2);
+}
+
+.reading-active-kun {
+    font-weight: 800 !important;
+    color: #047857 !important;
+    background: rgba(5,150,105,0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+[data-theme="dark"] .reading-active-kun {
+    color: #6ee7b7 !important;
+    background: rgba(16,185,129,0.2);
+}
+
+.kanji-type-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.2px;
+}
+.kanji-type-tag.is-on {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.kanji-type-tag.is-jukuji {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+[data-theme="dark"] .kanji-type-tag.is-jukuji {
+    background: #78350f;
+    color: #fcd34d;
+    border-color: #b45309;
+}
+.kanji-type-tag.is-kun {
+    background: #d1fae5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+[data-theme="dark"] .kanji-type-tag.is-on {
+    background: #1e3a8a;
+    color: #93c5fd;
+    border-color: #1d4ed8;
+}
+[data-theme="dark"] .kanji-type-tag.is-jukuji {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+[data-theme="dark"] .kanji-type-tag.is-jukuji {
+    background: #78350f;
+    color: #fcd34d;
+    border-color: #b45309;
+}
+.kanji-type-tag.is-kun {
+    background: #064e3b;
+    color: #6ee7b7;
+    border-color: #047857;
 }
 
 /* 單字複習專用樣式 */
@@ -1440,8 +1557,149 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             return kunStem || on || '';
         }}
 
-        // 取得單字之漢字音讀與訓讀對照標籤
-        function getKanjiReadingsHtml(word) {{
+        // 熟字訓 (Jukujikun) 常見字典表
+        const JUKUJIKUN_MAP = {{
+            '今日': 'きょう', '明日': 'あした', '昨日': 'きのう', '一昨日': 'おととい', '明後日': 'あさって',
+            '今年': 'ことし', '去年': 'きょねん', '大人': 'おとな', '眼鏡': 'めがね', '部屋': 'へや',
+            '友達': 'ともだち', '時計': 'とけい', '景色': 'けしき', '田舎': 'いなか', '八百屋': 'やおや',
+            '土産': 'みやげ', 'お土産': 'おみやげ', '紅葉': 'もみじ', '吹雪': 'ふぶき', '清水': 'しみず',
+            '鍛冶': 'かじ', '従兄弟': 'いとこ', '従姉妹': 'いとこ', '上手': 'じょうず', '下手': 'へた'
+        }};
+
+        // 清理讀音字串為清單陣列
+        function cleanReadingList(str) {{
+            if (!str || str === '-') return [];
+            return str.split(/[,、]/).map(s => {{
+                let cleaned = s.trim().replace(/\(.*?\)/g, '').replace(/-/g, '');
+                return kataToHira(cleaned);
+            }}).filter(Boolean);
+        }}
+
+        // 濁音與促音變體生成 (連濁・促音便)
+        function getVoicedVariants(str) {{
+            if (!str) return [];
+            const first = str[0];
+            const rest = str.slice(1);
+            const voicings = {{
+                'か': ['が'], 'き': ['ぎ'], 'く': ['ぐ'], 'け': ['げ'], 'こ': ['ご'],
+                'さ': ['ざ'], 'し': ['じ'], 'す': ['ず'], 'せ': ['ぜ'], 'そ': ['ぞ'],
+                'た': ['だ'], 'ち': ['ぢ'], 'つ': ['づ'], 'て': ['で'], 'と': ['ど'],
+                'は': ['ば', 'ぱ'], 'ひ': ['び', 'ぴ'], 'ふ': ['ぶ', 'ぷ'], 'へ': ['べ', 'ぺ'], 'ほ': ['ぼ', 'ぽ']
+            }};
+            const res = [str];
+            if (voicings[first]) {{
+                voicings[first].forEach(v => res.push(v + rest));
+            }}
+            if (str.endsWith('く') || str.endsWith('ち') || str.endsWith('つ')) {{
+                res.push(str.slice(0, -1) + 'っ');
+                if (voicings[first]) {{
+                    voicings[first].forEach(v => res.push(v + rest.slice(0, -1) + 'っ'));
+                }}
+            }}
+            return res;
+        }}
+
+        // 精準判定單字中的漢字是屬於音讀、訓讀還是熟字訓
+        function classifyKanjiReading(char, word, wordReading) {{
+            const entry = (typeof KANJI_DICT !== 'undefined') ? KANJI_DICT[char] : null;
+            if (!entry) return {{ type: 'unknown', onStr: '-', kunStr: '-', matchedReading: '' }};
+
+            const onList = cleanReadingList(entry[2]);
+            const kunList = cleanReadingList(entry[3]);
+
+            let detectedType = 'unknown';
+            let matchedReading = '';
+
+            if (word && wordReading) {{
+                const norm = kataToHira(wordReading.trim());
+
+                // 1. 熟字訓檢查
+                if (JUKUJIKUN_MAP[word] && norm === JUKUJIKUN_MAP[word]) {{
+                    return {{
+                        type: 'jukuji',
+                        matchedReading: norm,
+                        onStr: entry[2] || '-',
+                        kunStr: entry[3] || '-'
+                    }};
+                }}
+
+                // 2. 單漢字獨立詞 (例如: 私 = わたし, 山 = やま, 本 = ほん)
+                if (word === char) {{
+                    if (kunList.includes(norm)) {{
+                        return {{ type: 'kun', matchedReading: norm, onStr: entry[2] || '-', kunStr: entry[3] || '-' }};
+                    }}
+                    if (onList.includes(norm)) {{
+                        return {{ type: 'on', matchedReading: norm, onStr: entry[2] || '-', kunStr: entry[3] || '-' }};
+                    }}
+                }}
+
+                // 3. 帶送假名之動詞/形容詞 (例如: 食べる, 行く, 話す, 楽しい)
+                const hasOkurigana = /[\u3040-\u309f]/.test(word);
+                if (hasOkurigana) {{
+                    for (const k of kunList) {{
+                        if (!k) continue;
+                        if (norm.startsWith(k) || norm.includes(k) || k.startsWith(norm)) {{
+                            return {{ type: 'kun', matchedReading: k, onStr: entry[2] || '-', kunStr: entry[3] || '-' }};
+                        }}
+                    }}
+                }}
+
+                // 4. 多漢字複合詞 (例如: 日本語, 学校, 勉強, 食堂, 富士山, 旅行)
+                const isCompoundKanji = /^[\u4e00-\u9faf]+$/.test(word);
+
+                let foundOn = null;
+                for (const o of onList) {{
+                    const variants = getVoicedVariants(o);
+                    for (const v of variants) {{
+                        if (norm.includes(v)) {{
+                            foundOn = o;
+                            break;
+                        }}
+                    }}
+                    if (foundOn) break;
+                }}
+
+                let foundKun = null;
+                for (const k of kunList) {{
+                    const variants = getVoicedVariants(k);
+                    for (const v of variants) {{
+                        if (norm.includes(v)) {{
+                            foundKun = k;
+                            break;
+                        }}
+                    }}
+                    if (foundKun) break;
+                }}
+
+                if (foundOn && !foundKun) {{
+                    detectedType = 'on';
+                    matchedReading = foundOn;
+                }} else if (foundKun && !foundOn) {{
+                    detectedType = 'kun';
+                    matchedReading = foundKun;
+                }} else if (foundOn && foundKun) {{
+                    if (isCompoundKanji) {{
+                        detectedType = 'on';
+                        matchedReading = foundOn;
+                    }} else {{
+                        detectedType = 'kun';
+                        matchedReading = foundKun;
+                    }}
+                }} else if (isCompoundKanji) {{
+                    detectedType = 'on';
+                }}
+            }}
+
+            return {{
+                type: detectedType,
+                matchedReading: matchedReading,
+                onStr: entry[2] || '-',
+                kunStr: entry[3] || '-'
+            }};
+        }}
+
+        // 取得單字之漢字音讀與訓讀對照標籤 (標示本詞實際音讀或訓讀)
+        function getKanjiReadingsHtml(word, wordReading = '') {{
             if (!word) return '<span style="color:var(--text-muted);">-</span>';
             const kanjis = [];
             for (let i = 0; i < word.length; i++) {{
@@ -1455,38 +1713,120 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             }}
             let html = '<div class="kanji-readings-box">';
             kanjis.forEach(ch => {{
-                const entry = KANJI_DICT[ch];
-                if (entry) {{
-                    const onStr = kataToHira(entry[2] || '-');
-                    const kunStr = kataToHira(entry[3] || '-');
-                    html += `
-                        <div class="kanji-reading-item">
-                            <span class="kanji-char-badge">${{ch}}</span>
-                            <span class="badge-on">音</span><span class="reading-val-on">${{escapeHtml(onStr)}}</span>
-                            <span class="badge-kun">訓</span><span class="reading-val-kun">${{escapeHtml(kunStr)}}</span>
-                        </div>
-                    `;
-                }} else {{
-                    html += `
-                        <div class="kanji-reading-item">
-                            <span class="kanji-char-badge">${{ch}}</span>
-                            <span style="color:var(--text-muted);">-</span>
-                        </div>
-                    `;
+                const info = classifyKanjiReading(ch, word, wordReading);
+                const onDisplay = kataToHira(info.onStr);
+                const kunDisplay = kataToHira(info.kunStr);
+
+                const isOnActive = (info.type === 'on');
+                const isKunActive = (info.type === 'kun');
+                const isJukuji = (info.type === 'jukuji');
+
+                let typeBadge = '';
+                if (isOnActive) {{
+                    typeBadge = '<span class="kanji-type-tag is-on">【音讀】</span>';
+                }} else if (isKunActive) {{
+                    typeBadge = '<span class="kanji-type-tag is-kun">【訓讀】</span>';
+                }} else if (isJukuji) {{
+                    typeBadge = '<span class="kanji-type-tag is-jukuji">【熟字訓】</span>';
                 }}
+
+                html += `
+                    <div class="kanji-reading-item">
+                        <span class="kanji-char-badge">${{ch}}</span>
+                        ${{typeBadge}}
+                        <span class="badge-on ${{isOnActive ? 'badge-active-on' : ''}}">音</span>
+                        <span class="reading-val-on ${{isOnActive ? 'reading-active-on' : ''}}">${{escapeHtml(onDisplay)}}</span>
+                        <span class="badge-kun ${{isKunActive ? 'badge-active-kun' : ''}}">訓</span>
+                        <span class="reading-val-kun ${{isKunActive ? 'reading-active-kun' : ''}}">${{escapeHtml(kunDisplay)}}</span>
+                    </div>
+                `;
             }});
             html += '</div>';
             return html;
         }}
 
-        // 生成 Ruby HTML 標籤
+        // 100% 精準振假名 Ruby 生成器 (動態對齊漢字與假名)
         function createRubyHtml(surface, readingHira) {{
-            if (!readingHira || !KANJI_REGEX.test(surface)) return surface;
-            
+            if (!surface || !readingHira || !KANJI_REGEX.test(surface)) return surface || '';
+
             // 全漢字情況
-            if (/^[\\u4e00-\\u9faf]+$/.test(surface)) {{
+            if (/^[\u4e00-\u9faf]+$/.test(surface)) {{
                 return `<ruby>${{surface}}<rt>${{readingHira}}</rt></ruby>`;
             }}
+
+            // 將 surface 切分為漢字塊與假名塊交替序列
+            const chunks = [];
+            let currentType = KANJI_REGEX.test(surface[0]) ? 'kanji' : 'kana';
+            let currentText = surface[0];
+
+            for (let i = 1; i < surface.length; i++) {{
+                const isK = KANJI_REGEX.test(surface[i]);
+                const type = isK ? 'kanji' : 'kana';
+                if (type === currentType) {{
+                    currentText += surface[i];
+                }} else {{
+                    chunks.push({{ type: currentType, text: currentText }});
+                    currentType = type;
+                    currentText = surface[i];
+                }}
+            }}
+            chunks.push({{ type: currentType, text: currentText }});
+
+            let rPos = 0;
+            let out = '';
+            for (let c = 0; c < chunks.length; c++) {{
+                const chunk = chunks[c];
+                if (chunk.type === 'kana') {{
+                    out += chunk.text;
+                    rPos += chunk.text.length;
+                }} else {{
+                    const nextKanaChunk = chunks[c + 1];
+                    if (nextKanaChunk) {{
+                        const nextKana = nextKanaChunk.text;
+                        const foundPos = readingHira.indexOf(nextKana, rPos);
+                        if (foundPos !== -1) {{
+                            const kReading = readingHira.substring(rPos, foundPos);
+                            out += `<ruby>${{chunk.text}}<rt>${{kReading}}</rt></ruby>`;
+                            rPos = foundPos;
+                        }} else {{
+                            out += `<ruby>${{chunk.text}}<rt>${{readingHira.substring(rPos)}}</rt></ruby>`;
+                            rPos = readingHira.length;
+                        }}
+                    }} else {{
+                        const kReading = readingHira.substring(rPos);
+                        out += `<ruby>${{chunk.text}}<rt>${{kReading}}</rt></ruby>`;
+                        rPos = readingHira.length;
+                    }}
+                }}
+            }}
+            return out || `<ruby>${{surface}}<rt>${{readingHira}}</rt></ruby>`;
+        }}
+
+        // 動詞/形容詞活用形之實際發音還原
+        function getInflectedSurfaceReading(surface, baseWord, baseReadingHira) {{
+            if (!surface || !baseWord || !baseReadingHira) return baseReadingHira || surface;
+            if (surface === baseWord) return baseReadingHira;
+
+            let p = 0;
+            while (p < surface.length && p < baseWord.length && surface[p] === baseWord[p]) {{
+                p++;
+            }}
+            const baseTail = baseWord.substring(p);
+            const surfaceTail = surface.substring(p);
+
+            if (baseReadingHira.endsWith(baseTail)) {{
+                const stemReading = baseReadingHira.substring(0, baseReadingHira.length - baseTail.length);
+                return stemReading + surfaceTail;
+            }}
+            return baseReadingHira.slice(0, -1) + surfaceTail;
+        }}
+
+        function makeRubyHtmlForInflected(surface, baseWord, baseReading) {{
+            if (!surface) return '';
+            const baseHira = kataToHira(baseReading);
+            const surfaceReading = getInflectedSurfaceReading(surface, baseWord, baseHira);
+            return createRubyHtml(surface, surfaceReading);
+        }}}
 
             // 尋找尾部共同假名
             let sLen = 0;
@@ -3116,7 +3456,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 }}
 
                 const isFav = state.notebook.words.some(item => item.surface === baseForm || item.surface === w.surface);
-                const kanjiReadingsHtml = getKanjiReadingsHtml(baseForm);
+                const kanjiReadingsHtml = getKanjiReadingsHtml(baseForm, displayReading);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
