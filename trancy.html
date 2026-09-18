@@ -24,7 +24,14 @@
        仿 Trancy AI Translator / Dual Subtitles 視覺風格與雙向遮蔽互動
        ========================================================================== */
     :root {
-      /* Trancy Signature Gradient Palette */
+      /* 避免瀏覽器擴充功能之懸浮標記干擾閱讀畫面 */
+    #trancy-hover-marker {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* Trancy Signature Gradient Palette */
       --primary: #6366f1;
       --primary-hover: #4f46e5;
       --primary-glow: rgba(99, 102, 241, 0.35);

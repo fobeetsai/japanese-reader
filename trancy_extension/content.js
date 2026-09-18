@@ -866,10 +866,39 @@
   // Hover Quick-Translate Marker ([🌐 譯此段])
   // --------------------------------------------------------------------------
   function setupHoverMarker() {
+    // 若在日文閱讀器或學習相關頁面，不顯示懸浮譯此段，以免干擾學習
+    const href = window.location.href.toLowerCase();
+    if (href.includes('japanese-reader') || href.includes('master.html') || href.includes('閱讀高手') || href.includes('trancy.html') || href.includes('%e9%96%b1%e8%ae%80%e9%ab%98%e6%89%8b')) {
+      return;
+    }
+
     hoverMarkerEl = document.createElement('div');
     hoverMarkerEl.id = 'trancy-hover-marker';
-    hoverMarkerEl.innerHTML = '<span>🌐</span> 譯此段';
+    const isPinned = localStorage.getItem('trancy_hover_marker_pinned') === 'true';
+    if (isPinned) hoverMarkerEl.classList.add('is-pinned');
+
+    hoverMarkerEl.innerHTML = `
+      <span class="thm-btn-trans" style="display:inline-flex;align-items:center;gap:4px;"><span>🌐</span> 譯此段</span>
+      <span class="thm-btn-pin" id="btnPinMarker" title="${isPinned ? '解鎖游標跟隨' : '固定在右下角'}" style="margin-left:5px;cursor:pointer;opacity:0.8;font-size:11px;">${isPinned ? '📍' : '📌'}</span>
+    `;
     document.body.appendChild(hoverMarkerEl);
+
+    // 點擊固定/解鎖按鈕
+    const pinBtn = hoverMarkerEl.querySelector('#btnPinMarker');
+    if (pinBtn) {
+      pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const currentlyPinned = hoverMarkerEl.classList.toggle('is-pinned');
+        localStorage.setItem('trancy_hover_marker_pinned', currentlyPinned ? 'true' : 'false');
+        pinBtn.textContent = currentlyPinned ? '📍' : '📌';
+        pinBtn.title = currentlyPinned ? '解鎖游標跟隨' : '固定在右下角';
+        if (currentlyPinned) {
+          hoverMarkerEl.style.top = '';
+          hoverMarkerEl.style.left = '';
+          hoverMarkerEl.style.display = 'inline-flex';
+        }
+      });
+    }
 
     hoverMarkerEl.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -881,6 +910,7 @@
 
     document.addEventListener('mousemove', (e) => {
       if (state.isPickMode) return;
+      if (!hoverMarkerEl || hoverMarkerEl.classList.contains('is-pinned')) return;
       if (hoverMarkerEl.contains(e.target)) return;
 
       const target = findTargetParagraph(e.target);

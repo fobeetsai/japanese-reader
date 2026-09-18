@@ -670,3 +670,19 @@ body[data-trancy-ruby="hide"] rt.trancy-rt {
 }
 
 
+
+#trancy-hover-marker.is-pinned {
+  position: fixed !important;
+  right: 24px !important;
+  bottom: 85px !important;
+  top: auto !important;
+  left: auto !important;
+  display: inline-flex !important;
+  z-index: 2147483646 !important;
+  border-radius: 20px !important;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(99, 102, 241, 0.8) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
