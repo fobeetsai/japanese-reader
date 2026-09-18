@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日文閱讀助手 (Japanese Reading Assistant) | 仿句解霸・941條文法聯動</title>
+    <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・單字大成</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3003,7 +3003,356 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             gap: 8px;
         }
 
-    </style>
+    
+/* ==========================================================================
+   閱讀高手 (Reading Master) 全方位工作台專屬樣式
+   ========================================================================== */
+
+/* 頂部工作台模式切換導航 */
+.master-nav-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.06);
+    padding: 4px;
+    border-radius: 12px;
+    margin-left: 14px;
+}
+[data-theme="dark"] .master-nav-wrap {
+    background: rgba(255, 255, 255, 0.08);
+}
+.master-tab-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.master-tab-btn:hover {
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+.master-tab-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* 核心四大視圖面板 */
+.master-view-pane {
+    display: none;
+    animation: fadeInPane 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.master-view-pane.active {
+    display: block;
+}
+@keyframes fadeInPane {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 沉浸雙語卡片流樣式 */
+.trancy-stream-container {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding-bottom: 90px;
+}
+.trancy-stream-toolbar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+}
+.trancy-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    position: relative;
+}
+.trancy-card:hover {
+    border-color: #6366f1;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
+}
+.trancy-card.active-playing {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 8px 24px rgba(139, 92, 246, 0.2);
+    background: linear-gradient(180deg, var(--bg-card), rgba(99, 102, 241, 0.03));
+}
+.trancy-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.trancy-idx-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.12);
+    padding: 2px 8px;
+    border-radius: 9999px;
+}
+.trancy-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.trancy-btn-action {
+    background: var(--bg-sub);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+.trancy-btn-action:hover {
+    background: #6366f1;
+    color: #ffffff;
+    border-color: #6366f1;
+}
+.trancy-btn-action.btn-deep-analyze {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #6366f1;
+    font-weight: 700;
+}
+.trancy-btn-action.btn-deep-analyze:hover {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+.trancy-card-jp {
+    font-family: var(--font-jp);
+    font-size: 1.25rem;
+    line-height: 2.3;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+.trancy-card-zh {
+    font-size: 1.02rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 8px;
+}
+
+/* 雙向遮蔽效果 */
+.mask-active-jp .trancy-card-jp {
+    filter: blur(7px);
+    opacity: 0.3;
+    user-select: none;
+    transition: filter 0.2s, opacity 0.2s;
+    cursor: pointer;
+}
+.mask-active-jp .trancy-card:hover .trancy-card-jp,
+.mask-active-jp .trancy-card.revealed .trancy-card-jp {
+    filter: none;
+    opacity: 1;
+}
+.mask-active-zh .trancy-card-zh {
+    filter: blur(7px);
+    opacity: 0.3;
+    user-select: none;
+    transition: filter 0.2s, opacity 0.2s;
+    cursor: pointer;
+}
+.mask-active-zh .trancy-card:hover .trancy-card-zh,
+.mask-active-zh .trancy-card.revealed .trancy-card-zh {
+    filter: none;
+    opacity: 1;
+}
+
+/* KARAOKE 卡拉OK 隨讀變色高亮 */
+.jp-token.karaoke-active, .karaoke-active {
+    background: #fef08a !important;
+    color: #1e1b4b !important;
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.9), 0 0 0 1px rgba(234, 179, 8, 0.7) !important;
+    transform: scale(1.08);
+    font-weight: 700;
+    border-radius: 4px;
+    z-index: 5;
+}
+.jp-token.karaoke-active rt {
+    color: #1e1b4b !important;
+    font-weight: 700;
+    filter: none !important;
+}
+.jp-token.karaoke-passed, .karaoke-passed {
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* 跟讀與影子訓練專用樣式 */
+.shadowing-master-card {
+    max-width: 900px;
+    margin: 0 auto 30px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+.shadowing-display-box {
+    background: var(--bg-sub);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+.shadowing-jp-large {
+    font-family: var(--font-jp);
+    font-size: 1.65rem;
+    line-height: 2.2;
+    margin-bottom: 12px;
+}
+.shadowing-zh-hint {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+}
+.shadowing-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.btn-mic-record {
+    width: 68px;
+    height: 68px;
+    border-radius: 9999px;
+    border: none;
+    background: linear-gradient(135deg, #ef4444, #f43f5e);
+    color: #fff;
+    font-size: 1.6rem;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-mic-record:hover {
+    transform: scale(1.08);
+}
+.btn-mic-record.recording {
+    animation: micPulse 1.2s infinite;
+    background: #dc2626;
+}
+@keyframes micPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); }
+}
+
+/* 底部全域語音播放器底列 */
+.master-audio-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(99, 102, 241, 0.35);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+    color: #f8fafc;
+}
+.audio-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 240px;
+}
+.audio-bar-center {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    justify-content: center;
+    max-width: 600px;
+}
+.audio-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.btn-player-round {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    transition: all 0.15s;
+}
+.btn-player-round:hover {
+    transform: scale(1.08);
+}
+.btn-player-icon {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+.btn-player-icon:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+.btn-player-icon.active {
+    color: #818cf8;
+}
+.audio-voice-select {
+    background: #1e293b;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #f8fafc;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    outline: none;
+}
+
+</style>
     <link rel="stylesheet" href="static/cross_nav.css">
 </head>
 <body data-theme="light">
@@ -3031,21 +3380,34 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     <header class="app-header">
         <div class="header-container">
             <div class="header-brand-wrap">
-                <div class="brand-logo">
-                    <i class="fa-solid fa-book-open-reader"></i>
+                <div class="brand-logo" style="background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
+                    <i class="fa-solid fa-crown" style="color: #ffd700;"></i>
                 </div>
                 <div class="brand-info">
                     <div class="brand-title">
-                        <h1>日文閱讀助手</h1>
-                        <span class="version-tag">v2.1 漢字全假名・單字複習版</span>
+                        <h1 style="background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">閱讀高手</h1>
+                        <span class="version-tag" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-weight: 800;">全方位大成版</span>
                     </div>
                     <p class="brand-subtitle">
-                        仿句解霸閱讀拆解・深度聯動 
-                        <a href="https://fobeetsai.github.io/japanese-grammar/" target="_blank" rel="noopener noreferrer" class="grammar-link">
-                            <i class="fa-solid fa-graduation-cap"></i>《絵でわかる日本語》941條文法庫
-                        </a>
+                        941條文法 ✦ JLPT單字 ✦ 句解霸拆解 ✦ 沉浸雙語 ✦ 隨讀變色 ✦ 影子跟讀
                     </p>
                 </div>
+
+                <!-- 核心四大模式導航頁籤 -->
+                <nav class="master-nav-wrap" role="tablist">
+                    <button class="master-tab-btn active" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
+                        <i class="fa-solid fa-microscope"></i> 文章深度解析
+                    </button>
+                    <button class="master-tab-btn" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮、小字假名注音">
+                        <i class="fa-solid fa-closed-captioning"></i> 沉浸雙語閱讀
+                    </button>
+                    <button class="master-tab-btn" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、麥克風錄音對比、聽寫填空">
+                        <i class="fa-solid fa-microphone-lines"></i> 跟讀聽力特訓
+                    </button>
+                    <button class="master-tab-btn" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
+                        <i class="fa-solid fa-layer-group"></i> 單字文法複習
+                    </button>
+                </nav>
             </div>
 
             <!-- Reading Control Toolbar in Header -->
@@ -3109,10 +3471,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     <a href="flashcard.html" class="action-btn" id="btnWordReview" style="text-decoration: none; display: inline-flex; align-items: center;" title="進入 Anki 智慧單字抽認卡複習 APP (支援網頁、iOS、iPad、跨裝置同步)">
                         <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
                         <span>單字抽認卡 🎴</span>
-                    </a>
-                    <a href="master.html" class="action-btn" id="btnMasterReader" style="text-decoration: none; display: inline-flex; align-items: center; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff !important; font-weight: 800; border: none; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);" title="進入全方位終極大成版【閱讀高手】(文法+單字+文章解析+跟讀+雙語對照)">
-                        <i class="fa-solid fa-crown" style="color: #ffd700;"></i>
-                        <span>閱讀高手 👑</span>
                     </a>
                     <a href="trancy.html" class="action-btn" id="btnTrancyDual" style="text-decoration: none; display: inline-flex; align-items: center;" title="進入 Trancy AI 雙語字幕與中日雙向遮蔽互動網頁版">
                         <i class="fa-solid fa-closed-captioning text-purple-500"></i>
@@ -3206,7 +3564,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         </div>
 
         <!-- Reader Workspace (Two-Column Layout: Article Deck & Sentence Inspector) -->
-        <section class="reader-deck" id="readerDeck" style="display: none;">
+        <div class="master-view-pane active" id="paneDeep">
+<section class="reader-deck" id="readerDeck" style="display: none;">
 
             <!-- Left / Main Column: Article Reading Flow -->
             <div class="article-column">
@@ -3433,7 +3792,114 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         </div>
 </section>
 
-    </main>
+    </div><!-- end paneDeep -->
+
+        <!-- ==========================================================================
+             VIEW 2: TRANCY 沉浸雙語閱讀 (BILINGUAL DUAL STREAM)
+             ========================================================================== -->
+        <section class="master-view-pane" id="paneTrancy">
+            <div class="trancy-stream-container">
+                <div class="trancy-stream-toolbar">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-eye-slash"></i> 雙向遮蔽:</span>
+                        <div class="btn-group" id="trancyMaskGroup">
+                            <button class="pill-btn active" data-tmask="all">全顯</button>
+                            <button class="pill-btn" data-tmask="mask-jp" title="遮蔽日文原文（懸停或點擊解開）">遮日</button>
+                            <button class="pill-btn" data-tmask="mask-zh" title="遮蔽中文譯文（懸停或點擊解開）">遮中</button>
+                            <button class="pill-btn" data-tmask="mask-both" title="雙向全遮（盲聽特訓）">雙遮</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-action-pill" id="btnTrancyPlayAll" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-weight: 700; border: none;">
+                            <i class="fa-solid fa-play"></i> 全篇卡拉OK朗讀
+                        </button>
+                        <button class="btn-action-pill" id="btnTrancyReverseAll" title="一鍵反轉所有遮蔽">
+                            <i class="fa-solid fa-arrows-rotate"></i> 反轉遮蔽
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dual Sentences Stream -->
+                <div id="trancySentencesStream">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 3: 跟讀與聽力特訓 (SHADOWING & DICTATION)
+             ========================================================================== -->
+        <section class="master-view-pane" id="paneShadowing">
+            <div class="shadowing-master-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <span class="badge-jlpt badge-n2" id="shadowingIndexBadge">第 1 句 / 共 0 句</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="tool-btn" id="btnShadowPrev"><i class="fa-solid fa-backward-step"></i> 上一句</button>
+                        <button class="tool-btn" id="btnShadowNext">下一句 <i class="fa-solid fa-forward-step"></i></button>
+                    </div>
+                </div>
+
+                <div class="shadowing-display-box">
+                    <div class="shadowing-jp-large" id="shadowingJpDisplay">
+                        <!-- Target Sentence Injected -->
+                    </div>
+                    <div class="shadowing-zh-hint" id="shadowingZhDisplay">
+                        <!-- Chinese Translation Injected -->
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="shadowing-controls">
+                    <button class="btn-primary-action" id="btnShadowListen" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1rem;">
+                        <i class="fa-solid fa-volume-high"></i> 聆聽原聲 (伴隨變色)
+                    </button>
+                    <button class="btn-mic-record" id="btnShadowMic" title="點擊開始錄音，再次點擊結束">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button class="btn-primary-action" id="btnShadowPlayRec" style="background: #10b981; font-size: 1rem; display: none;">
+                        <i class="fa-solid fa-play"></i> 回放我的錄音
+                    </button>
+                </div>
+                <div id="shadowRecTimer" style="font-size: 0.9rem; color: #ef4444; font-weight: 700; display: none;">
+                    ● 正在錄音中...
+                </div>
+
+                <!-- 聽打填空特訓模組 -->
+                <div style="margin-top: 36px; padding-top: 24px; border-top: 1px dashed var(--border-color);">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: var(--text-main);"><i class="fa-solid fa-keyboard"></i> 聽打克漏字挑戰</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px;">聽取發音後，在輸入框中打出正確日語句子，檢驗假名與聽力：</p>
+                    <div style="display: flex; gap: 10px; justify-content: center; max-width: 600px; margin: 0 auto;">
+                        <input type="text" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.05rem; outline: none;">
+                        <button class="tool-btn btn-quiz-accent" id="btnCheckDictation">驗證答案</button>
+                    </div>
+                    <div id="dictationFeedback" style="margin-top: 10px; font-size: 0.92rem; font-weight: 700;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 4: 單字與文法複習中心 (REVIEW CENTER)
+             ========================================================================== -->
+        <section class="master-view-pane" id="paneReview">
+            <div style="max-width: 1060px; margin: 0 auto; padding-bottom: 90px;">
+                <div class="trancy-stream-toolbar">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);"><i class="fa-solid fa-book-bookmark text-amber-500"></i> 我的學習複習庫</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="pill-btn active" id="btnSubTabStarred">⭐ 收藏句 (<span id="revStarredCount">0</span>)</button>
+                        <button class="pill-btn" id="btnSubTabVocab">📖 標記生詞 (<span id="revVocabCount">0</span>)</button>
+                        <button class="pill-btn" id="btnSubTabGrammar">🎴 941 文法卡片</button>
+                    </div>
+                </div>
+
+                <div id="reviewContainer">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </section>
+    
+</main>
 
     <!-- Floating Particle Quick Quiz Popover (點擊助詞隨堂測驗與代用換句話說) -->
     <div class="particle-popover" id="particlePopover" style="display: none;">
@@ -7775,5 +8241,42 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             initAnalyzerDrag();
         }
     </script>
+
+    <!-- 底部微軟 Edge 自然人聲與卡拉OK高亮控制底列 -->
+    <div class="master-audio-bar" id="masterAudioBar">
+        <div class="audio-bar-left">
+            <button class="btn-player-round" id="btnGlobalPlay" title="播放 / 暫停 (Space)">
+                <i class="fa-solid fa-play" id="globalPlayIcon"></i>
+            </button>
+            <div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: #fff;" id="playerStatusTitle">語音發音就緒</div>
+                <div style="font-size: 0.72rem; color: #94a3b8;" id="playerStatusSnippet">點選任意句子或單字即可發音</div>
+            </div>
+        </div>
+
+        <div class="audio-bar-center">
+            <button class="btn-player-icon" id="btnGlobalPrev" title="上一句 (J)"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="btn-player-icon" id="btnGlobalLoop" title="循環朗讀當前句子"><i class="fa-solid fa-repeat"></i></button>
+            <button class="btn-player-icon active" id="btnGlobalAutoNext" title="朗讀完畢自動連播下一句"><i class="fa-solid fa-forward"></i></button>
+            <button class="btn-player-icon" id="btnGlobalNext" title="下一句 (K)"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+
+        <div class="audio-bar-right">
+            <!-- 語音引擎選單 -->
+            <select class="audio-voice-select" id="globalVoiceSelect" title="選取自然真人發音引擎">
+                <option value="nanami">🌸 微軟 Nanami (七海・自然女聲)</option>
+                <option value="keita">👦 微軟 Keita (圭太・自然男聲)</option>
+                <option value="google-hd">☁️ Google 真人高音質 (Cloud HD)</option>
+                <option value="default">🌐 瀏覽器日語 (系統)</option>
+            </select>
+
+            <!-- 無段語速 -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.78rem; color: #cbd5e1;" id="globalRateLabel">1.0x</span>
+                <input type="range" id="globalRateSlider" min="0.5" max="2.0" step="0.05" value="1.0" style="width: 75px; accent-color: #6366f1; cursor: pointer;">
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>

@@ -1,9 +1,21 @@
-# 日文閱讀助手 (Japanese Reading Assistant) 🇯🇵📖
+# 日語學習全旗艦套件：閱讀高手 👑 & 日文閱讀助手 🇯🇵📖
 
-> 仿 **句解霸 (en998.com/iread)** 閱讀拆解理念，專為日語自學者與閱讀者打造的智慧閱讀輔助系統。
-> 深度聯動 **《絵でわかる日本語》941 條繁體中文文法資料庫** (https://fobeetsai.github.io/japanese-grammar/)。
+> 融合 **句解霸 (en998.com/iread)** 閱讀拆解理念、**Trancy 沉浸式雙語字幕** 與 **《絵でわかる日本語》941 條繁體中文文法資料庫** (https://fobeetsai.github.io/japanese-grammar/)。
+> 全方位兼具：**941文法深度解析、JLPT單字色彩、假名遮蔽測驗、助詞代用換句話說、雙語字幕卡片、隨讀變色朗讀 (Karaoke)、影子跟讀、聽打特訓與 SRS 複習中心**。
 
-🌐 **線上使用網址**：[https://fobeetsai.github.io/japanese-reader/](https://fobeetsai.github.io/japanese-reader/)
+👑 **全功能旗艦旗艦 APP 網址**：[https://fobeetsai.github.io/japanese-reader/master.html](https://fobeetsai.github.io/japanese-reader/master.html) *(亦可開啟 [閱讀高手.html](https://fobeetsai.github.io/japanese-reader/%E9%96%B1%E8%AE%80%E9%AB%98%E6%89%8B.html))*  
+🌐 **日文閱讀助手 (專注句解)**：[https://fobeetsai.github.io/japanese-reader/](https://fobeetsai.github.io/japanese-reader/)  
+🌐 **Trancy 雙語特訓站 (專注字幕)**：[https://fobeetsai.github.io/japanese-reader/trancy.html](https://fobeetsai.github.io/japanese-reader/trancy.html)  
+🎴 **單字抽認卡 APP (AnkiFlash)**：[https://fobeetsai.github.io/japanese-reader/flashcard.html](https://fobeetsai.github.io/japanese-reader/flashcard.html)  
+
+---
+
+## 👑 全新旗艦：閱讀高手 (Reading Master - `master.html`)
+針對學生與自學者深度整合「閱讀理解」、「聽力跟讀」、「文法解析」、「單字記憶」之全功能一站式 Web APP：
+- 📖 **文章深度解析 (句解霸)**：941 條文法抽屜、8,138 JLPT 單字等級色彩標註、助詞文型階層防拆保護、代用換句話說深度分析。
+- 🌐 **沉浸雙語閱讀 (Trancy)**：雙語字幕流、四態遮蔽 (全顯 / 遮日 / 遮中 / 雙遮)、振假名開關、一鍵將任意句子轉入「🔬 深度解析」。
+- 🎧 **跟讀與聽力特訓 (Shadowing & Dictation)**：隨讀變色 (Karaoke 滾動高亮)、微軟 Edge 自然人聲 (七海 / 圭太)、無段語速調控、麥克風口說跟讀評分、聽打填空。
+- 📚 **單字與文法複習中心 (SRS Flashcards)**：即時星號收藏單字本、收藏句庫、941 文法卡片翻轉自測。
 
 ---
 
@@ -119,11 +131,13 @@
 ## 💻 離線與本機使用
 
 本系統為 **100% 純前端單一靜態 HTML** 架構，無須安裝 Python 或啟動後端：
+- **👑 閱讀高手 (旗艦全能)**：直接雙擊 `master.html` 或 `閱讀高手.html` 即可在瀏覽器完整開啟所有功能。
 - **日文閱讀助手**：直接雙擊 `index.html` 或 `japanese_reader.html` 即可在瀏覽器開啟。
 - **單字抽認卡 APP**：直接雙擊 `flashcard.html` 即可在任何瀏覽器、手機或平板中使用。
 - **Trancy 雙語遮蔽特訓站**：直接雙擊 `trancy.html` 即可體驗沉浸雙向遮蔽與聽打跟讀。
 
 🌐 **線上體驗網址**：
+- 👑 閱讀高手 (旗艦版)：[https://fobeetsai.github.io/japanese-reader/master.html](https://fobeetsai.github.io/japanese-reader/master.html)
 - 日文閱讀器：[https://fobeetsai.github.io/japanese-reader/](https://fobeetsai.github.io/japanese-reader/)
 - 單字抽認卡：[https://fobeetsai.github.io/japanese-reader/flashcard.html](https://fobeetsai.github.io/japanese-reader/flashcard.html)
 - Trancy 雙語遮蔽站：[https://fobeetsai.github.io/japanese-reader/trancy.html](https://fobeetsai.github.io/japanese-reader/trancy.html)
