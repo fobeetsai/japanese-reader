@@ -99,6 +99,32 @@ body {
 /* ==========================================================================
    Header & Navigation Toolbar
    ========================================================================== */
+
+/* ==========================================================================
+   Header Top Row & Deep Mode Toolbar Layout
+   ========================================================================== */
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+}
+
+.header-toolbar.deep-mode-toolbar {
+    width: 100%;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    transition: all 0.2s ease;
+}
+
 .app-header {
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
@@ -3580,9 +3606,15 @@ body[data-ruby-mode="hide"] ruby rt,
     visibility: hidden !important;
 }
 
-/* 遮蔽自測模式 (Mask Mode) */
+/* ==========================================================================
+   全方位遮蔽自測與即時懸停揭示引擎 (Universal Hover & Reveal System)
+   保證假名、原文、翻譯、助詞文型、挖空特訓在遮蔽時懸停 (Hover) 與點擊皆 100% 即時清晰揭示
+   ========================================================================== */
+
+/* 1. 振假名 (Ruby) 遮蔽模式 */
 body[data-ruby-mode="mask"] ruby rt,
-.furigana-mode-mask ruby rt {
+.furigana-mode-mask ruby rt,
+.cloze-blank ruby rt {
     filter: blur(4.5px) !important;
     opacity: 0.18 !important;
     background: #94a3b8 !important;
@@ -3590,26 +3622,54 @@ body[data-ruby-mode="mask"] ruby rt,
     color: transparent !important;
     user-select: none !important;
     cursor: pointer !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 [data-theme="dark"] body[data-ruby-mode="mask"] ruby rt,
-[data-theme="dark"] .furigana-mode-mask ruby rt {
+[data-theme="dark"] .furigana-mode-mask ruby rt,
+[data-theme="dark"] .cloze-blank ruby rt {
     background: #64748b !important;
 }
 
-/* 滑鼠懸停或點擊揭示 (Reveal) */
+/* 振假名全方位懸停揭示 (Furigana Hover Reveal across ALL Views) */
 body[data-ruby-mode="mask"] ruby:hover rt,
+body[data-ruby-mode="mask"] rt:hover,
 body[data-ruby-mode="mask"] ruby.revealed rt,
 body[data-ruby-mode="mask"] .word-token:hover ruby rt,
 body[data-ruby-mode="mask"] .word-token.revealed ruby rt,
 body[data-ruby-mode="mask"] .sentence-row:hover ruby rt,
 body[data-ruby-mode="mask"] .sentence-row.revealed ruby rt,
+body[data-ruby-mode="mask"] .sentence-jp-text:hover ruby rt,
+body[data-ruby-mode="mask"] .sentence-jp-text.revealed ruby rt,
 body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt,
 body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
+body[data-ruby-mode="mask"] #selectedSentenceJp ruby:hover rt,
+body[data-ruby-mode="mask"] .sentence-words-table tr:hover ruby rt,
+body[data-ruby-mode="mask"] .sentence-words-table tr.revealed ruby rt,
+body[data-ruby-mode="mask"] #allWordsTableTbody tr:hover ruby rt,
+body[data-ruby-mode="mask"] #allWordsTableTbody tr.revealed ruby rt,
+body[data-ruby-mode="mask"] .all-words-table tr:hover ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box:hover ruby rt,
+body[data-ruby-mode="mask"] .grammar-example-box.revealed ruby rt,
+body[data-ruby-mode="mask"] .grammar-item-card:hover .grammar-example-box ruby rt,
+body[data-ruby-mode="mask"] .drawer-box:hover ruby rt,
+body[data-ruby-mode="mask"] .drawer-box.revealed ruby rt,
+.furigana-mode-mask ruby:hover rt,
+.furigana-mode-mask rt:hover,
+.furigana-mode-mask ruby.revealed rt,
 .furigana-mode-mask .jp-token:hover ruby rt,
 .furigana-mode-mask .jp-token.revealed ruby rt,
-.furigana-mode-mask .trancy-card.revealed ruby rt {
+.furigana-mode-mask.trancy-card:hover ruby rt,
+.furigana-mode-mask.trancy-card.revealed ruby rt,
+.trancy-card.furigana-mode-mask:hover ruby rt,
+.trancy-card.furigana-mode-mask.revealed ruby rt,
+.furigana-mode-mask .trancy-card-jp:hover ruby rt,
+.furigana-mode-mask .trancy-card:hover ruby rt,
+.trancy-card:hover .trancy-card-jp ruby rt,
+.cloze-blank:hover ruby rt,
+.cloze-blank.revealed ruby rt,
+#shadowingJpDisplay:hover ruby rt,
+#shadowingJpDisplay.revealed ruby rt {
     filter: none !important;
     opacity: 1 !important;
     background: transparent !important;
@@ -3618,11 +3678,163 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
 }
 
 [data-theme="dark"] body[data-ruby-mode="mask"] ruby:hover rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] rt:hover,
 [data-theme="dark"] body[data-ruby-mode="mask"] ruby.revealed rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .word-token:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .word-token.revealed ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .sentence-row:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .sentence-row.revealed ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .sentence-jp-text:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] #selectedSentenceJp:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] .sentence-words-table tr:hover ruby rt,
+[data-theme="dark"] body[data-ruby-mode="mask"] #allWordsTableTbody tr:hover ruby rt,
+[data-theme="dark"] .furigana-mode-mask ruby:hover rt,
+[data-theme="dark"] .furigana-mode-mask rt:hover,
 [data-theme="dark"] .furigana-mode-mask .jp-token:hover ruby rt,
 [data-theme="dark"] .furigana-mode-mask .jp-token.revealed ruby rt,
-[data-theme="dark"] .furigana-mode-mask .trancy-card.revealed ruby rt {
+[data-theme="dark"] .furigana-mode-mask.trancy-card:hover ruby rt,
+[data-theme="dark"] .furigana-mode-mask.trancy-card.revealed ruby rt,
+[data-theme="dark"] .trancy-card.furigana-mode-mask:hover ruby rt,
+[data-theme="dark"] .trancy-card.furigana-mode-mask.revealed ruby rt,
+[data-theme="dark"] .furigana-mode-mask .trancy-card-jp:hover ruby rt,
+[data-theme="dark"] .trancy-card:hover .trancy-card-jp ruby rt,
+[data-theme="dark"] .cloze-blank:hover ruby rt,
+[data-theme="dark"] .cloze-blank.revealed ruby rt,
+[data-theme="dark"] #shadowingJpDisplay:hover ruby rt {
     color: #fb7185 !important;
+}
+
+/* 2. 中文翻譯 (ZH Translation) 遮蔽與全方位懸停揭示 */
+body[data-trans-mode="mask"] .trans-text,
+body[data-trans-mode="mask"] #selectedSentenceZh,
+body[data-trans-mode="mask"] .word-trans-val,
+.mask-active-zh .trancy-card-zh,
+.trancy-card.mask-active-zh .trancy-card-zh {
+    filter: blur(6px) !important;
+    opacity: 0.22 !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body[data-trans-mode="mask"] .sentence-trans-row:hover .trans-text,
+body[data-trans-mode="mask"] .sentence-row:hover .trans-text,
+body[data-trans-mode="mask"] .trans-text:hover,
+body[data-trans-mode="mask"] .trans-text.revealed,
+body[data-trans-mode="mask"] #selectedSentenceZh:hover,
+body[data-trans-mode="mask"] #selectedSentenceZh.revealed,
+body[data-trans-mode="mask"] .word-trans-val:hover,
+body[data-trans-mode="mask"] .word-trans-val.revealed,
+body[data-trans-mode="mask"] tr:hover .word-trans-val,
+.trancy-card.mask-active-zh:hover .trancy-card-zh,
+.trancy-card.mask-active-zh.revealed .trancy-card-zh,
+.mask-active-zh.trancy-card:hover .trancy-card-zh,
+.mask-active-zh.trancy-card.revealed .trancy-card-zh,
+.mask-active-zh .trancy-card:hover .trancy-card-zh,
+.mask-active-zh .trancy-card.revealed .trancy-card-zh,
+.trancy-card:hover .trancy-card-zh,
+.trancy-card-zh:hover,
+#shadowingZhDisplay:hover {
+    filter: none !important;
+    opacity: 1 !important;
+    user-select: text !important;
+}
+
+/* 3. 日文原文 (JP Original) 遮蔽與全方位懸停揭示 */
+body[data-jp-mode="mask"] .sentence-jp-text,
+body[data-jp-mode="mask"] #selectedSentenceJp,
+.mask-active-jp .trancy-card-jp,
+.trancy-card.mask-active-jp .trancy-card-jp {
+    filter: blur(7px) !important;
+    opacity: 0.2 !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body[data-jp-mode="mask"] .sentence-row:hover .sentence-jp-text,
+body[data-jp-mode="mask"] .sentence-jp-text:hover,
+body[data-jp-mode="mask"] .sentence-jp-text.revealed,
+body[data-jp-mode="mask"] #selectedSentenceJp:hover,
+body[data-jp-mode="mask"] #selectedSentenceJp.revealed,
+.trancy-card.mask-active-jp:hover .trancy-card-jp,
+.trancy-card.mask-active-jp.revealed .trancy-card-jp,
+.mask-active-jp.trancy-card:hover .trancy-card-jp,
+.mask-active-jp.trancy-card.revealed .trancy-card-jp,
+.mask-active-jp .trancy-card:hover .trancy-card-jp,
+.mask-active-jp .trancy-card.revealed .trancy-card-jp,
+.trancy-card:hover .trancy-card-jp,
+.trancy-card-jp:hover {
+    filter: none !important;
+    opacity: 1 !important;
+    user-select: text !important;
+}
+
+/* 4. 助詞與文法遮蔽全方位懸停揭示 */
+body[data-grammar-mode^="mask"] .grammar-elem-token:hover,
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed,
+body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token {
+    color: var(--text-main) !important;
+    border-color: var(--primary) !important;
+    background: var(--primary-light) !important;
+}
+body[data-grammar-mode^="mask"] .grammar-elem-token:hover::before,
+body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
+body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before {
+    display: none !important;
+}
+
+/* 5. 字幕挖空特訓懸停揭示 (Cloze Blanking Hover Reveal) */
+.cloze-blank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 1px 8px;
+    margin: 0 3px;
+    background: rgba(16, 185, 129, 0.14) !important;
+    border: 1.5px dashed rgba(16, 185, 129, 0.75) !important;
+    border-radius: 6px;
+    color: transparent !important;
+    user-select: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    vertical-align: baseline;
+}
+.cloze-blank * {
+    color: transparent !important;
+    visibility: hidden;
+}
+.cloze-blank ruby rt {
+    color: transparent !important;
+    visibility: hidden;
+}
+.cloze-blank::after {
+    content: '❓';
+    position: absolute;
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+.cloze-blank:hover,
+.cloze-blank.revealed {
+    background: rgba(16, 185, 129, 0.22) !important;
+    color: #059669 !important;
+    border-style: solid !important;
+}
+.cloze-blank:hover *,
+.cloze-blank.revealed * {
+    color: inherit !important;
+    visibility: visible !important;
+}
+.cloze-blank:hover ruby rt,
+.cloze-blank.revealed ruby rt {
+    color: #e11d48 !important;
+    visibility: visible !important;
+}
+.cloze-blank:hover::after,
+.cloze-blank.revealed::after {
+    display: none !important;
 }
 </style>
 </head>
@@ -3650,18 +3862,20 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
     <!-- Top Navigation Header -->
     <header class="app-header">
         <div class="header-container">
-            <div class="header-brand-wrap">
-                <div class="brand-logo" style="background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
-                    <i class="fa-solid fa-crown" style="color: #ffd700;"></i>
-                </div>
-                <div class="brand-info">
-                    <div class="brand-title">
-                        <h1 style="background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">閱讀高手</h1>
-                        <span class="version-tag" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-weight: 800;">全方位大成版</span>
+            <div class="header-top-row">
+                <div class="header-brand-wrap">
+                    <div class="brand-logo" style="background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
+                        <i class="fa-solid fa-crown" style="color: #ffd700;"></i>
                     </div>
-                    <p class="brand-subtitle">
-                        941條文法 ✦ JLPT單字 ✦ 句解霸拆解 ✦ 沉浸雙語 ✦ 字幕挖空 ✦ 單句復讀
-                    </p>
+                    <div class="brand-info">
+                        <div class="brand-title">
+                            <h1 style="background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">閱讀高手</h1>
+                            <span class="version-tag" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-weight: 800;">全方位大成版</span>
+                        </div>
+                        <p class="brand-subtitle">
+                            941條文法 ✦ JLPT單字 ✦ 句解霸拆解 ✦ 沉浸雙語 ✦ 字幕挖空 ✦ 單句復讀
+                        </p>
+                    </div>
                 </div>
 
                 <!-- 核心四大模式導航頁籤 -->
@@ -3680,6 +3894,73 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
                     </button>
                 </nav>
             </div>
+
+            <!-- Reading Control Toolbar in Header (文章深度解析 標註假名與遮蔽自測控制列) -->
+            <div class="header-toolbar deep-mode-toolbar" id="deepHeaderToolbar">
+                <!-- Japanese Original Mode Switch (中日雙向翻譯練習) -->
+                <div class="control-pill-group" title="日文原文顯示模式 (中日雙向翻譯自測練習)">
+                    <span class="group-label"><i class="fa-solid fa-file-lines"></i> 原文:</span>
+                    <button class="pill-btn active" id="btnJpShow" data-mode="show" title="正常顯示日文原文">顯示</button>
+                    <button class="pill-btn" id="btnJpMask" data-mode="mask" title="【中翻日練習模式】日文原文預設遮蔽模糊，看中文練習翻譯，游標移過或點擊揭示">遮蔽自測</button>
+                </div>
+
+                <!-- Furigana Mode Switch -->
+                <div class="control-pill-group" title="振假名讀音顯示模式">
+                    <span class="group-label"><i class="fa-solid fa-font"></i> 假名:</span>
+                    <button class="pill-btn active" id="btnRubyShow" data-mode="show" title="顯示漢字上方平假名讀音">顯示</button>
+                    <button class="pill-btn" id="btnRubyHide" data-mode="hide" title="完全隱藏假名讀音，訓練漢字直讀">隱藏</button>
+                    <button class="pill-btn" id="btnRubyMask" data-mode="mask" title="【遮蔽自測模式】讀音預設遮蔽模糊，滑鼠懸浮或點擊時即時揭示">遮蔽自測</button>
+                </div>
+
+                <!-- Vocabulary Level Color Switch -->
+                <div class="control-pill-group" title="JLPT 單字色彩標註開關">
+                    <span class="group-label"><i class="fa-solid fa-palette"></i> 單字:</span>
+                    <button class="pill-btn active" id="btnToggleWordColors" title="依 JLPT N1~N5 分顏色標示單字">分級著色</button>
+                </div>
+
+                <!-- Grammar Pattern Switch -->
+                <div class="control-pill-group" title="941 條文法句型標註開關">
+                    <span class="group-label"><i class="fa-solid fa-highlighter"></i> 文型:</span>
+                    <button class="pill-btn active" id="btnToggleGrammar" title="高亮標註文章中符合《絵でわかる日本語》之文法">文法標註</button>
+                </div>
+
+                <!-- Particle Mode Switch (助詞遮蔽測驗) -->
+                <div class="control-pill-group" title="助詞與文型階層遮蔽自測模式：可按格助詞、副助詞、複合助詞、文型句型進行單項或全文挖空自測">
+                    <span class="group-label"><i class="fa-solid fa-shapes"></i> 語法自測:</span>
+                    <button class="pill-btn active" id="btnGrammarShow" data-mode="show" title="正常顯示所有助詞與文型">顯示</button>
+                    <button class="pill-btn" id="btnGrammarMaskAll" data-mode="mask-all" title="【全部遮蔽】遮蔽全文所有格助詞、副助詞、複合助詞與文型">全部遮蔽</button>
+                    <button class="pill-btn" id="btnGrammarMaskCase" data-mode="mask-case" title="【格助詞遮蔽】僅遮蔽 が、を、に、で、へ、と 等格助詞">格助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskAdverbial" data-mode="mask-adverbial" title="【副助詞遮蔽】僅遮蔽 は、も、ばかり、だけ、さえ 等副助詞與係助詞">副助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskCompound" data-mode="mask-compound" title="【複合助詞遮蔽】僅遮蔽 について、に対して、として、に関して 等複合助詞">複合助詞</button>
+                    <button class="pill-btn" id="btnGrammarMaskSentence" data-mode="mask-sentence" title="【文型句型遮蔽】僅遮蔽 ながらも、に伴い、あげく、一方だ 等單純文型句型">文型句型</button>
+                    <button id="btnParticleShow" style="display:none;"></button>
+                    <button id="btnParticleMask" style="display:none;"></button>
+                </div>
+
+                <!-- Translation Mode Switch -->
+                <div class="control-pill-group" title="中文翻譯顯示模式">
+                    <span class="group-label"><i class="fa-solid fa-language"></i> 翻譯:</span>
+                    <button class="pill-btn active" id="btnTransShow" data-mode="show" title="全文顯示繁體中文翻譯對照">顯示</button>
+                    <button class="pill-btn" id="btnTransHide" data-mode="hide" title="完全隱藏中文翻譯，專注日文沉浸閱讀">隱藏</button>
+                    <button class="pill-btn" id="btnTransMask" data-mode="mask" title="【遮蔽自測模式】中文預設遮蔽模糊，滑鼠懸浮或點擊即可即時揭示">遮蔽自測</button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="header-actions">
+                    <button class="action-btn" id="btnOpenParticleQuizTop" title="開啟全篇日文助詞測驗挑戰與換句話說特訓">
+                        <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
+                        <span>助詞特訓</span>
+                    </button>
+                    <button class="action-btn" id="btnOpenNotebook" title="我的生詞與文法筆記本">
+                        <i class="fa-solid fa-book-bookmark text-amber-500"></i>
+                        <span>筆記本</span>
+                    </button>
+                    <button class="theme-toggle-btn" id="btnThemeToggle" title="深色/淺色主題切換" style="background:var(--bg-sub);border:1px solid var(--border-color);border-radius:50%;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- Main Workspace Container -->
@@ -5767,8 +6048,8 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
         }
 
         function setupEventListeners() {
-            dom.btnJpShow.addEventListener('click', () => setJpMode('show'));
-            dom.btnJpMask.addEventListener('click', () => setJpMode('mask'));
+            if (dom.btnJpShow) dom.btnJpShow.addEventListener('click', () => setJpMode('show'));
+            if (dom.btnJpMask) dom.btnJpMask.addEventListener('click', () => setJpMode('mask'));
 
             if (dom.btnParticleShow) dom.btnParticleShow.addEventListener('click', () => setParticleMode('show'));
             if (dom.btnParticleMask) dom.btnParticleMask.addEventListener('click', () => setParticleMode('mask'));
@@ -5782,17 +6063,17 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
             if (dom.btnOpenParticleQuizTop) dom.btnOpenParticleQuizTop.addEventListener('click', openParticleQuizModal);
             if (dom.btnMaskSentenceParticles) dom.btnMaskSentenceParticles.addEventListener('click', toggleMaskSentenceParticles);
 
-            dom.btnRubyShow.addEventListener('click', () => setRubyMode('show'));
-            dom.btnRubyHide.addEventListener('click', () => setRubyMode('hide'));
-            dom.btnRubyMask.addEventListener('click', () => setRubyMode('mask'));
+            if (dom.btnRubyShow) dom.btnRubyShow.addEventListener('click', () => setRubyMode('show'));
+            if (dom.btnRubyHide) dom.btnRubyHide.addEventListener('click', () => setRubyMode('hide'));
+            if (dom.btnRubyMask) dom.btnRubyMask.addEventListener('click', () => setRubyMode('mask'));
 
-            dom.btnTransShow.addEventListener('click', () => setTransMode('show'));
-            dom.btnTransHide.addEventListener('click', () => setTransMode('hide'));
-            dom.btnTransMask.addEventListener('click', () => setTransMode('mask'));
+            if (dom.btnTransShow) dom.btnTransShow.addEventListener('click', () => setTransMode('show'));
+            if (dom.btnTransHide) dom.btnTransHide.addEventListener('click', () => setTransMode('hide'));
+            if (dom.btnTransMask) dom.btnTransMask.addEventListener('click', () => setTransMode('mask'));
 
-            dom.btnToggleWordColors.addEventListener('click', () => setWordColors(!state.enableWordColors));
-            dom.btnToggleGrammar.addEventListener('click', () => setGrammarHighlight(!state.enableGrammar));
-            dom.btnThemeToggle.addEventListener('click', () => setTheme(state.theme === 'light' ? 'dark' : 'light'));
+            if (dom.btnToggleWordColors) dom.btnToggleWordColors.addEventListener('click', () => setWordColors(!state.enableWordColors));
+            if (dom.btnToggleGrammar) dom.btnToggleGrammar.addEventListener('click', () => setGrammarHighlight(!state.enableGrammar));
+            if (dom.btnThemeToggle) dom.btnThemeToggle.addEventListener('click', () => setTheme(state.theme === 'light' ? 'dark' : 'light'));
 
             dom.articleInput.addEventListener('input', () => {
                 dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
@@ -5880,8 +6161,8 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
             state.jpMode = mode;
             localStorage.setItem('japanese_reader_jp_mode', mode);
             document.body.setAttribute('data-jp-mode', mode);
-            dom.btnJpShow.classList.toggle('active', mode === 'show');
-            dom.btnJpMask.classList.toggle('active', mode === 'mask');
+            if (dom.btnJpShow) dom.btnJpShow.classList.toggle('active', mode === 'show');
+            if (dom.btnJpMask) dom.btnJpMask.classList.toggle('active', mode === 'mask');
             if (mode === 'mask') {
                 showToast('已開啟【中翻日自測模式】：日文原文已遮蔽，請看中文練習翻譯，滑鼠移過或點擊即可揭示！');
             }
@@ -5985,9 +6266,9 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
             state.transMode = mode;
             localStorage.setItem('japanese_reader_trans_mode', mode);
             document.body.setAttribute('data-trans-mode', mode);
-            dom.btnTransShow.classList.toggle('active', mode === 'show');
-            dom.btnTransHide.classList.toggle('active', mode === 'hide');
-            dom.btnTransMask.classList.toggle('active', mode === 'mask');
+            if (dom.btnTransShow) dom.btnTransShow.classList.toggle('active', mode === 'show');
+            if (dom.btnTransHide) dom.btnTransHide.classList.toggle('active', mode === 'hide');
+            if (dom.btnTransMask) dom.btnTransMask.classList.toggle('active', mode === 'mask');
             if (mode === 'mask') {
                 showToast('已開啟【中文遮蔽自測模式】：中文翻譯已遮蔽，滑鼠移過或點擊即可揭示！');
             }
@@ -8781,24 +9062,29 @@ body[data-ruby-mode="mask"] #selectedSentenceJp.revealed ruby rt,
 
             const inputCard = document.getElementById('inputCard');
 
+            const deepToolbar = document.getElementById('deepHeaderToolbar');
             if (viewId === 'deep') {
                 const pane = document.getElementById('paneDeep');
                 if (pane) pane.classList.add('active');
                 if (inputCard) inputCard.style.display = '';
+                if (deepToolbar) deepToolbar.style.display = 'flex';
             } else if (viewId === 'trancy') {
                 const pane = document.getElementById('paneTrancy');
                 if (pane) pane.classList.add('active');
                 if (inputCard) inputCard.style.display = 'none';
+                if (deepToolbar) deepToolbar.style.display = 'none';
                 renderTrancyStream();
             } else if (viewId === 'shadowing') {
                 const pane = document.getElementById('paneShadowing');
                 if (pane) pane.classList.add('active');
                 if (inputCard) inputCard.style.display = 'none';
+                if (deepToolbar) deepToolbar.style.display = 'none';
                 updateShadowingCard(masterState.currentSentenceIdx);
             } else if (viewId === 'review') {
                 const pane = document.getElementById('paneReview');
                 if (pane) pane.classList.add('active');
                 if (inputCard) inputCard.style.display = 'none';
+                if (deepToolbar) deepToolbar.style.display = 'none';
                 renderReviewNotebook('starred');
             }
         };
