@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・單字大成</title>
+    <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* 避免瀏覽器擴充功能之懸浮標記干擾閱讀畫面 */
+        #trancy-hover-marker {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
 /* ==========================================================================
    日文閱讀助手 (Japanese Reading Assistant) 核心樣式表
    仿 句解霸 (en998) 閱讀拆解與版型・深度聯動《絵でわかる日本語》
@@ -3105,6 +3111,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.45), 0 8px 24px rgba(139, 92, 246, 0.2) !important;
     background: linear-gradient(180deg, var(--bg-card), rgba(99, 102, 241, 0.04));
 }
+.trancy-card.looping-sentence {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5), 0 8px 24px rgba(16, 185, 129, 0.22) !important;
+}
 .trancy-card-header {
     display: flex;
     align-items: center;
@@ -3122,13 +3132,14 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 .trancy-card-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+    flex-wrap: wrap;
 }
 .trancy-btn-action {
     background: var(--bg-sub);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 6px 12px;
+    padding: 5px 11px;
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 700;
@@ -3153,18 +3164,70 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
 }
-.trancy-btn-action.btn-restart-card {
-    color: #f59e0b;
+.trancy-btn-action.btn-loop-card {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.4);
 }
-.trancy-btn-action.btn-restart-card:hover {
-    background: #f59e0b;
-    color: #fff;
-    border-color: #f59e0b;
+.trancy-btn-action.btn-loop-card:hover, .trancy-btn-action.btn-loop-card.active {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
 }
 
 /* ==========================================================================
-   TRANCY DUAL 標註假名格式完美排版 (Furigana Typography Fix)
+   畫面日文字幕挖空聽力特訓 (Cloze Blanking)
    ========================================================================== */
+.cloze-blank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 1px 8px;
+    margin: 0 3px;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1.5px dashed rgba(16, 185, 129, 0.75);
+    border-radius: 6px;
+    color: transparent !important;
+    user-select: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    vertical-align: baseline;
+}
+.cloze-blank ruby rt {
+    color: transparent !important;
+}
+.cloze-blank::after {
+    content: '❓';
+    position: absolute;
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+.cloze-blank:hover,
+.cloze-blank.revealed {
+    background: rgba(16, 185, 129, 0.22) !important;
+    color: #059669 !important;
+    border-style: solid !important;
+}
+[data-theme="dark"] .cloze-blank:hover,
+[data-theme="dark"] .cloze-blank.revealed {
+    color: #34d399 !important;
+}
+.cloze-blank:hover ruby rt,
+.cloze-blank.revealed ruby rt {
+    color: #e11d48 !important;
+}
+[data-theme="dark"] .cloze-blank:hover ruby rt,
+[data-theme="dark"] .cloze-blank.revealed ruby rt {
+    color: #fb7185 !important;
+}
+.cloze-blank:hover::after,
+.cloze-blank.revealed::after {
+    display: none !important;
+}
+
+/* TRANCY DUAL 標註假名格式完美排版 */
 .trancy-card-jp {
     font-family: var(--font-jp);
     font-size: 1.35rem;
@@ -3283,7 +3346,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     opacity: 1;
 }
 
-/* KARAOKE 卡拉OK 隨讀變色高亮 (文字隨著朗讀逐字變色) */
+/* KARAOKE 卡拉OK 隨讀變色高亮 */
 .jp-token.karaoke-active, .word-token.karaoke-active, .karaoke-active {
     background: #fef08a !important;
     color: #1e1b4b !important;
@@ -3340,7 +3403,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
@@ -3372,7 +3435,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     100% { transform: scale(1); }
 }
 
-/* 底部全域語音播放器底列 (含暫停/繼續/重啟標示) */
+/* 底部全域語音播放器底列 */
 .master-audio-bar {
     position: fixed;
     bottom: 0;
@@ -3447,8 +3510,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     background: rgba(255, 255, 255, 0.12);
 }
 .btn-player-icon.active {
-    color: #818cf8;
-    background: rgba(99, 102, 241, 0.2);
+    color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.2) !important;
 }
 .audio-voice-select {
     background: #1e293b;
@@ -3498,7 +3561,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <span class="version-tag" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-weight: 800;">全方位大成版</span>
                     </div>
                     <p class="brand-subtitle">
-                        941條文法 ✦ JLPT單字 ✦ 句解霸拆解 ✦ 沉浸雙語 ✦ 隨讀變色 ✦ 影子跟讀
+                        941條文法 ✦ JLPT單字 ✦ 句解霸拆解 ✦ 沉浸雙語 ✦ 字幕挖空 ✦ 單句復讀
                     </p>
                 </div>
 
@@ -3507,10 +3570,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     <button class="master-tab-btn active" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
                         <i class="fa-solid fa-microscope"></i> 文章深度解析
                     </button>
-                    <button class="master-tab-btn" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮、小字假名注音">
+                    <button class="master-tab-btn" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮/字幕挖空、單句復讀">
                         <i class="fa-solid fa-closed-captioning"></i> 沉浸雙語閱讀
                     </button>
-                    <button class="master-tab-btn" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、麥克風錄音對比、聽寫填空">
+                    <button class="master-tab-btn" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、單句重複磨耳朵、麥克風錄音、聽寫填空">
                         <i class="fa-solid fa-microphone-lines"></i> 跟讀聽力特訓
                     </button>
                     <button class="master-tab-btn" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
@@ -3827,18 +3890,19 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     </div><!-- end paneDeep -->
 
         <!-- ==========================================================================
-             VIEW 2: TRANCY 沉浸雙語閱讀 (BILINGUAL DUAL STREAM)
+             VIEW 2: TRANCY 沉浸雙語閱讀 (BILINGUAL DUAL STREAM + CLOZE + REPEAT)
              ========================================================================== -->
         <section class="master-view-pane" id="paneTrancy">
             <div class="trancy-stream-container">
                 <div class="trancy-stream-toolbar">
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-eye-slash"></i> 雙向遮蔽:</span>
+                        <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-eye-slash"></i> 遮蔽/挖空:</span>
                         <div class="btn-group" id="trancyMaskGroup">
                             <button class="pill-btn active" data-tmask="all">全顯</button>
                             <button class="pill-btn" data-tmask="mask-jp" title="遮蔽日文原文（懸停或點擊解開）">遮日</button>
                             <button class="pill-btn" data-tmask="mask-zh" title="遮蔽中文譯文（懸停或點擊解開）">遮中</button>
                             <button class="pill-btn" data-tmask="mask-both" title="雙向全遮（盲聽特訓）">雙遮</button>
+                            <button class="pill-btn" data-tmask="cloze" style="color: #10b981; font-weight: 800;" title="挖空日文字幕中的關鍵詞與助詞，測驗聽力理解 (點擊空格揭曉答案)"><i class="fa-solid fa-puzzle-piece"></i> 挖空特訓</button>
                         </div>
                     </div>
 
@@ -3855,8 +3919,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <button class="btn-action-pill" id="btnTrancyPlayAll" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-weight: 700; border: none;">
                             <i class="fa-solid fa-play"></i> 全篇朗讀
                         </button>
-                        <button class="btn-action-pill" id="btnTrancyReverseAll" title="一鍵反轉所有遮蔽">
-                            <i class="fa-solid fa-arrows-rotate"></i> 反轉遮蔽
+                        <button class="btn-action-pill" id="btnTrancyReverseAll" title="一鍵反轉所有遮蔽與挖空">
+                            <i class="fa-solid fa-arrows-rotate"></i> 揭開/反轉
                         </button>
                     </div>
                 </div>
@@ -3869,7 +3933,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         </section>
 
         <!-- ==========================================================================
-             VIEW 3: 跟讀與聽力特訓 (SHADOWING & DICTATION)
+             VIEW 3: 跟讀與聽力特訓 (SHADOWING & DICTATION & SINGLE SENTENCE REPEAT)
              ========================================================================== -->
         <section class="master-view-pane" id="paneShadowing">
             <div class="shadowing-master-card">
@@ -3894,6 +3958,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 <div class="shadowing-controls">
                     <button class="btn-action-pill" id="btnShadowListen" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 1.05rem; padding: 10px 22px;">
                         <i class="fa-solid fa-volume-high" id="shadowListenIcon"></i> <span id="shadowListenText">聆聽原聲 (伴隨變色)</span>
+                    </button>
+                    <button class="btn-action-pill" id="btnShadowLoop" style="background: #10b981; color: #fff; font-size: 1.05rem; padding: 10px 20px;" title="循環復讀本句 (磨耳朵)">
+                        <i class="fa-solid fa-repeat"></i> <span id="shadowLoopText">循環復讀</span>
                     </button>
                     <button class="btn-action-pill" id="btnShadowRestart" style="background: #f59e0b; color: #fff; font-size: 1.05rem; padding: 10px 18px;" title="從頭重新播放本句">
                         <i class="fa-solid fa-rotate-left"></i> 重啟
@@ -8287,7 +8354,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         }
     </script>
 
-    <!-- 底部微軟 Edge 自然人聲與卡拉OK高亮控制底列 (含暫停、繼續、重啟) -->
+    <!-- 底部微軟 Edge 自然人聲與卡拉OK高亮控制底列 (含暫停、繼續、重啟、單句復讀) -->
     <div class="master-audio-bar" id="masterAudioBar">
         <div class="audio-bar-left">
             <button class="btn-player-round" id="btnGlobalPlay" title="播放 / 暫停 (Space)">
@@ -8295,6 +8362,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             </button>
             <button class="btn-player-icon" id="btnGlobalRestart" title="從頭重新播放本句 (R)" style="font-size: 1.1rem; color: #f59e0b;">
                 <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button class="btn-player-icon" id="btnGlobalLoop" title="本句單句循環復讀 (L)" style="font-size: 1.1rem;">
+                <i class="fa-solid fa-repeat"></i>
             </button>
             <div>
                 <div style="font-size: 0.9rem; font-weight: 800; color: #fff;" id="playerStatusTitle">語音發音就緒</div>
@@ -8304,7 +8374,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
         <div class="audio-bar-center">
             <button class="btn-player-icon" id="btnGlobalPrev" title="上一句 (J)"><i class="fa-solid fa-backward-step"></i></button>
-            <button class="btn-player-icon" id="btnGlobalLoop" title="循環朗讀當前句子"><i class="fa-solid fa-repeat"></i></button>
             <button class="btn-player-icon active" id="btnGlobalAutoNext" title="朗讀完畢自動連播下一句"><i class="fa-solid fa-forward"></i></button>
             <button class="btn-player-icon" id="btnGlobalNext" title="下一句 (K)"><i class="fa-solid fa-forward-step"></i></button>
         </div>
@@ -8330,6 +8399,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
     // ==========================================================================
     // 閱讀高手 (Reading Master) 全方位工作台互動控制器
+    // 整合：句解霸941文法、Trancy雙語字幕、字幕挖空特訓、單句循環復讀、微軟自然語音
     // ==========================================================================
     (function() {
         'use strict';
@@ -8338,13 +8408,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
         const masterState = {
             activeView: 'deep', // 'deep', 'trancy', 'shadowing', 'review'
-            trancyMask: 'all',
+            trancyMask: 'all', // 'all', 'mask-jp', 'mask-zh', 'mask-both', 'cloze'
             trancyFurigana: localStorage.getItem('master_trancy_furigana') || 'show',
             currentAudio: null,
             currentUtterance: null,
             currentSentenceIdx: 0,
             playbackStatus: 'idle', // 'idle' | 'playing' | 'paused'
-            isLoop: false,
+            isLoop: false, // 單句循環復讀 (Repeat current sentence)
             isAutoPlay: true,
             playbackRate: 1.0,
             voice: localStorage.getItem('master_voice') || 'nanami',
@@ -8410,24 +8480,21 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             document.querySelectorAll('.karaoke-passed').forEach(el => el.classList.remove('karaoke-passed'));
         }
 
-        // 核心語音播放函式
         function speakWithKaraoke(text, containerEl, onEnd, forceRestart = false) {
             if (!text) return;
             const cleanText = text.replace(/<[^>]+>/g, '').trim();
 
-            // 若目前為暫停狀態且非強制重啟 -> 執行「繼續播放 (Resume)」
+            // 若目前為暫停狀態且非強制重啟 -> 繼續播放 (Resume)
             if (!forceRestart && masterState.playbackStatus === 'paused') {
                 resumePlayback();
                 return;
             }
 
-            // 停止舊語音並清除高亮
             stopPlayback(false);
 
-            // 尋找高亮單詞 tokens
             let tokens = [];
             if (containerEl) {
-                tokens = Array.from(containerEl.querySelectorAll('.jp-token, .word-token'));
+                tokens = Array.from(containerEl.querySelectorAll('.jp-token, .word-token, .cloze-blank'));
             }
             masterState.activeTokens = tokens;
             masterState.activeOnEnd = onEnd;
@@ -8438,7 +8505,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             masterState.playbackStatus = 'playing';
             updatePlayerBarStatus('playing', cleanText);
 
-            // 方案 1: 若瀏覽器具備微軟自然語音 (例如 Edge 瀏覽器)
+            // 方案 1: 微軟自然語音
             if (voiceChoice !== 'google-hd' && 'speechSynthesis' in window) {
                 const voices = window.speechSynthesis.getVoices();
                 let matchedVoice = voices.find(v => {
@@ -8471,10 +8538,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     }
 
                     u.onend = () => {
-                        masterState.playbackStatus = 'idle';
-                        updatePlayerBarStatus('idle');
-                        setTimeout(clearKaraokeHighlights, 400);
-                        if (onEnd) onEnd();
+                        handleSpeechCompleted(onEnd);
                     };
                     u.onerror = () => {
                         masterState.playbackStatus = 'idle';
@@ -8495,11 +8559,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             startAudioInterval(audio, tokens, rate);
 
             audio.onended = () => {
-                masterState.playbackStatus = 'idle';
-                updatePlayerBarStatus('idle');
-                masterState.currentAudio = null;
-                setTimeout(clearKaraokeHighlights, 400);
-                if (onEnd) onEnd();
+                handleSpeechCompleted(onEnd);
             };
             audio.onerror = () => {
                 masterState.playbackStatus = 'idle';
@@ -8512,7 +8572,23 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             });
         }
 
-        // 啟動/恢復音頻進度與 Karaoke 定時器
+        // 當單句語音播畢時的判斷 (支援單句循環復讀)
+        function handleSpeechCompleted(onEnd) {
+            masterState.playbackStatus = 'idle';
+            updatePlayerBarStatus('idle');
+            setTimeout(clearKaraokeHighlights, 400);
+
+            if (masterState.isLoop) {
+                // 單句循環復讀模式：間隔 0.6 秒後從頭重新朗讀本句
+                console.log('[閱讀高手] 單句循環復讀中... 0.6秒後重複朗讀');
+                setTimeout(() => {
+                    playSentenceAt(masterState.currentSentenceIdx, true);
+                }, 600);
+            } else if (onEnd) {
+                onEnd();
+            }
+        }
+
         function startAudioInterval(audio, tokens, rate) {
             if (!tokens || tokens.length === 0) return;
             const lengths = tokens.map(t => Math.max(1, (t.dataset.word || t.textContent || '').length));
@@ -8564,7 +8640,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             } else if ('speechSynthesis' in window && window.speechSynthesis.paused) {
                 window.speechSynthesis.resume();
             } else {
-                // 若瀏覽器不支持 resume，從頭重新朗讀本句
                 playSentenceAt(masterState.currentSentenceIdx, true);
                 return;
             }
@@ -8590,6 +8665,33 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         function restartCurrentSentence() {
             console.log('[閱讀高手] 從頭重啟朗讀第', masterState.currentSentenceIdx + 1, '句');
             playSentenceAt(masterState.currentSentenceIdx, true);
+        }
+
+        // --- 單句循環復讀切換 (Loop / Repeat Sentence) ---
+        function toggleSentenceRepeat(targetIdx = null) {
+            if (targetIdx !== null && targetIdx !== masterState.currentSentenceIdx) {
+                masterState.currentSentenceIdx = targetIdx;
+                masterState.isLoop = true;
+            } else {
+                masterState.isLoop = !masterState.isLoop;
+            }
+
+            const btnLoop = document.getElementById('btnGlobalLoop');
+            const shadowLoopBtn = document.getElementById('btnShadowLoop');
+            const shadowLoopText = document.getElementById('shadowLoopText');
+
+            if (btnLoop) btnLoop.classList.toggle('active', masterState.isLoop);
+            if (shadowLoopBtn) shadowLoopBtn.classList.toggle('active', masterState.isLoop);
+            if (shadowLoopText) shadowLoopText.textContent = masterState.isLoop ? '復讀中 (點擊取消)' : '循環復讀';
+
+            updateCardActionIcons();
+
+            if (masterState.isLoop) {
+                if (typeof showToast === 'function') showToast(`🔁 已開啟第 ${masterState.currentSentenceIdx + 1} 句單句循環復讀！`);
+                playSentenceAt(masterState.currentSentenceIdx, true);
+            } else {
+                if (typeof showToast === 'function') showToast('已關閉單句復讀');
+            }
         }
 
         function applyTokenHighlight(tokens, activeIdx) {
@@ -8618,7 +8720,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             if (status === 'playing') {
                 if (icon) icon.className = 'fa-solid fa-pause';
-                if (title) title.textContent = '正在朗讀 (伴隨變色)...';
+                if (title) title.textContent = masterState.isLoop ? `🔁 正在復讀第 ${masterState.currentSentenceIdx + 1} 句...` : '正在朗讀 (伴隨變色)...';
                 if (shadowBtnText) shadowBtnText.textContent = '暫停朗讀';
                 if (shadowIcon) shadowIcon.className = 'fa-solid fa-pause';
             } else if (status === 'paused') {
@@ -8628,31 +8730,36 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 if (shadowIcon) shadowIcon.className = 'fa-solid fa-play';
             } else {
                 if (icon) icon.className = 'fa-solid fa-play';
-                if (title) title.textContent = '語音發音就緒';
+                if (title) title.textContent = masterState.isLoop ? `🔁 已設為第 ${masterState.currentSentenceIdx + 1} 句復讀` : '語音發音就緒';
                 if (shadowBtnText) shadowBtnText.textContent = '聆聽原聲 (伴隨變色)';
                 if (shadowIcon) shadowIcon.className = 'fa-solid fa-volume-high';
             }
 
             if (snipEl && snippet) snipEl.textContent = snippet.slice(0, 35) + (snippet.length > 35 ? '...' : '');
-
-            // 更新當前卡片按鈕圖示
             updateCardActionIcons();
         }
 
         function updateCardActionIcons() {
             document.querySelectorAll('.trancy-card').forEach((c, i) => {
                 const playBtn = c.querySelector('.trancy-play-btn');
-                if (!playBtn) return;
-                if (i === masterState.currentSentenceIdx) {
-                    if (masterState.playbackStatus === 'playing') {
+                const loopBtn = c.querySelector('.btn-loop-card');
+                const isCurrent = (i === masterState.currentSentenceIdx);
+
+                if (playBtn) {
+                    if (isCurrent && masterState.playbackStatus === 'playing') {
                         playBtn.innerHTML = '<i class="fa-solid fa-pause" style="color:#ef4444;"></i> 暫停';
-                    } else if (masterState.playbackStatus === 'paused') {
+                    } else if (isCurrent && masterState.playbackStatus === 'paused') {
                         playBtn.innerHTML = '<i class="fa-solid fa-play" style="color:#10b981;"></i> 繼續';
                     } else {
                         playBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> 朗讀';
                     }
-                } else {
-                    playBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> 朗讀';
+                }
+
+                if (loopBtn) {
+                    const isLoopingThis = (isCurrent && masterState.isLoop);
+                    loopBtn.classList.toggle('active', isLoopingThis);
+                    c.classList.toggle('looping-sentence', isLoopingThis);
+                    loopBtn.innerHTML = isLoopingThis ? '<i class="fa-solid fa-repeat fa-spin"></i> 復讀中' : '<i class="fa-solid fa-repeat"></i> 復讀';
                 }
             });
         }
@@ -8661,7 +8768,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             speakWithKaraoke(text, targetEl);
         };
 
-        // --- 渲染 Trancy 沉浸雙語流 (精準字元級假名排版 + 假名模式切換) ---
+        // --- 渲染 Trancy 沉浸雙語流 (支援 字幕挖空特訓 + 單句復讀 + 假名排版) ---
         function renderTrancyStream() {
             const stream = document.getElementById('trancySentencesStream');
             if (!stream) return;
@@ -8686,20 +8793,35 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             stream.innerHTML = '';
             sentences.forEach((s, idx) => {
                 const card = document.createElement('div');
-                card.className = `trancy-card ${getTrancyMaskClass()} ${getTrancyFuriganaClass()} ${idx === masterState.currentSentenceIdx ? 'active-playing' : ''}`;
+                const isCurrent = (idx === masterState.currentSentenceIdx);
+                const isLoopingThis = (isCurrent && masterState.isLoop);
+
+                card.className = `trancy-card ${getTrancyMaskClass()} ${getTrancyFuriganaClass()} ${isCurrent ? 'active-playing' : ''} ${isLoopingThis ? 'looping-sentence' : ''}`;
                 card.id = `trancy-card-${idx}`;
                 card.dataset.index = idx;
 
                 const isStarred = masterState.starredSentences.some(st => st.text === s.text);
+                const isClozeMode = (masterState.trancyMask === 'cloze');
 
-                // 核心修復：使用形態素分析已精準拆解漢字與假名之 ruby_html，絕不產生跑版！
+                // 核心：組裝日文字幕 (支援字幕挖空特訓與精準 ruby 假名)
                 let jpTokensHtml = '';
                 if (s.words && s.words.length > 0) {
-                    jpTokensHtml = s.words.map(w => {
+                    jpTokensHtml = s.words.map((w, wIdx) => {
                         const surface = w.surface || '';
-                        // 優先使用由形態素精準分離的 w.ruby_html (例如: <ruby>使<rt>つか</rt></ruby>った)
                         const tokenContent = w.ruby_html || surface;
-                        return `<span class="jp-token" data-word="${surface}" data-reading="${w.reading || ''}">${tokenContent}</span>`;
+
+                        // 判斷挖空規則：在「挖空特訓」模式下，對關鍵詞 (名詞/動詞/漢字詞/重要助詞) 產生挖空互動盒
+                        const shouldCloze = isClozeMode && (
+                            (w.is_kanji && surface.length >= 1) ||
+                            (w.pos && (w.pos.includes('動詞') || w.pos.includes('名詞') || w.pos.includes('形容'))) ||
+                            (w.is_grammar_elem || w.is_particle)
+                        ) && (wIdx % 2 === 1 || surface.length >= 2);
+
+                        if (shouldCloze) {
+                            return `<span class="cloze-blank" data-word="${surface}" data-reading="${w.reading || ''}" title="點擊揭曉答案">${tokenContent}</span>`;
+                        } else {
+                            return `<span class="jp-token" data-word="${surface}" data-reading="${w.reading || ''}">${tokenContent}</span>`;
+                        }
                     }).join('');
                 } else {
                     jpTokensHtml = s.text;
@@ -8711,6 +8833,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <div class="trancy-card-actions">
                             <button class="trancy-btn-action trancy-play-btn" data-idx="${idx}" title="朗讀 / 暫停 / 繼續">
                                 <i class="fa-solid fa-volume-high"></i> 朗讀
+                            </button>
+                            <button class="trancy-btn-action btn-loop-card ${isLoopingThis ? 'active' : ''}" data-idx="${idx}" title="本句單句循環復讀 (無限重複磨耳朵)">
+                                <i class="fa-solid fa-repeat ${isLoopingThis ? 'fa-spin' : ''}"></i> ${isLoopingThis ? '復讀中' : '復讀'}
                             </button>
                             <button class="trancy-btn-action btn-restart-card" data-idx="${idx}" title="從頭重新朗讀此句">
                                 <i class="fa-solid fa-rotate-left"></i> 重播
@@ -8734,6 +8859,14 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     </div>
                 `;
 
+                // 點擊挖空方塊 -> 揭曉/遮蔽答案
+                card.querySelectorAll('.cloze-blank').forEach(blank => {
+                    blank.onclick = (e) => {
+                        e.stopPropagation();
+                        blank.classList.toggle('revealed');
+                    };
+                });
+
                 // 深度解析
                 const deepBtn = card.querySelector('.btn-deep-analyze');
                 deepBtn.onclick = (e) => {
@@ -8746,7 +8879,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     }, 100);
                 };
 
-                // 朗讀 / 暫停 / 繼續 按鈕
+                // 朗讀 / 暫停 / 繼續
                 const playBtn = card.querySelector('.trancy-play-btn');
                 playBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -8757,6 +8890,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     } else {
                         playSentenceAt(idx, true);
                     }
+                };
+
+                // 單句復讀按鈕
+                const loopBtn = card.querySelector('.btn-loop-card');
+                loopBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSentenceRepeat(idx);
                 };
 
                 // 重播按鈕
@@ -8784,7 +8924,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     });
                 };
 
-                // 點擊卡片解開遮蔽
+                // 點擊卡片解開整體遮蔽
                 card.onclick = () => card.classList.toggle('revealed');
 
                 stream.appendChild(card);
@@ -8804,7 +8944,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             return '';
         }
 
-        // --- 播放第 idx 句 (支援強制重啟) ---
+        // --- 播放第 idx 句 (支援單句復讀與連播) ---
         function playSentenceAt(idx, forceRestart = false) {
             const sentences = getSentences();
             if (!sentences || idx < 0 || idx >= sentences.length) return;
@@ -8824,7 +8964,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             speakWithKaraoke(s.text, activeContainer, () => {
                 if (masterState.isLoop) {
-                    setTimeout(() => playSentenceAt(idx, true), 600);
+                    // 已在 handleSpeechCompleted 處理復讀
                 } else if (masterState.isAutoPlay) {
                     if (idx + 1 < sentences.length) {
                         setTimeout(() => playSentenceAt(idx + 1, true), 700);
@@ -8854,7 +8994,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             if (badge) badge.textContent = `第 ${idx + 1} 句 / 共 ${sentences.length} 句`;
 
-            // 組裝帶有正確 ruby_html 的日語文字以利隨讀變色
             let jpTokensHtml = '';
             if (s.words && s.words.length > 0) {
                 jpTokensHtml = s.words.map(w => {
@@ -8873,6 +9012,11 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             if (dictInput) { dictInput.value = ''; dictInput.style.borderColor = 'var(--border-color)'; }
             const dictFeed = document.getElementById('dictationFeedback');
             if (dictFeed) dictFeed.innerHTML = '';
+
+            const shadowLoopBtn = document.getElementById('btnShadowLoop');
+            const shadowLoopText = document.getElementById('shadowLoopText');
+            if (shadowLoopBtn) shadowLoopBtn.classList.toggle('active', masterState.isLoop);
+            if (shadowLoopText) shadowLoopText.textContent = masterState.isLoop ? '復讀中 (點擊取消)' : '循環復讀';
         }
 
         // --- 收藏句子與生詞庫 (View 4) ---
@@ -9001,12 +9145,15 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 btn.onclick = () => window.switchMasterView(btn.dataset.view);
             });
 
-            // 2. 雙語遮蔽按鈕切換
+            // 2. 雙語遮蔽與字幕挖空切換
             document.querySelectorAll('#trancyMaskGroup button').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('#trancyMaskGroup button').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     masterState.trancyMask = btn.dataset.tmask;
+                    if (masterState.trancyMask === 'cloze') {
+                        if (typeof showToast === 'function') showToast('🧩 已開啟日文字幕挖空模式！點擊空格即可揭曉答案');
+                    }
                     renderTrancyStream();
                 };
             });
@@ -9022,11 +9169,12 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 };
             });
 
-            // 3. 一鍵反轉所有遮蔽
+            // 3. 一鍵反轉所有遮蔽與挖空
             const btnRevAll = document.getElementById('btnTrancyReverseAll');
             if (btnRevAll) {
                 btnRevAll.onclick = () => {
                     document.querySelectorAll('.trancy-card').forEach(c => c.classList.toggle('revealed'));
+                    document.querySelectorAll('.cloze-blank').forEach(b => b.classList.toggle('revealed'));
                 };
             }
 
@@ -9036,7 +9184,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 btnPlayAll.onclick = () => playSentenceAt(0, true);
             }
 
-            // 5. 跟讀控制項 (支援 聆聽 / 暫停 / 重啟)
+            // 5. 跟讀控制項 (支援 聆聽 / 暫停 / 重啟 / 復讀)
             document.getElementById('btnShadowPrev')?.addEventListener('click', () => {
                 if (masterState.currentSentenceIdx > 0) {
                     updateShadowingCard(masterState.currentSentenceIdx - 1);
@@ -9063,6 +9211,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             });
             document.getElementById('btnShadowRestart')?.addEventListener('click', () => {
                 restartCurrentSentence();
+            });
+            document.getElementById('btnShadowLoop')?.addEventListener('click', () => {
+                toggleSentenceRepeat();
             });
 
             // 麥克風錄音
@@ -9129,7 +9280,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             document.getElementById('btnSubTabVocab')?.addEventListener('click', () => renderReviewNotebook('vocab'));
             document.getElementById('btnSubTabGrammar')?.addEventListener('click', () => renderReviewNotebook('grammar'));
 
-            // 6. 全域音頻播放欄控制事件 (播放 / 暫停 / 繼續 / 重啟)
+            // 6. 全域音頻播放欄控制事件 (播放 / 暫停 / 繼續 / 重啟 / 單句復讀)
             document.getElementById('btnGlobalPlay')?.addEventListener('click', () => {
                 if (masterState.playbackStatus === 'playing') {
                     pausePlayback();
@@ -9144,6 +9295,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 restartCurrentSentence();
             });
 
+            document.getElementById('btnGlobalLoop')?.addEventListener('click', () => {
+                toggleSentenceRepeat();
+            });
+
             document.getElementById('btnGlobalPrev')?.addEventListener('click', () => {
                 if (masterState.currentSentenceIdx > 0) playSentenceAt(masterState.currentSentenceIdx - 1, true);
             });
@@ -9152,11 +9307,6 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 if (masterState.currentSentenceIdx + 1 < sentences.length) {
                     playSentenceAt(masterState.currentSentenceIdx + 1, true);
                 }
-            });
-            document.getElementById('btnGlobalLoop')?.addEventListener('click', (e) => {
-                masterState.isLoop = !masterState.isLoop;
-                e.currentTarget.classList.toggle('active', masterState.isLoop);
-                if (typeof showToast === 'function') showToast(masterState.isLoop ? '已開啟單句循環' : '已關閉單句循環');
             });
             document.getElementById('btnGlobalAutoNext')?.addEventListener('click', (e) => {
                 masterState.isAutoPlay = !masterState.isAutoPlay;
@@ -9176,7 +9326,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 if (masterState.currentAudio) masterState.currentAudio.playbackRate = masterState.playbackRate;
             });
 
-            // 鍵盤快捷鍵 (Space: 播放/暫停, R: 重啟本句, J: 上一句, K: 下一句)
+            // 鍵盤快捷鍵 (Space: 播放/暫停, R: 重啟本句, L: 單句復讀, J: 上一句, K: 下一句)
             document.addEventListener('keydown', (e) => {
                 if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
                 if (e.code === 'Space') {
@@ -9184,6 +9334,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     document.getElementById('btnGlobalPlay')?.click();
                 } else if (e.key === 'r' || e.key === 'R') {
                     document.getElementById('btnGlobalRestart')?.click();
+                } else if (e.key === 'l' || e.key === 'L') {
+                    toggleSentenceRepeat();
                 } else if (e.key === 'j' || e.key === 'J') {
                     document.getElementById('btnGlobalPrev')?.click();
                 } else if (e.key === 'k' || e.key === 'K') {
