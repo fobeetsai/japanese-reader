@@ -3184,10 +3184,10 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                         <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
                         <span>助詞特訓</span>
                     </button>
-                    <a href="flashcard.html" class="action-btn" id="btnWordReview" style="text-decoration: none; display: inline-flex; align-items: center;" title="進入 Anki 智慧單字抽認卡複習 APP (支援網頁、iOS、iPad、跨裝置同步)">
+                    <button class="action-btn" id="btnWordReview" title="開啟單字翻牌抽認卡複習 (文章單字 / 生詞本)">
                         <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
                         <span>單字抽認卡 🎴</span>
-                    </a>
+                    </button>
                     <button class="action-btn" id="btnOpenNotebook" title="我的生詞與文法筆記本">
                         <i class="fa-solid fa-star text-amber-400"></i>
                         <span>筆記本 (<strong id="notebookCount">0</strong>)</span>
@@ -3685,7 +3685,12 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         <div class="modal-container" style="max-width: 620px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-graduation-cap text-indigo-500"></i> 單字翻牌抽卡複習</h3>
-                <button class="modal-close-btn" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <a href="flashcard.html" target="_blank" rel="noopener noreferrer" class="btn-review-anki-link" title="在獨立新分頁開啟 AnkiFlash 跨平台進階抽認卡 APP" style="font-size: 12px; text-decoration: none; color: #4f46e5; background: #eef2ff; padding: 4px 10px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #c7d2fe; transition: all 0.2s ease;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> 開啟 AnkiFlash APP
+                    </a>
+                    <button class="modal-close-btn" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
             <div class="notebook-tabs">
@@ -5311,6 +5316,17 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             dom.btnExportNotebook.addEventListener('click', exportNotebook);
             dom.btnClearNotebook.addEventListener('click', clearNotebook);
 
+            if (dom.reviewModal) {
+                dom.reviewModal.addEventListener('click', (e) => {
+                    if (e.target === dom.reviewModal) closeReviewModal();
+                });
+            }
+            if (dom.notebookModal) {
+                dom.notebookModal.addEventListener('click', (e) => {
+                    if (e.target === dom.notebookModal) closeNotebookModal();
+                });
+            }
+
             document.addEventListener('click', (e) => {
                 const r = e.target.closest('ruby');
                 if (r && state.rubyMode === 'mask') {
@@ -5905,10 +5921,26 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         // ==========================================================================
         // 單字翻牌抽卡複習功能 (Vocabulary Flashcard Review)
         // ==========================================================================
-        function openReviewModal() {
+        function openReviewModal(e) {
+            if (e && e.preventDefault) e.preventDefault();
+
+            // 若本篇閱讀尚未解析但生詞本有收藏，自動切換至生詞本來源
+            const hasArticle = state.analyzedData && ((state.analyzedData.allWords && state.analyzedData.allWords.length > 0) || (state.analyzedData.sentences && state.analyzedData.sentences.length > 0));
+            const hasNotebook = state.notebook && state.notebook.words && state.notebook.words.length > 0;
+
+            if (state.review.source === 'article' && !hasArticle && hasNotebook) {
+                state.review.source = 'notebook';
+                if (dom.tabReviewArticleBtn) dom.tabReviewArticleBtn.classList.remove('active');
+                if (dom.tabReviewNotebookBtn) dom.tabReviewNotebookBtn.classList.add('active');
+            } else if (state.review.source === 'notebook' && !hasNotebook && hasArticle) {
+                state.review.source = 'article';
+                if (dom.tabReviewArticleBtn) dom.tabReviewArticleBtn.classList.add('active');
+                if (dom.tabReviewNotebookBtn) dom.tabReviewNotebookBtn.classList.remove('active');
+            }
+
             buildReviewWordList();
             if (state.review.words.length === 0) {
-                showToast('目前尚無可供複習之單字，請先解析文章或加入生詞本');
+                showToast('目前尚無可供複習之單字，請先解析文章或將單字加入生詞本！');
                 return;
             }
             state.review.currentIdx = 0;
@@ -5926,39 +5958,58 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             const seen = new Set();
 
             if (state.review.source === 'article' && state.analyzedData) {
-                state.analyzedData.sentences.forEach(s => {
-                    s.words.forEach(w => {
-                        const key = w.base_form || w.surface;
-                        if (key.length >= 2 && !seen.has(key) && w.pos !== '符號/助詞') {
+                // 優先使用全篇已智慧抽取之單字庫
+                if (state.analyzedData.allWords && state.analyzedData.allWords.length > 0) {
+                    state.analyzedData.allWords.forEach(w => {
+                        const key = w.baseForm || w.surface;
+                        if (key && !seen.has(key)) {
                             seen.add(key);
                             list.push({
                                 word: key,
-                                reading: w.reading,
-                                jlpt: w.jlpt,
-                                pos: w.pos,
-                                translation: w.translation || ''
+                                reading: w.reading || key,
+                                jlpt: w.jlpt || '',
+                                pos: w.pos || '',
+                                translation: w.meaning || w.translation || ''
                             });
                         }
                     });
-                });
+                } else if (state.analyzedData.sentences) {
+                    state.analyzedData.sentences.forEach(s => {
+                        (s.words || []).forEach(w => {
+                            const key = w.baseForm || w.base_form || w.surface;
+                            if (key && !seen.has(key) && w.pos !== '符號/助詞') {
+                                seen.add(key);
+                                list.push({
+                                    word: key,
+                                    reading: w.reading || key,
+                                    jlpt: w.jlpt || '',
+                                    pos: w.pos || '',
+                                    translation: w.meaning || w.translation || ''
+                                });
+                            }
+                        });
+                    });
+                }
             } else {
-                state.notebook.words.forEach(w => {
-                    if (!seen.has(w.surface)) {
-                        seen.add(w.surface);
+                (state.notebook.words || []).forEach(w => {
+                    const key = w.baseForm || w.surface;
+                    if (key && !seen.has(key)) {
+                        seen.add(key);
                         list.push({
-                            word: w.surface,
-                            reading: w.reading,
-                            jlpt: w.jlpt,
-                            pos: w.pos,
-                            translation: w.translation || ''
+                            word: key,
+                            reading: w.reading || key,
+                            jlpt: w.jlpt || '',
+                            pos: w.pos || '',
+                            translation: w.meaning || w.translation || ''
                         });
                     }
                 });
             }
 
             state.review.words = list;
-            dom.reviewArticleWordCount.textContent = (state.analyzedData ? seen.size : 0);
-            dom.reviewNotebookWordCount.textContent = state.notebook.words.length;
+            const articleCount = state.analyzedData ? (state.analyzedData.allWords ? state.analyzedData.allWords.length : seen.size) : 0;
+            if (dom.reviewArticleWordCount) dom.reviewArticleWordCount.textContent = articleCount;
+            if (dom.reviewNotebookWordCount) dom.reviewNotebookWordCount.textContent = (state.notebook.words || []).length;
         }
 
         function switchReviewSource(src) {
