@@ -4565,18 +4565,30 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 </html>
 """
 
-    print("[4/5] 寫入獨立網頁檔案...")
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_template)
+    print("[4/5] 寫入獨立網頁檔案 (具備防降級保護機制)...")
+    # 防降級保護：若現有 index.html 包含全篇單字抽取、文型一覽與收藏文章，則不被舊版模板覆蓋
+    should_write_template = True
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as cur_f:
+            cur_html = cur_f.read()
+        if "allWordsViewSection" in cur_html and "allWordsViewSection" not in html_template:
+            print("[SAFEGUARD] 偵測到現有 index.html 包含進階全篇單字抽取、文型一覽與儲存文章功能，保留現有完整版本！")
+            should_write_template = False
+            with open("japanese_reader.html", "w", encoding="utf-8") as f:
+                f.write(cur_html)
+            with open("static/index.html", "w", encoding="utf-8") as f:
+                f.write(cur_html)
 
-    with open("japanese_reader.html", "w", encoding="utf-8") as f:
-        f.write(html_template)
-
-    with open("static/index.html", "w", encoding="utf-8") as f:
-        f.write(html_template)
+    if should_write_template:
+        with open("index.html", "w", encoding="utf-8") as f:
+            f.write(html_template)
+        with open("japanese_reader.html", "w", encoding="utf-8") as f:
+            f.write(html_template)
+        with open("static/index.html", "w", encoding="utf-8") as f:
+            f.write(html_template)
 
     size_kb = os.path.getsize("index.html") / 1024
-    print(f"[OK] 產出完成！index.html, japanese_reader.html, static/index.html 已更新，檔案大小：{size_kb:.1f} KB")
+    print(f"[OK] 產出完成！index.html, japanese_reader.html, static/index.html 已同步，檔案大小：{size_kb:.1f} KB")
 
 if __name__ == "__main__":
     build()
