@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw https://www.googleapis.com https://accounts.google.com;">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; connect-src 'self' https://translate.googleapis.com https://translate.google.com https://api.allorigins.win https://www.googleapis.com https://accounts.google.com; media-src 'self' blob: data: https://translate.google.com https://translate.googleapis.com;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
@@ -7606,18 +7607,34 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         }
 
         function speakJapanese(text) {
-            if (!('speechSynthesis' in window)) {
-                showToast('您的瀏覽器不支援語音朗讀');
+            if (typeof window.speakJapanese === 'function' && window.speakJapanese !== speakJapanese) {
+                window.speakJapanese(text);
                 return;
             }
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'ja-JP';
-            u.rate = 0.95;
-            const voices = window.speechSynthesis.getVoices();
-            const jaVoice = voices.find(v => v.lang.startsWith('ja'));
-            if (jaVoice) u.voice = jaVoice;
-            window.speechSynthesis.speak(u);
+            if (!text) return;
+            const cleanText = text.replace(/<[^>]+>/g, '').trim();
+            if ('speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices() || [];
+                const naturalVoice = voices.find(v => {
+                    const isJa = v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP'));
+                    const isNotDesktop = !v.name.includes('Desktop') && !v.name.includes('Haruka');
+                    return isJa && isNotDesktop && (/七海|Nanami|Natural|Online/i.test(v.name));
+                });
+                if (naturalVoice) {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(cleanText);
+                    u.voice = naturalVoice;
+                    u.lang = 'ja-JP';
+                    u.rate = 0.95;
+                    window.speechSynthesis.speak(u);
+                    return;
+                }
+            }
+            // 若無微軟自然真音，採用 Google 雲端真人高音質 (HD) 人聲
+            const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=' + encodeURIComponent(cleanText.slice(0, 180));
+            const audio = new Audio(audioUrl);
+            audio.playbackRate = 0.95;
+            audio.play().catch(() => {});
         }
 
         // toastTimer is declared at the top of script
@@ -9658,19 +9675,20 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             masterState.playbackStatus = 'playing';
             updatePlayerBarStatus('playing', cleanText);
 
-            // 方案 1: 微軟自然語音
+            // 方案 1: 微軟自然真音 (嚴格排除 Desktop 合成機械音)
             if (voiceChoice !== 'google-hd' && 'speechSynthesis' in window) {
-                const voices = window.speechSynthesis.getVoices();
+                const voices = window.speechSynthesis.getVoices() || [];
                 let matchedVoice = voices.find(v => {
                     const isJa = v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP'));
-                    if (voiceChoice === 'nanami') return isJa && (v.name.includes('Nanami') || v.name.includes('七海') || (v.name.includes('Natural') && !v.name.includes('Keita') && !v.name.includes('圭太')));
-                    if (voiceChoice === 'keita') return isJa && (v.name.includes('Keita') || v.name.includes('圭太'));
-                    return isJa && !v.name.includes('Desktop') && !v.name.includes('Haruka');
+                    const isNotDesktop = !v.name.includes('Desktop') && !v.name.includes('Haruka') && !v.name.includes('Ichiro') && !v.name.includes('Ayumi');
+                    if (voiceChoice === 'nanami') {
+                        return isJa && isNotDesktop && (/七海|Nanami/i.test(v.name) || (/Natural|Online/i.test(v.name) && !/圭太|Keita/i.test(v.name)));
+                    }
+                    if (voiceChoice === 'keita') {
+                        return isJa && isNotDesktop && (/圭太|Keita/i.test(v.name));
+                    }
+                    return isJa && isNotDesktop && /Natural|Online/i.test(v.name);
                 });
-
-                if (!matchedVoice && voiceChoice !== 'google-hd') {
-                    matchedVoice = voices.find(v => v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-                }
 
                 if (matchedVoice) {
                     window.speechSynthesis.cancel();
