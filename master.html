@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw;">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw https://www.googleapis.com https://accounts.google.com;">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3935,11 +3935,21 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     }
 }
 </style>
+
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="閱讀高手">
+    <link rel="manifest" href="master.webmanifest">
+    <link rel="apple-touch-icon" href="static/master/icon-180.png">
+    <link rel="icon" type="image/png" href="static/master/icon-192.png">
+    <link rel="stylesheet" href="static/master/master-mobile.css?v=20260922-1">
+<link rel="stylesheet" href="static/master/reader-cloud.css?v=20260922-2">
 </head>
 <body data-theme="light">
 
     <!-- 全站同源統一頂部導覽列 -->
-    <nav class="cross-app-nav-bar">
+    <nav class="cross-app-nav-bar" id="learningAppsNav" aria-label="其他學習工具">
         <a href="master.html" class="nav-brand">
             <span>🇯🇵 日語學習全方位生態系</span>
             <span class="badge-sync">學生專用公開版</span>
@@ -3981,27 +3991,22 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
                 <!-- 核心四大模式導航頁籤 -->
                 <nav class="master-nav-wrap" role="tablist">
-                    <button class="master-tab-btn active" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
-                        <i class="fa-solid fa-microscope"></i> 文章深度解析
+                    <button class="master-tab-btn active" role="tab" aria-selected="true" aria-controls="paneDeep" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
+                        <i class="fa-solid fa-microscope"></i> <span class="desktop-label">文章深度解析</span><span class="mobile-only">精讀</span>
                     </button>
-                    <button class="master-tab-btn" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮/字幕挖空、單句復讀">
-                        <i class="fa-solid fa-closed-captioning"></i> 沉浸雙語閱讀
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneTrancy" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮/字幕挖空、單句復讀">
+                        <i class="fa-solid fa-closed-captioning"></i> <span class="desktop-label">沉浸雙語閱讀</span><span class="mobile-only">雙語</span>
                     </button>
-                    <button class="master-tab-btn" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、單句重複磨耳朵、麥克風錄音、聽寫填空">
-                        <i class="fa-solid fa-microphone-lines"></i> 跟讀聽力特訓
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneShadowing" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、單句重複磨耳朵、麥克風錄音、聽寫填空">
+                        <i class="fa-solid fa-microphone-lines"></i> <span class="desktop-label">跟讀聽力特訓</span><span class="mobile-only">跟讀</span>
                     </button>
-                    <button class="master-tab-btn" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
-                        <i class="fa-solid fa-layer-group"></i> 單字文法複習
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneReview" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
+                        <i class="fa-solid fa-layer-group"></i> <span class="desktop-label">單字文法複習</span><span class="mobile-only">複習</span>
                     </button>
                 </nav>
                 <!-- 常駐全站操作功能 (跨所有模式皆可隨時開啟筆記本、抽認卡與深色主題切換) -->
-                <div class="header-actions" style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;">
-                    <span id="voiceStatusBadge" class="btn btn-header" style="cursor:pointer; background:rgba(99, 102, 241, 0.15); border:1px solid rgba(99, 102, 241, 0.35); color:var(--text-main); font-weight:700; font-size:12px; padding:6px 12px; border-radius:10px; display:inline-flex; align-items:center; gap:6px;" title="點擊檢視微軟真人男聲狀態">👦 語音：微軟圭太 (檢測中...)</span>
-                    <div class="rate-slider-wrap" style="display:inline-flex; align-items:center; gap:6px; background:var(--bg-sub); padding:4px 10px; border-radius:10px; border:1px solid var(--border-color);" title="無段調整朗讀語速 (0.5x ~ 2.0x)">
-                        <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">⚡ 語速</span>
-                        <input type="range" id="headerRateSlider" min="0.5" max="2.0" step="0.05" value="1.0" style="width:70px; accent-color:var(--primary); cursor:pointer;">
-                        <span id="headerRateLabel" style="font-size:0.78rem; color:var(--text-main); font-weight:700; min-width:32px;">1.00x</span>
-                    </div>
+                <div class="header-actions" style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+                    <button class="reader-sync-launch desktop-sync-launch" data-open-reader-sync>☁ 收藏同步</button>
                     <button class="action-btn" id="btnWordReview" onclick="openReviewModal()" title="開啟單字翻牌抽認卡複習 (文章單字 / 生詞本)">
                         <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
                         <span>單字抽認卡 🎴</span>
@@ -4016,6 +4021,12 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 </div>
             </div>
 
+            <div class="mobile-toolbar mobile-only">
+                <button id="btnMobileSettings" aria-expanded="false" aria-controls="deepHeaderToolbar">☷ 閱讀設定</button>
+                <button class="reader-sync-launch" data-open-reader-sync>☁ 收藏同步</button>
+                <button id="btnMobileInstall">＋ 加入主畫面</button>
+                <button id="btnMobileApps" aria-label="其他學習工具" aria-expanded="false" aria-controls="learningAppsNav">⋯</button>
+            </div>
             <!-- Reading Control Toolbar in Header (文章深度解析 標註假名與遮蔽自測控制列) -->
             <div class="header-toolbar deep-mode-toolbar" id="deepHeaderToolbar">
                 <!-- Japanese Original Mode Switch (中日雙向翻譯練習) -->
@@ -4066,13 +4077,6 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     <button class="pill-btn" id="btnTransMask" data-mode="mask" title="【遮蔽自測模式】中文預設遮蔽模糊，滑鼠懸浮或點擊即可即時揭示">遮蔽自測</button>
                 </div>
 
-                <!-- Japanese Original Read Aloud Control -->
-                <div class="control-pill-group" title="日語真人語音朗讀控制">
-                    <span class="group-label"><i class="fa-solid fa-volume-high"></i> 朗讀:</span>
-                    <button class="pill-btn" id="btnHeaderPlayArticle" style="color:var(--primary); font-weight:700;" onclick="if(window.playSentenceAt) playSentenceAt(0, true);" title="從第 1 句開始全篇連續朗讀 (伴隨卡拉OK高亮)">▶️ 全文朗讀</button>
-                    <button class="pill-btn" id="btnHeaderPlayCurrent" style="font-weight:600;" onclick="if(window.playSentenceAt) playSentenceAt(typeof state !== 'undefined' ? state.currentSentenceIdx : 0, true);" title="朗讀目前選取的句子">🔊 讀本句</button>
-                </div>
-
                 <!-- Action Buttons in Deep Toolbar -->
                 <div class="header-actions">
                     <button class="action-btn" id="btnOpenParticleQuizTop" title="開啟全篇日文助詞測驗挑戰與換句話說特訓">
@@ -4086,6 +4090,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
     <!-- Main Workspace Container -->
     <main class="app-main">
+        <div class="mobile-welcome mobile-only">
+            <span class="eyebrow">READING MASTER · 日本語</span>
+            <h2>今天，讀一點日文。</h2>
+            <p>貼上文章或選一篇範例，從讀懂一句開始。</p>
+        </div>
 
         <!-- Input Section (Collapsible) -->
         <section class="input-card" id="inputCard">
@@ -4110,7 +4119,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             <!-- Tab 1: Paste Text -->
             <div class="tab-panel active" id="panelPaste">
                 <div class="textarea-wrap">
-                    <textarea id="articleInput" class="article-textarea" rows="6" placeholder="請在此貼上欲閱讀之日文文章、章節、NHK 新聞或小說段落...&#10;點擊下方「開始閱讀與智慧解析」即可全自動生成漢字假名、JLPT 著色、文型標註與繁中對照！"></textarea>
+                    <textarea aria-label="日文文章" id="articleInput" class="article-textarea" rows="6" placeholder="請在此貼上欲閱讀之日文文章、章節、NHK 新聞或小說段落...&#10;點擊下方「開始閱讀與智慧解析」即可全自動生成漢字假名、JLPT 著色、文型標註與繁中對照！"></textarea>
                     <button class="clear-input-btn" id="btnClearInput" title="清空內容">
                         <i class="fa-solid fa-trash-can"></i> 清空
                     </button>
@@ -4122,7 +4131,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <div class="url-input-wrap">
                     <div class="url-input-box">
                         <i class="fa-solid fa-globe url-icon"></i>
-                        <input type="text" id="urlInput" class="url-input" placeholder="請輸入日文新聞或文章網址 (例如：https://www3.nhk.or.jp/news/easy/...)">
+                        <input type="url" inputmode="url" autocomplete="url" aria-label="日文文章網址" id="urlInput" class="url-input" placeholder="請輸入日文新聞或文章網址 (例如：https://www3.nhk.or.jp/news/easy/...)">
                         <button class="btn-fetch-url" id="btnFetchUrl">
                             <i class="fa-solid fa-cloud-arrow-down"></i> 一鍵抓取網頁正文
                         </button>
@@ -4215,6 +4224,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     </div>
                 </div>
 
+                <button class="tool-btn mobile-only" id="btnMobileAnalyze" hidden>查看選句解析 ↓</button>
                 <!-- Article Content Container -->
                 <div class="article-content-box" id="articleContentBox">
                     <!-- Sentences injected dynamically -->
@@ -4481,8 +4491,8 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <div style="margin-top: 36px; padding-top: 24px; border-top: 1px dashed var(--border-color);">
                     <h3 style="font-size: 1.2rem; margin-bottom: 10px; color: var(--text-main);"><i class="fa-solid fa-keyboard"></i> 聽打克漏字挑戰</h3>
                     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">聽取自然人聲發音後，在下方輸入聽到的日文句子：</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; max-width: 650px; margin: 0 auto;">
-                        <input type="text" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.1rem; outline: none; background: var(--bg-body); color: var(--text-main);">
+                    <div class="dictation-entry" style="display: flex; gap: 10px; justify-content: center; max-width: 650px; margin: 0 auto;">
+                        <input type="text" aria-label="聽寫日文句子" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.1rem; outline: none; background: var(--bg-body); color: var(--text-main);">
                         <button class="tool-btn btn-quiz-accent" id="btnCheckDictation" style="padding: 10px 18px; font-weight: 700;">驗證答案</button>
                     </div>
                     <div id="dictationFeedback" style="margin-top: 14px; font-size: 1rem; font-weight: 700;"></div>
@@ -4494,6 +4504,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
              VIEW 4: 單字與文法複習中心 (REVIEW CENTER)
              ========================================================================== -->
         <section class="master-view-pane" id="paneReview">
+            <button class="tool-btn mobile-only" style="margin-bottom:12px" onclick="openReviewModal()">🎴 單字翻牌複習</button>
             <div style="max-width: 1080px; margin: 0 auto; padding-bottom: 120px;">
                 <div class="trancy-stream-toolbar">
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -4736,7 +4747,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <!-- Injected dynamically -->
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer"><button class="reader-sync-launch" data-open-reader-sync>☁ 同步／完整備份</button>
                 <button class="btn-secondary" id="btnExportNotebook">
                     <i class="fa-solid fa-download"></i> 匯出學習筆記 (.txt)
                 </button>
@@ -6879,17 +6890,6 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 row.dataset.sentenceIdx = sIdx;
                 row.addEventListener('click', () => selectSentence(sIdx));
 
-                const rowHeader = document.createElement('div');
-                rowHeader.className = 'sentence-row-header';
-                rowHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;';
-                rowHeader.innerHTML = `
-                    <span class="sentence-idx-tag" style="font-size:0.75rem; font-weight:700; color:var(--text-muted); background:var(--bg-sub); padding:1px 6px; border-radius:4px; border:1px solid var(--border-color);">#${sIdx + 1}</span>
-                    <button class="sentence-audio-btn" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3); color:var(--primary); border-radius:6px; padding:2px 8px; font-size:0.78rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="朗讀本句 (微軟圭太真人音)" onclick="event.stopPropagation(); window.speakJapanese('${s.text.replace(/'/g, "\\'")}');">
-                        <i class="fa-solid fa-volume-high"></i> 朗讀
-                    </button>
-                `;
-                row.appendChild(rowHeader);
-
                 const jpWrap = document.createElement('div');
                 jpWrap.className = 'sentence-jp-text';
                 jpWrap.title = '點擊切換揭示/遮蔽';
@@ -7154,9 +7154,6 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     </td>
                     <td style="text-align:center;">
                         <div style="display:flex; gap:6px; justify-content:center; align-items:center; white-space:nowrap;">
-                            <button class="btn-fav-word" title="朗讀單字發音 (微軟圭太)" style="color:var(--text-muted);" onclick="speakJapanese('${escapeHtml(baseForm)}')">
-                                <i class="fa-solid fa-volume-high"></i>
-                            </button>
                             <button class="btn-fav-word ${isFav ? 'active' : ''}" title="加入生詞本" onclick="toggleWordNotebook('${escapeHtml(baseForm)}', '${escapeHtml(baseForm)}', '${escapeHtml(displayReading)}', '${escapeHtml(displayLevel || '')}', '')">
                                 <i class="fa-solid fa-star"></i>
                             </button>
@@ -7446,6 +7443,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
         function saveNotebook() {
             localStorage.setItem('yuedu_gaoshou_notebook', JSON.stringify(state.notebook));
+            window.ReaderCloud?.changed();
             updateNotebookHeaderCount();
         }
 
@@ -8410,7 +8408,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (!title || !title.trim()) return;
 
             const newArt = {
-                id: 'art_' + Date.now(),
+                id: 'art_' + crypto.randomUUID(),
                 title: title.trim(),
                 content: rawText,
                 savedAt: new Date().toLocaleDateString(),
@@ -8421,6 +8419,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             const existingIdx = state.savedArticles.findIndex(a => a.title === newArt.title || a.content === newArt.content);
             if (existingIdx !== -1) {
+                newArt.id = state.savedArticles[existingIdx].id;
                 state.savedArticles[existingIdx] = newArt;
                 showToast(`已更新收藏文章《${newArt.title}》！`);
             } else {
@@ -8429,6 +8428,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             }
 
             localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
             updateSavedArticlesCount();
         }
 
@@ -8450,6 +8450,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (!confirm('確定要從收藏中移除這篇文章嗎？')) return;
             state.savedArticles = state.savedArticles.filter(a => a.id !== artId);
             localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
             updateSavedArticlesCount();
             switchNotebookTab('articles');
             showToast('已移除該收藏文章');
@@ -8973,6 +8974,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = state.savedArticles.filter((_, idx) => !selectedNotebookIndices.has(idx));
                 localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
                 updateSavedArticlesCount();
             }
 
@@ -9066,6 +9068,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = [];
                 localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
                 updateSavedArticlesCount();
             }
 
@@ -9110,7 +9113,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                                 </div>
                             </div>
                             <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); sendWordToAnkiFlash('${escapeHtml(w.baseForm || w.surface)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); readerSendWord(${idx})">
                                     <i class="fa-solid fa-layer-group"></i>
                                 </button>
                                 <button class="btn-del-item" onclick="event.stopPropagation(); removeWordFromNotebook(${idx})" title="單筆刪除"><i class="fa-solid fa-trash-can"></i></button>
@@ -9201,7 +9204,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                                 <div style="flex:1; min-width:0;">
                                     <strong style="font-size:1.15rem; font-family:var(--font-jp); color:var(--text-main); word-break:break-word;">${escapeHtml(art.title)}</strong>
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
-                                        收藏時間：${art.savedAt} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
+                                        收藏時間：${escapeHtml(art.savedAt)} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
                                     </div>
                                 </div>
                             </div>
@@ -9513,13 +9516,14 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             </div>
         </div>
 
-        <div class="audio-bar-center">
+        <button id="btnMobileAudio" class="audio-expand mobile-only" aria-label="展開播放設定" aria-expanded="false" aria-controls="mobileAudioControls mobileAudioOptions">⌃</button>
+        <div class="audio-bar-center" id="mobileAudioControls">
             <button class="btn-player-icon" id="btnGlobalPrev" title="上一句 (J)"><i class="fa-solid fa-backward-step"></i></button>
             <button class="btn-player-icon active" id="btnGlobalAutoNext" title="朗讀完畢自動連播下一句"><i class="fa-solid fa-forward"></i></button>
             <button class="btn-player-icon" id="btnGlobalNext" title="下一句 (K)"><i class="fa-solid fa-forward-step"></i></button>
         </div>
 
-        <div class="audio-bar-right">
+        <div class="audio-bar-right" id="mobileAudioOptions">
             <!-- 語音引擎選單 -->
             <select class="audio-voice-select" id="globalVoiceSelect" title="選取自然真人發音引擎">
                 <option value="nanami">🌸 微軟 Nanami (七海・自然女聲)</option>
@@ -9568,6 +9572,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             activeOnEnd: null
         };
 
+        window.readerGetStars = () => masterState.starredSentences;
+        window.readerSetStars = values => { masterState.starredSentences = values; updateReviewCounters(); if (masterState.activeView === 'review') renderReviewNotebook('starred'); };
+        window.readerSpeakStar = index => window.speakJapanese(masterState.starredSentences[index]?.text || '');
         // 取得當前文章的句子清單
         function getSentences() {
             if (typeof state !== 'undefined' && state.analyzedData && Array.isArray(state.analyzedData.sentences)) {
@@ -9626,79 +9633,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             document.querySelectorAll('.karaoke-passed').forEach(el => el.classList.remove('karaoke-passed'));
         }
 
-        let readerKeitaVoiceCache = null;
-
-        function getReaderKeitaVoiceAsync() {
-            if (!('speechSynthesis' in window)) return Promise.resolve(null);
-            const scan = () => {
-                const list = window.speechSynthesis.getVoices() || [];
-                return list.find(v => /圭太|けいた|Keita/i.test(v.name));
-            };
-            let found = scan();
-            if (found) {
-                readerKeitaVoiceCache = found;
-                updateHeaderVoiceBadge(true);
-                return Promise.resolve(found);
-            }
-            return new Promise(resolve => {
-                let resolved = false;
-                const onVoices = () => {
-                    if (resolved) return;
-                    const k = scan();
-                    if (k) {
-                        resolved = true;
-                        readerKeitaVoiceCache = k;
-                        updateHeaderVoiceBadge(true);
-                        window.speechSynthesis.removeEventListener('voiceschanged', onVoices);
-                        resolve(k);
-                    }
-                };
-                window.speechSynthesis.addEventListener('voiceschanged', onVoices);
-                setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true;
-                        window.speechSynthesis.removeEventListener('voiceschanged', onVoices);
-                        const k = scan();
-                        readerKeitaVoiceCache = k || null;
-                        updateHeaderVoiceBadge(!!k);
-                        resolve(k || null);
-                    }
-                }, 800);
-            });
-        }
-
-        function updateHeaderVoiceBadge(isKeitaReady) {
-            const badge = document.getElementById('voiceStatusBadge');
-            if (!badge) return;
-            if (isKeitaReady) {
-                badge.innerHTML = '👦 語音：微軟圭太 (真人自然音) <span style="display:inline-block; width:8px; height:8px; background:#22c55e; border-radius:50%; margin-left:4px; box-shadow:0 0 6px #22c55e;" title="微軟自然真人音已就緒"></span>';
-                badge.style.background = 'rgba(34, 197, 94, 0.16)';
-                badge.style.borderColor = 'rgba(34, 197, 94, 0.4)';
-                badge.style.color = '#dcfce7';
-                badge.onclick = () => showToast('✅ 目前已啟用微軟【圭太 (けいた)】自然真人語音，發音真實自然！');
-            } else {
-                badge.innerHTML = '⚠️ 語音：建議以 Edge 開啟 <span style="display:inline-block; width:8px; height:8px; background:#f59e0b; border-radius:50%; margin-left:4px; box-shadow:0 0 6px #f59e0b;" title="目前瀏覽器未支援微軟真人音"></span>';
-                badge.style.background = 'rgba(245, 158, 11, 0.16)';
-                badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-                badge.style.color = '#fef3c7';
-                badge.onclick = () => alert('【微軟真人語音提示】\n\n您目前使用的瀏覽器（如 Chrome）不支援微軟 Online Natural 真人語音，因此瀏覽器只能發出機械合成音。\n\n💡 只要使用 Windows 內建的「Microsoft Edge」瀏覽器開啟本網頁，即可自動享有最頂級的微軟【圭太 (けいた)】自然真人發音！');
-            }
-        }
-
-        // 初次加載即檢測語音引擎
-        if ('speechSynthesis' in window) {
-            getReaderKeitaVoiceAsync();
-            window.speechSynthesis.onvoiceschanged = () => getReaderKeitaVoiceAsync();
-        }
-
-        async function speakWithKaraoke(text, containerEl, onEnd, forceRestart = false) {
+        function speakWithKaraoke(text, containerEl, onEnd, forceRestart = false) {
             if (!text) return;
             const cleanText = text.replace(/<[^>]+>/g, '').trim();
-
-            if (!('speechSynthesis' in window)) {
-                showToast('您的瀏覽器不支援語音朗讀功能');
-                return;
-            }
 
             // 若目前為暫停狀態且非強制重啟 -> 繼續播放 (Resume)
             if (!forceRestart && masterState.playbackStatus === 'paused') {
@@ -9715,69 +9652,77 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             masterState.activeTokens = tokens;
             masterState.activeOnEnd = onEnd;
 
+            const voiceChoice = masterState.voice;
             const rate = masterState.playbackRate;
 
             masterState.playbackStatus = 'playing';
             updatePlayerBarStatus('playing', cleanText);
 
-            window.speechSynthesis.cancel();
+            // 方案 1: 微軟自然語音
+            if (voiceChoice !== 'google-hd' && 'speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices();
+                let matchedVoice = voices.find(v => {
+                    const isJa = v.lang.startsWith('ja') || v.lang.includes('JP');
+                    if (voiceChoice === 'nanami') return isJa && (v.name.includes('Nanami') || (v.name.includes('Natural') && !v.name.includes('Keita')));
+                    if (voiceChoice === 'keita') return isJa && v.name.includes('Keita');
+                    return isJa && !v.name.includes('Desktop') && !v.name.includes('Haruka');
+                });
 
-            const keitaVoice = await getReaderKeitaVoiceAsync();
-            const list = window.speechSynthesis.getVoices() || [];
-            let voiceToUse = keitaVoice;
-            
-            // 若使用者手動指定七海
-            if (masterState.voice === 'nanami') {
-                const nanami = list.find(v => /七海|Nanami/i.test(v.name));
-                if (nanami) voiceToUse = nanami;
-            }
-            if (!voiceToUse) {
-                voiceToUse = list.find(v => v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-            }
+                if (matchedVoice) {
+                    const u = new SpeechSynthesisUtterance(cleanText);
+                    u.voice = matchedVoice;
+                    u.lang = 'ja-JP';
+                    u.rate = rate;
+                    masterState.currentUtterance = u;
 
-            if (voiceToUse) {
-                const u = new SpeechSynthesisUtterance(cleanText);
-                u.voice = voiceToUse;
-                u.lang = 'ja-JP';
-                u.rate = rate;
-                masterState.currentUtterance = u;
+                    if (tokens.length > 0) {
+                        u.onboundary = (e) => {
+                            if (masterState.playbackStatus !== 'playing') return;
+                            const charIdx = e.charIndex || 0;
+                            let acc = 0;
+                            let activeIdx = 0;
+                            for (let i = 0; i < tokens.length; i++) {
+                                const w = tokens[i].dataset.word || tokens[i].textContent || '';
+                                acc += Math.max(1, w.length);
+                                if (acc > charIdx) { activeIdx = i; break; }
+                            }
+                            applyTokenHighlight(tokens, activeIdx);
+                        };
+                    }
 
-                if (voiceToUse === keitaVoice) {
-                    showToast(`🔊 正在以微軟真人【圭太】朗讀...`);
-                } else {
-                    const name = voiceToUse.name.replace(/Microsoft\s*/i, '').replace(/\s*-\s*Japanese.*/i, '');
-                    showToast(`⚠️ 目前使用 [${name}] 語音，建議以 Edge 開啟享受微軟【圭太】真人音`);
-                }
-
-                if (tokens.length > 0) {
-                    u.onboundary = (e) => {
-                        if (masterState.playbackStatus !== 'playing') return;
-                        const charIdx = e.charIndex || 0;
-                        let acc = 0;
-                        let activeIdx = 0;
-                        for (let i = 0; i < tokens.length; i++) {
-                            const w = tokens[i].dataset.word || tokens[i].textContent || '';
-                            acc += Math.max(1, w.length);
-                            if (acc > charIdx) { activeIdx = i; break; }
-                        }
-                        applyTokenHighlight(tokens, activeIdx);
+                    u.onend = () => {
+                        handleSpeechCompleted(onEnd);
                     };
+                    u.onerror = () => {
+                        masterState.playbackStatus = 'idle';
+                        updatePlayerBarStatus('idle');
+                        clearKaraokeHighlights();
+                    };
+                    window.speechSynthesis.speak(u);
+                    return;
                 }
+            }
 
-                u.onend = () => {
-                    handleSpeechCompleted(onEnd);
-                };
-                u.onerror = () => {
-                    masterState.playbackStatus = 'idle';
-                    updatePlayerBarStatus('idle');
-                    clearKaraokeHighlights();
-                };
-                window.speechSynthesis.speak(u);
-            } else {
+            // 方案 2: Google Cloud HD 自然人聲
+            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText.slice(0, 180))}`;
+            const audio = new Audio(audioUrl);
+            masterState.currentAudio = audio;
+            audio.playbackRate = rate;
+
+            startAudioInterval(audio, tokens, rate);
+
+            audio.onended = () => {
+                handleSpeechCompleted(onEnd);
+            };
+            audio.onerror = () => {
                 masterState.playbackStatus = 'idle';
                 updatePlayerBarStatus('idle');
-                showToast('您的裝置未偵測到可用之日語語音');
-            }
+                clearKaraokeHighlights();
+            };
+            audio.play().catch(() => {
+                masterState.playbackStatus = 'idle';
+                updatePlayerBarStatus('idle');
+            });
         }
 
         // 當單句語音播畢時的判斷 (支援單句循環復讀)
@@ -10026,9 +9971,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                         ) && (wIdx % 2 === 1 || surface.length >= 2);
 
                         if (shouldCloze) {
-                            return `<span class="cloze-blank" data-word="${surface}" data-reading="${w.reading || ''}" title="點擊揭曉答案">${tokenContent}</span>`;
+                            return `<span class="cloze-blank" data-word="${surface}" data-reading="${escapeHtml(w.reading || '')}" title="點擊揭曉答案">${tokenContent}</span>`;
                         } else {
-                            return `<span class="jp-token" data-word="${surface}" data-reading="${w.reading || ''}">${tokenContent}</span>`;
+                            return `<span class="jp-token" data-word="${surface}" data-reading="${escapeHtml(w.reading || '')}">${tokenContent}</span>`;
                         }
                     }).join('');
                 } else {
@@ -10242,6 +10187,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 if (typeof showToast === 'function') showToast('已收藏至複習庫 ⭐');
             }
             localStorage.setItem('master_starred_sentences', JSON.stringify(masterState.starredSentences));
+            window.ReaderCloud?.changed();
             updateReviewCounters();
         }
 
@@ -10273,13 +10219,13 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     html += `
                         <div class="trancy-card" style="margin-bottom:0;">
                             <div class="trancy-card-header">
-                                <span class="trancy-idx-tag">#${i + 1} (${st.date})</span>
+                                <span class="trancy-idx-tag">#${i + 1} (${escapeHtml(st.date)})</span>
                                 <div>
-                                    <button class="trancy-btn-action" onclick="window.speakJapanese('${st.text.replace(/'/g, "\\'")}');"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
+                                    <button class="trancy-btn-action" onclick="readerSpeakStar(${i})"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
                                 </div>
                             </div>
-                            <div class="trancy-card-jp" style="font-size:1.25rem;">${st.text}</div>
-                            <div class="trancy-card-zh">${st.translation}</div>
+                            <div class="trancy-card-jp" style="font-size:1.25rem;">${escapeHtml(st.text)}</div>
+                            <div class="trancy-card-zh">${escapeHtml(st.translation)}</div>
                         </div>
                     `;
                 });
@@ -10296,11 +10242,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     html += `
                         <div class="trancy-card" style="margin-bottom:0;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                                <span style="font-weight:800;font-size:1.15rem;color:var(--text-main);">${w.surface || w.baseForm}</span>
-                                <button class="trancy-btn-action" onclick="window.speakJapanese('${w.surface || w.baseForm}');"><i class="fa-solid fa-volume-high"></i></button>
+                                <span style="font-weight:800;font-size:1.15rem;color:var(--text-main);">${escapeHtml(w.surface || w.baseForm)}</span>
+                                <button class="trancy-btn-action" onclick="readerSpeakWord(${i})"><i class="fa-solid fa-volume-high"></i></button>
                             </div>
-                            <div style="font-size:0.9rem;color:#6366f1;font-weight:700;">${w.reading || ''}</div>
-                            <div style="font-size:0.88rem;color:var(--text-muted);margin-top:6px;">${w.meaning || '文章生詞'}</div>
+                            <div style="font-size:0.9rem;color:#6366f1;font-weight:700;">${escapeHtml(w.reading || '')}</div>
+                            <div style="font-size:0.88rem;color:var(--text-muted);margin-top:6px;">${escapeHtml(w.meaning || '文章生詞')}</div>
                         </div>
                     `;
                 });
@@ -10529,31 +10475,16 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 localStorage.setItem('master_voice', masterState.voice);
             });
 
-            function setMasterRate(rateVal) {
-                const r = Math.min(2.0, Math.max(0.5, Math.round(rateVal * 20) / 20));
-                masterState.playbackRate = r;
-                localStorage.setItem('master_playback_rate', r.toString());
-                const text = r.toFixed(2).replace(/\.?0+$/, '') + 'x';
-                const s1 = document.getElementById('globalRateSlider');
-                const l1 = document.getElementById('globalRateLabel');
-                const s2 = document.getElementById('headerRateSlider');
-                const l2 = document.getElementById('headerRateLabel');
-                if (s1 && parseFloat(s1.value) !== r) s1.value = r;
-                if (l1) l1.textContent = text;
-                if (s2 && parseFloat(s2.value) !== r) s2.value = r;
-                if (l2) l2.textContent = text;
-            }
-
-            document.getElementById('globalRateSlider')?.addEventListener('input', (e) => setMasterRate(parseFloat(e.target.value)));
-            document.getElementById('headerRateSlider')?.addEventListener('input', (e) => setMasterRate(parseFloat(e.target.value)));
-            
-            // 讀取已儲存語速
-            const savedRate = parseFloat(localStorage.getItem('master_playback_rate') || '1.0');
-            setMasterRate(savedRate);
+            document.getElementById('globalRateSlider')?.addEventListener('input', (e) => {
+                masterState.playbackRate = parseFloat(e.target.value);
+                const lbl = document.getElementById('globalRateLabel');
+                if (lbl) lbl.textContent = masterState.playbackRate.toFixed(2) + 'x';
+                if (masterState.currentAudio) masterState.currentAudio.playbackRate = masterState.playbackRate;
+            });
 
             // 鍵盤快捷鍵 (Space: 播放/暫停, R: 重啟本句, L: 單句復讀, J: 上一句, K: 下一句)
             document.addEventListener('keydown', (e) => {
-                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(e.target.tagName) || e.target.isContentEditable || document.querySelector('dialog[open]')) return;
                 if (e.code === 'Space') {
                     e.preventDefault();
                     document.getElementById('btnGlobalPlay')?.click();
@@ -10595,7 +10526,14 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 const sentences = getSentences();
                 if ((!sentences || sentences.length === 0) && typeof SAMPLE_ARTICLES !== 'undefined' && SAMPLE_ARTICLES.length > 0) {
                     console.log('[閱讀高手] 自動預載入範例文章一...');
-                    window.quickLoadSample(0);
+                    if (matchMedia('(max-width: 900px)').matches) {
+                        if (!dom.articleInput.value) {
+                            dom.articleInput.value = SAMPLE_ARTICLES[0].content;
+                            dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
+                        }
+                    } else {
+                        window.quickLoadSample(0);
+                    }
                 }
             }, 350);
         }
@@ -10603,5 +10541,56 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     })();
     
 </script>
+
+<dialog id="mobileInstallHelp" class="install-help" aria-labelledby="installTitle">
+    <button id="btnCloseInstall" class="install-close" aria-label="關閉安裝說明">✕</button>
+    <h2 id="installTitle">把閱讀高手放進主畫面</h2>
+    <p><strong>iPhone / iPad</strong><br>使用 Safari 開啟本頁，點「分享」，再選「加入主畫面」。若看到「以網頁 App 打開」，請開啟它。</p>
+    <p><strong>Android</strong><br>使用 Chrome 開啟本頁，點右上角選單，再選「安裝應用程式」或「加到主畫面」。</p>
+    <p>加入後，點主畫面的「閱讀高手」圖示即可開始。線上翻譯與網址抓取仍需要網路。</p>
+    <button id="btnConfirmInstall" class="install-confirm" hidden>安裝閱讀高手</button>
+</dialog>
+<script src="static/master/master-mobile.js?v=20260922-1"></script>
+
+<script>
+window.ReaderLibrary = {
+  apply(data) {
+    state.savedArticles = data.articles;
+    state.notebook = {words:data.words,grammars:data.grammars};
+    window.readerSetStars(data.sentences);
+    updateSavedArticlesCount(); updateNotebookHeaderCount();
+    if (document.getElementById('notebookModal').classList.contains('open')) switchNotebookTab(currentNotebookTab);
+  }
+};
+window.readerSpeakWord = index => window.speakJapanese(state.notebook.words[index]?.surface || '');
+window.readerSendWord = index => { const w=state.notebook.words[index]; if(w) sendWordToAnkiFlash(w.baseForm||w.surface,w.reading,w.jlpt,w.pos,w.meaning,w.example); };
+</script>
+<dialog id="readerSyncDialog" class="reader-sync-dialog" aria-labelledby="readerSyncTitle">
+  <header><h2 id="readerSyncTitle">收藏同步與備份</h2><button id="readerSyncClose" aria-label="關閉同步視窗">✕</button></header>
+  <p>電腦與手機使用同一個 Google 帳號，即可同步自己的收藏。每位學生的雲端資料彼此獨立。</p>
+  <p id="readerLibraryCounts"></p>
+  <div class="reader-status" role="status" aria-live="polite"><strong id="readerSyncStatus">正在讀取收藏…</strong><p id="readerSyncDetail"></p></div>
+  <section>
+    <h3>Google Drive 同步</h3>
+    <p>同步文章、生詞、文法及收藏句子。Google 授權有效期間，修改後會自動同步；重新開啟 APP 或授權到期時，請再次登入。</p>
+    <div id="readerSetupNotice" class="reader-sync-notice"><p>管理者尚未完成 Google 登入設定。目前請先使用下方的完整備份，在手機匯入即可讀取收藏。</p></div>
+    <div class="reader-sync-actions"><button id="readerConnect" class="reader-primary" disabled>登入 Google</button><button id="readerSyncNow">立即同步</button><button id="readerDisconnect">中斷連線</button></div>
+    <div id="readerAccountChoice" class="reader-sync-notice" hidden><p id="readerAccountNotice"></p><button id="readerAcceptAccount" class="reader-primary">確認使用此帳號同步</button></div>
+  </section>
+  <section>
+    <h3>完整備份與還原</h3>
+    <p>下載可還原的 JSON 檔，再存到你的雲端硬碟。手機選擇同一份檔案匯入，無須等待 Google 登入設定。</p>
+    <div class="reader-sync-actions"><button id="readerExport" class="reader-primary">下載完整備份</button><button id="readerImport">匯入備份</button><button id="readerExportRecovery">下載合併前備份</button></div>
+    <input id="readerBackupFile" type="file" accept=".json,application/json" hidden>
+    <div id="readerImportChoice" class="reader-sync-notice" hidden><p id="readerImportSummary"></p><div class="reader-sync-actions"><button id="readerConfirmImport" class="reader-primary">確認合併收藏</button><button id="readerCancelImport">取消</button></div></div>
+  </section>
+  <p>清除網站資料前，請確認同步完成或已下載備份。共用電腦仍會保留本機收藏；使用完畢請先同步，再清除網站資料。</p>
+  <p><a href="reader-privacy.html" target="_blank" rel="noopener">收藏同步隱私說明</a></p>
+</dialog>
+<script src="static/master/google-config.js?v=20260922-2"></script>
+<script src="static/master/sync-core.js?v=20260922-2"></script>
+<script src="static/master/drive-store.js?v=20260922-2"></script>
+<script src="static/master/reader-cloud.js?v=20260922-2"></script>
+
 </body>
 </html>
