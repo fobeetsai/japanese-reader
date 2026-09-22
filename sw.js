@@ -1,5 +1,5 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v14-master-mobile';
+const CACHE_NAME = 'ankiflash-v15-reader-cloud';
 const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
   './static/flashcards/js/moji_bridge.js', './static/flashcards/js/app.js', './static/flashcards/js/excel_import.js',
   './static/flashcards/vendor/xlsx.full.min.js', './static/flashcards/icons/icon-192.svg'
 ].map(path => /\.(js|css)$/.test(path) ? `${path}?v=${VERSION}` : path)
-.concat(['./master.html', './master.webmanifest', './static/master/master-mobile.css?v=20260922-1', './static/master/master-mobile.js?v=20260922-1', './static/master/icon-180.png', './static/master/icon-192.png', './static/master/icon-512.png', './static/cross_nav.css', './static/flashcards/js/ankiflash_bridge.js']);
+.concat(['./reader-privacy.html', './static/master/google-config.js?v=20260922-2', './static/master/sync-core.js?v=20260922-2', './static/master/drive-store.js?v=20260922-2', './static/master/reader-cloud.js?v=20260922-2', './static/master/reader-cloud.css?v=20260922-2', './master.html', './master.webmanifest', './static/master/master-mobile.css?v=20260922-1', './static/master/master-mobile.js?v=20260922-1', './static/master/icon-180.png', './static/master/icon-192.png', './static/master/icon-512.png', './static/cross_nav.css', './static/flashcards/js/ankiflash_bridge.js']);
 
 self.addEventListener('install', event => {
   self.skipWaiting();

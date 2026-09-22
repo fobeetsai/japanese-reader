@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw;">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw https://www.googleapis.com https://accounts.google.com;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
@@ -3944,6 +3944,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     <link rel="apple-touch-icon" href="static/master/icon-180.png">
     <link rel="icon" type="image/png" href="static/master/icon-192.png">
     <link rel="stylesheet" href="static/master/master-mobile.css?v=20260922-1">
+<link rel="stylesheet" href="static/master/reader-cloud.css?v=20260922-2">
 </head>
 <body data-theme="light">
 
@@ -4005,6 +4006,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 </nav>
                 <!-- 常駐全站操作功能 (跨所有模式皆可隨時開啟筆記本、抽認卡與深色主題切換) -->
                 <div class="header-actions" style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+                    <button class="reader-sync-launch desktop-sync-launch" data-open-reader-sync>☁ 收藏同步</button>
                     <button class="action-btn" id="btnWordReview" onclick="openReviewModal()" title="開啟單字翻牌抽認卡複習 (文章單字 / 生詞本)">
                         <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
                         <span>單字抽認卡 🎴</span>
@@ -4021,6 +4023,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             <div class="mobile-toolbar mobile-only">
                 <button id="btnMobileSettings" aria-expanded="false" aria-controls="deepHeaderToolbar">☷ 閱讀設定</button>
+                <button class="reader-sync-launch" data-open-reader-sync>☁ 收藏同步</button>
                 <button id="btnMobileInstall">＋ 加入主畫面</button>
                 <button id="btnMobileApps" aria-label="其他學習工具" aria-expanded="false" aria-controls="learningAppsNav">⋯</button>
             </div>
@@ -4744,7 +4747,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <!-- Injected dynamically -->
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer"><button class="reader-sync-launch" data-open-reader-sync>☁ 同步／完整備份</button>
                 <button class="btn-secondary" id="btnExportNotebook">
                     <i class="fa-solid fa-download"></i> 匯出學習筆記 (.txt)
                 </button>
@@ -7440,6 +7443,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
         function saveNotebook() {
             localStorage.setItem('yuedu_gaoshou_notebook', JSON.stringify(state.notebook));
+            window.ReaderCloud?.changed();
             updateNotebookHeaderCount();
         }
 
@@ -8404,7 +8408,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (!title || !title.trim()) return;
 
             const newArt = {
-                id: 'art_' + Date.now(),
+                id: 'art_' + crypto.randomUUID(),
                 title: title.trim(),
                 content: rawText,
                 savedAt: new Date().toLocaleDateString(),
@@ -8415,6 +8419,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             const existingIdx = state.savedArticles.findIndex(a => a.title === newArt.title || a.content === newArt.content);
             if (existingIdx !== -1) {
+                newArt.id = state.savedArticles[existingIdx].id;
                 state.savedArticles[existingIdx] = newArt;
                 showToast(`已更新收藏文章《${newArt.title}》！`);
             } else {
@@ -8423,6 +8428,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             }
 
             localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
             updateSavedArticlesCount();
         }
 
@@ -8444,6 +8450,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (!confirm('確定要從收藏中移除這篇文章嗎？')) return;
             state.savedArticles = state.savedArticles.filter(a => a.id !== artId);
             localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
             updateSavedArticlesCount();
             switchNotebookTab('articles');
             showToast('已移除該收藏文章');
@@ -8967,6 +8974,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = state.savedArticles.filter((_, idx) => !selectedNotebookIndices.has(idx));
                 localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
                 updateSavedArticlesCount();
             }
 
@@ -9060,6 +9068,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = [];
                 localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
+            window.ReaderCloud?.changed();
                 updateSavedArticlesCount();
             }
 
@@ -9104,7 +9113,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                                 </div>
                             </div>
                             <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); sendWordToAnkiFlash('${escapeHtml(w.baseForm || w.surface)}', '${escapeHtml(w.reading)}', '${escapeHtml(w.jlpt)}', '${escapeHtml(w.pos)}', '${escapeHtml(w.meaning)}', '${escapeHtml(w.example)}')">
+                                <button class="btn-fav-word" title="🎴 送至 AnkiFlash 抽認卡" style="color:#818cf8;" onclick="event.stopPropagation(); readerSendWord(${idx})">
                                     <i class="fa-solid fa-layer-group"></i>
                                 </button>
                                 <button class="btn-del-item" onclick="event.stopPropagation(); removeWordFromNotebook(${idx})" title="單筆刪除"><i class="fa-solid fa-trash-can"></i></button>
@@ -9195,7 +9204,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                                 <div style="flex:1; min-width:0;">
                                     <strong style="font-size:1.15rem; font-family:var(--font-jp); color:var(--text-main); word-break:break-word;">${escapeHtml(art.title)}</strong>
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
-                                        收藏時間：${art.savedAt} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
+                                        收藏時間：${escapeHtml(art.savedAt)} ｜ 句數：${art.sentenceCount} ｜ 詞數：${art.wordCount}
                                     </div>
                                 </div>
                             </div>
@@ -9563,6 +9572,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             activeOnEnd: null
         };
 
+        window.readerGetStars = () => masterState.starredSentences;
+        window.readerSetStars = values => { masterState.starredSentences = values; updateReviewCounters(); if (masterState.activeView === 'review') renderReviewNotebook('starred'); };
+        window.readerSpeakStar = index => window.speakJapanese(masterState.starredSentences[index]?.text || '');
         // 取得當前文章的句子清單
         function getSentences() {
             if (typeof state !== 'undefined' && state.analyzedData && Array.isArray(state.analyzedData.sentences)) {
@@ -9959,9 +9971,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                         ) && (wIdx % 2 === 1 || surface.length >= 2);
 
                         if (shouldCloze) {
-                            return `<span class="cloze-blank" data-word="${surface}" data-reading="${w.reading || ''}" title="點擊揭曉答案">${tokenContent}</span>`;
+                            return `<span class="cloze-blank" data-word="${surface}" data-reading="${escapeHtml(w.reading || '')}" title="點擊揭曉答案">${tokenContent}</span>`;
                         } else {
-                            return `<span class="jp-token" data-word="${surface}" data-reading="${w.reading || ''}">${tokenContent}</span>`;
+                            return `<span class="jp-token" data-word="${surface}" data-reading="${escapeHtml(w.reading || '')}">${tokenContent}</span>`;
                         }
                     }).join('');
                 } else {
@@ -10175,6 +10187,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 if (typeof showToast === 'function') showToast('已收藏至複習庫 ⭐');
             }
             localStorage.setItem('master_starred_sentences', JSON.stringify(masterState.starredSentences));
+            window.ReaderCloud?.changed();
             updateReviewCounters();
         }
 
@@ -10206,13 +10219,13 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     html += `
                         <div class="trancy-card" style="margin-bottom:0;">
                             <div class="trancy-card-header">
-                                <span class="trancy-idx-tag">#${i + 1} (${st.date})</span>
+                                <span class="trancy-idx-tag">#${i + 1} (${escapeHtml(st.date)})</span>
                                 <div>
-                                    <button class="trancy-btn-action" onclick="window.speakJapanese('${st.text.replace(/'/g, "\\'")}');"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
+                                    <button class="trancy-btn-action" onclick="readerSpeakStar(${i})"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
                                 </div>
                             </div>
-                            <div class="trancy-card-jp" style="font-size:1.25rem;">${st.text}</div>
-                            <div class="trancy-card-zh">${st.translation}</div>
+                            <div class="trancy-card-jp" style="font-size:1.25rem;">${escapeHtml(st.text)}</div>
+                            <div class="trancy-card-zh">${escapeHtml(st.translation)}</div>
                         </div>
                     `;
                 });
@@ -10229,11 +10242,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     html += `
                         <div class="trancy-card" style="margin-bottom:0;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                                <span style="font-weight:800;font-size:1.15rem;color:var(--text-main);">${w.surface || w.baseForm}</span>
-                                <button class="trancy-btn-action" onclick="window.speakJapanese('${w.surface || w.baseForm}');"><i class="fa-solid fa-volume-high"></i></button>
+                                <span style="font-weight:800;font-size:1.15rem;color:var(--text-main);">${escapeHtml(w.surface || w.baseForm)}</span>
+                                <button class="trancy-btn-action" onclick="readerSpeakWord(${i})"><i class="fa-solid fa-volume-high"></i></button>
                             </div>
-                            <div style="font-size:0.9rem;color:#6366f1;font-weight:700;">${w.reading || ''}</div>
-                            <div style="font-size:0.88rem;color:var(--text-muted);margin-top:6px;">${w.meaning || '文章生詞'}</div>
+                            <div style="font-size:0.9rem;color:#6366f1;font-weight:700;">${escapeHtml(w.reading || '')}</div>
+                            <div style="font-size:0.88rem;color:var(--text-muted);margin-top:6px;">${escapeHtml(w.meaning || '文章生詞')}</div>
                         </div>
                     `;
                 });
@@ -10538,5 +10551,46 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     <button id="btnConfirmInstall" class="install-confirm" hidden>安裝閱讀高手</button>
 </dialog>
 <script src="static/master/master-mobile.js?v=20260922-1"></script>
+
+<script>
+window.ReaderLibrary = {
+  apply(data) {
+    state.savedArticles = data.articles;
+    state.notebook = {words:data.words,grammars:data.grammars};
+    window.readerSetStars(data.sentences);
+    updateSavedArticlesCount(); updateNotebookHeaderCount();
+    if (document.getElementById('notebookModal').classList.contains('open')) switchNotebookTab(currentNotebookTab);
+  }
+};
+window.readerSpeakWord = index => window.speakJapanese(state.notebook.words[index]?.surface || '');
+window.readerSendWord = index => { const w=state.notebook.words[index]; if(w) sendWordToAnkiFlash(w.baseForm||w.surface,w.reading,w.jlpt,w.pos,w.meaning,w.example); };
+</script>
+<dialog id="readerSyncDialog" class="reader-sync-dialog" aria-labelledby="readerSyncTitle">
+  <header><h2 id="readerSyncTitle">收藏同步與備份</h2><button id="readerSyncClose" aria-label="關閉同步視窗">✕</button></header>
+  <p>電腦與手機使用同一個 Google 帳號，即可同步自己的收藏。每位學生的雲端資料彼此獨立。</p>
+  <p id="readerLibraryCounts"></p>
+  <div class="reader-status" role="status" aria-live="polite"><strong id="readerSyncStatus">正在讀取收藏…</strong><p id="readerSyncDetail"></p></div>
+  <section>
+    <h3>Google Drive 同步</h3>
+    <p>同步文章、生詞、文法及收藏句子。Google 授權有效期間，修改後會自動同步；重新開啟 APP 或授權到期時，請再次登入。</p>
+    <div id="readerSetupNotice" class="reader-sync-notice"><p>管理者尚未完成 Google 登入設定。目前請先使用下方的完整備份，在手機匯入即可讀取收藏。</p></div>
+    <div class="reader-sync-actions"><button id="readerConnect" class="reader-primary" disabled>登入 Google</button><button id="readerSyncNow">立即同步</button><button id="readerDisconnect">中斷連線</button></div>
+    <div id="readerAccountChoice" class="reader-sync-notice" hidden><p id="readerAccountNotice"></p><button id="readerAcceptAccount" class="reader-primary">確認使用此帳號同步</button></div>
+  </section>
+  <section>
+    <h3>完整備份與還原</h3>
+    <p>下載可還原的 JSON 檔，再存到你的雲端硬碟。手機選擇同一份檔案匯入，無須等待 Google 登入設定。</p>
+    <div class="reader-sync-actions"><button id="readerExport" class="reader-primary">下載完整備份</button><button id="readerImport">匯入備份</button><button id="readerExportRecovery">下載合併前備份</button></div>
+    <input id="readerBackupFile" type="file" accept=".json,application/json" hidden>
+    <div id="readerImportChoice" class="reader-sync-notice" hidden><p id="readerImportSummary"></p><div class="reader-sync-actions"><button id="readerConfirmImport" class="reader-primary">確認合併收藏</button><button id="readerCancelImport">取消</button></div></div>
+  </section>
+  <p>清除網站資料前，請確認同步完成或已下載備份。共用電腦仍會保留本機收藏；使用完畢請先同步，再清除網站資料。</p>
+  <p><a href="reader-privacy.html" target="_blank" rel="noopener">收藏同步隱私說明</a></p>
+</dialog>
+<script src="static/master/google-config.js?v=20260922-2"></script>
+<script src="static/master/sync-core.js?v=20260922-2"></script>
+<script src="static/master/drive-store.js?v=20260922-2"></script>
+<script src="static/master/reader-cloud.js?v=20260922-2"></script>
+
 </body>
 </html>
