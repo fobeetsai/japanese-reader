@@ -9662,13 +9662,18 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (voiceChoice !== 'google-hd' && 'speechSynthesis' in window) {
                 const voices = window.speechSynthesis.getVoices();
                 let matchedVoice = voices.find(v => {
-                    const isJa = v.lang.startsWith('ja') || v.lang.includes('JP');
-                    if (voiceChoice === 'nanami') return isJa && (v.name.includes('Nanami') || (v.name.includes('Natural') && !v.name.includes('Keita')));
-                    if (voiceChoice === 'keita') return isJa && v.name.includes('Keita');
+                    const isJa = v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP'));
+                    if (voiceChoice === 'nanami') return isJa && (v.name.includes('Nanami') || v.name.includes('七海') || (v.name.includes('Natural') && !v.name.includes('Keita') && !v.name.includes('圭太')));
+                    if (voiceChoice === 'keita') return isJa && (v.name.includes('Keita') || v.name.includes('圭太'));
                     return isJa && !v.name.includes('Desktop') && !v.name.includes('Haruka');
                 });
 
+                if (!matchedVoice && voiceChoice !== 'google-hd') {
+                    matchedVoice = voices.find(v => v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+                }
+
                 if (matchedVoice) {
+                    window.speechSynthesis.cancel();
                     const u = new SpeechSynthesisUtterance(cleanText);
                     u.voice = matchedVoice;
                     u.lang = 'ja-JP';
@@ -10469,6 +10474,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 e.currentTarget.classList.toggle('active', masterState.isAutoPlay);
                 if (typeof showToast === 'function') showToast(masterState.isAutoPlay ? '已開啟自動連播' : '已關閉自動連播');
             });
+
+            const voiceSelectEl = document.getElementById('globalVoiceSelect');
+            if (voiceSelectEl) {
+                voiceSelectEl.value = masterState.voice;
+            }
 
             document.getElementById('globalVoiceSelect')?.addEventListener('change', (e) => {
                 masterState.voice = e.target.value;
