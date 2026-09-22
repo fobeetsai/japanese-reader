@@ -3100,10 +3100,115 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
     max-width: 100% !important;
 }
 
+/* Cross App Unified Navigation Bar */
+.cross-app-nav-bar {
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+}
+.cross-app-nav-bar .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f8fafc;
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+}
+.cross-app-nav-bar .nav-brand span.badge-sync {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+.cross-app-nav-bar .nav-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0;
+    -webkit-overflow-scrolling: touch;
+}
+.cross-app-nav-bar .nav-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+.cross-app-nav-bar .nav-link-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+.cross-app-nav-bar .nav-link-btn.btn-to-master {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #ffffff;
+    border-color: #c084fc;
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+    font-weight: 700;
+}
+.cross-app-nav-bar .nav-link-btn.active-reader {
+    color: #ffffff;
+    background: #2563eb;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+@media (max-width: 640px) {
+    .cross-app-nav-bar {
+        padding: 6px 8px;
+    }
+    .cross-app-nav-bar .nav-brand {
+        display: none;
+    }
+    .cross-app-nav-bar .nav-group {
+        width: 100%;
+        justify-content: space-around;
+    }
+}
     </style>
     <script src="static/flashcards/js/ankiflash_bridge.js"></script>
 </head>
 <body data-theme="light">
+
+    <!-- 全站同源統一頂部導覽列 -->
+    <nav class="cross-app-nav-bar">
+        <a href="index.html" class="nav-brand">
+            <span>🇯🇵 日語學習全方位生態系</span>
+            <span class="badge-sync">全站互通</span>
+        </a>
+        <div class="nav-group">
+            <a href="master.html" class="nav-link-btn btn-to-master" title="點擊進入全方位大成版【閱讀高手】">
+                <span>👑 進入【閱讀高手】(大成版) ↗</span>
+            </a>
+            <a href="index.html" class="nav-link-btn active-reader" title="當前：日文閱讀助手">
+                <span>📖 閱讀助手</span>
+            </a>
+            <a href="kanji.html" class="nav-link-btn" title="漢字記憶道場">
+                <span>🈩 漢字道場</span>
+            </a>
+            <a href="flashcard.html" class="nav-link-btn" title="AnkiFlash 抽認卡">
+                <span>🎴 AnkiFlash</span>
+            </a>
+        </div>
+    </nav>
 
     <!-- Top Navigation Header -->
     <header class="app-header">
@@ -4238,6 +4343,36 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
         // 動詞與形容詞活用還原到原型 (辭書形) 演算法
         function deinflectWord(word) {
             if (!word || word.length < 2) return null;
+            if (word === 'する') return 'する';
+            if (word === 'できる') return 'できる';
+
+            // 0. 特殊高頻度サ変動詞與可能動詞活用保護 (徹底杜絕 將 した/して/します/すれば 還原為 す (醋))
+            const suruPatterns = [
+                'しませんでした', 'ませんでした', 'しました', 'しません', 'します',
+                'しなかった', 'しないで', 'すれば', 'しよう', 'される', 'された',
+                'されて', 'させる', 'させた', 'させて', 'させられる', 'しない',
+                'した', 'して', 'する'
+            ];
+            for (const sp of suruPatterns) {
+                if (word.endsWith(sp)) {
+                    const stem = word.slice(0, -sp.length);
+                    if (stem === '') return 'する';
+                    return stem + 'する';
+                }
+            }
+
+            const dekiruPatterns = [
+                'できませんでした', 'できなかった', 'できません', 'できます',
+                'できない', 'できれば', 'できた', 'できて', 'できる'
+            ];
+            for (const dp of dekiruPatterns) {
+                if (word.endsWith(dp)) {
+                    const stem = word.slice(0, -dp.length);
+                    if (stem === '') return 'できる';
+                    return stem + 'できる';
+                }
+            }
+
             if (JLPT_VOCAB[word]) return word;
 
             const candidates = [];
@@ -4365,7 +4500,8 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
             }
             if (word.endsWith('した') || word.endsWith('して')) {
                 const stem = word.slice(0, -2);
-                candidates.push(stem + 'す', stem + 'する');
+                candidates.push(stem + 'する');
+                if (stem.length > 0) candidates.push(stem + 'す');
             }
             if (word.endsWith('んだ') || word.endsWith('んで')) {
                 const stem = word.slice(0, -2);
@@ -4455,6 +4591,9 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             // 10. 比對 JLPT 單字庫，命中即回傳原型！
             for (const c of candidates) {
+                // 嚴禁回傳長度小於 2 的假名（如 'す' 絕非動詞原型，避免誤配為「醋」）
+                if (!c || c.length < 2) continue;
+                if (c === 'す') continue;
                 if (JLPT_VOCAB[c]) {
                     return c;
                 }
@@ -4604,6 +4743,58 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     i = protectedSpan.end;
                     continue;
                 }
+
+                // 0. サ変動詞與可能動詞活用形原子保護 (嚴禁 する/した/して/します/できる 等被錯誤切碎為 孤立假名「す」「し」「る」)
+                const SURU_ATOMIC_FORMS = [
+                    { pat: 'しませんでした', base: 'する', reading: 'しませんでした', jlpt: 'N5' },
+                    { pat: 'ませんでした', base: 'ます', reading: 'ませんでした', jlpt: 'N5' },
+                    { pat: 'できませんでした', base: 'できる', reading: 'できませんでした', jlpt: 'N5' },
+                    { pat: 'できなかった', base: 'できる', reading: 'できなかった', jlpt: 'N5' },
+                    { pat: 'できません', base: 'できる', reading: 'できません', jlpt: 'N5' },
+                    { pat: 'しなかった', base: 'する', reading: 'しなかった', jlpt: 'N5' },
+                    { pat: 'させられる', base: 'する', reading: 'させられる', jlpt: 'N3' },
+                    { pat: 'しました', base: 'する', reading: 'しました', jlpt: 'N5' },
+                    { pat: 'しません', base: 'する', reading: 'しません', jlpt: 'N5' },
+                    { pat: 'できます', base: 'できる', reading: 'できます', jlpt: 'N5' },
+                    { pat: 'できない', base: 'できる', reading: 'できない', jlpt: 'N5' },
+                    { pat: 'できれば', base: 'できる', reading: 'できれば', jlpt: 'N4' },
+                    { pat: 'しないで', base: 'する', reading: 'しないで', jlpt: 'N5' },
+                    { pat: 'すれば', base: 'する', reading: 'すれば', jlpt: 'N5' },
+                    { pat: 'しよう', base: 'する', reading: 'しよう', jlpt: 'N4' },
+                    { pat: 'される', base: 'する', reading: 'される', jlpt: 'N4' },
+                    { pat: 'された', base: 'する', reading: 'された', jlpt: 'N4' },
+                    { pat: 'されて', base: 'する', reading: 'されて', jlpt: 'N4' },
+                    { pat: 'させる', base: 'する', reading: 'させる', jlpt: 'N4' },
+                    { pat: 'させた', base: 'する', reading: 'させた', jlpt: 'N4' },
+                    { pat: 'させて', base: 'する', reading: 'させて', jlpt: 'N4' },
+                    { pat: 'します', base: 'する', reading: 'します', jlpt: 'N5' },
+                    { pat: 'しない', base: 'する', reading: 'しない', jlpt: 'N5' },
+                    { pat: 'できる', base: 'できる', reading: 'できる', jlpt: 'N5' },
+                    { pat: 'できた', base: 'できる', reading: 'できた', jlpt: 'N5' },
+                    { pat: 'できて', base: 'できる', reading: 'できて', jlpt: 'N5' },
+                    { pat: 'する', base: 'する', reading: 'する', jlpt: 'N5' },
+                    { pat: 'した', base: 'する', reading: 'した', jlpt: 'N5' },
+                    { pat: 'して', base: 'する', reading: 'して', jlpt: 'N5' }
+                ];
+                let suruMatched = false;
+                for (const sf of SURU_ATOMIC_FORMS) {
+                    if (text.startsWith(sf.pat, i)) {
+                        tokens.push({
+                            surface: sf.pat,
+                            base_form: sf.base,
+                            reading: sf.reading,
+                            jlpt: sf.jlpt,
+                            is_kanji: false,
+                            ruby_html: sf.pat,
+                            pos: '動詞',
+                            is_particle: false
+                        });
+                        i += sf.pat.length;
+                        suruMatched = true;
+                        break;
+                    }
+                }
+                if (suruMatched) continue;
 
                 // 1. JLPT 單字庫長詞比對或動詞原型還原 (8 down to 2)
                 let matched = false;
@@ -4872,6 +5063,21 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     next.reading = cur.surface + (next.reading || '');
                     next.ruby_html = cur.surface + (next.ruby_html || '');
                     continue;
+                }
+
+                // 1.5 サ變名詞 + 動詞活用形合併 (例: [勉強] + [する/した/して/します/できる] -> [勉強する/勉強した/勉強して/勉強します])
+                if (prev && (prev.pos === '名詞' || prev.pos === '單字' || prev.is_kanji)) {
+                    const isSuruForm = cur.base_form === 'する' || cur.base_form === 'できる' ||
+                        ['する', 'した', 'して', 'します', 'しました', 'しない', 'すれば', 'される', 'された', 'させる', 'できる', 'できた', 'できて', 'できない'].includes(cur.surface);
+                    if (isSuruForm) {
+                        const baseSuffix = (cur.base_form === 'できる' ? 'できる' : 'する');
+                        prev.surface += cur.surface;
+                        prev.base_form = prev.base_form ? (prev.base_form.endsWith(baseSuffix) ? prev.base_form : prev.base_form + baseSuffix) : (prev.surface + baseSuffix);
+                        prev.reading = (prev.reading || '') + (cur.reading || cur.surface);
+                        prev.ruby_html = (prev.ruby_html || prev.surface) + cur.surface;
+                        prev.pos = '動詞';
+                        continue;
+                    }
                 }
 
                 // 檢查是否為孤立假名
@@ -5760,6 +5966,7 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 if (w.base_form && JAPANESE_PARTICLES.has(w.base_form)) return false;
                 // 單一平假名且無漢字通常為助詞/感嘆詞
                 if (/^[\u3040-\u309f]$/.test(s) && !KANJI_REGEX.test(s)) return false;
+                if (s === 'す' || (w.base_form === 'す' && !KANJI_REGEX.test(s))) return false;
                 return true;
             });
 
@@ -5768,7 +5975,11 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 
             validWords.forEach((w, wIdx) => {
                 // 2. 動詞與形容詞還原為原型 (辭書形)
-                const baseForm = deinflectWord(w.surface) || w.base_form || w.surface;
+                let baseForm = deinflectWord(w.surface) || w.base_form || w.surface;
+                if (baseForm === 'す' && !KANJI_REGEX.test(w.surface)) {
+                    baseForm = 'する';
+                }
+                if (baseForm.length <= 1 && !KANJI_REGEX.test(baseForm)) return;
                 let displayReading = w.reading || '-';
                 let displayLevel = w.jlpt;
 
@@ -7028,8 +7239,13 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                     if (typeof JAPANESE_PARTICLES !== 'undefined' && JAPANESE_PARTICLES.has(surface)) return;
                     if (w.base_form && typeof JAPANESE_PARTICLES !== 'undefined' && JAPANESE_PARTICLES.has(w.base_form)) return;
                     if (/^[\u3040-\u309f]$/.test(surface) && !KANJI_REGEX.test(surface)) return;
+                    if (surface === 'す' || (w.base_form === 'す' && !KANJI_REGEX.test(surface))) return;
 
-                    const baseForm = deinflectWord(surface) || w.base_form || surface;
+                    let baseForm = deinflectWord(surface) || w.base_form || surface;
+                    if (baseForm === 'す' && !KANJI_REGEX.test(surface)) {
+                        baseForm = 'する';
+                    }
+                    if (baseForm.length <= 1 && !KANJI_REGEX.test(baseForm)) return;
                     let displayReading = w.reading || '-';
                     let displayLevel = w.jlpt || 'Other';
 

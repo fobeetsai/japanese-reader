@@ -3836,25 +3836,126 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 .cloze-blank.revealed::after {
     display: none !important;
 }
+
+/* ==========================================================================
+   Cross App Unified Navigation Bar (全站整合頂部導覽列)
+   ========================================================================== */
+.cross-app-nav-bar {
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+}
+.cross-app-nav-bar .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f8fafc;
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+}
+.cross-app-nav-bar .nav-brand span.badge-sync {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+.cross-app-nav-bar .nav-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0;
+    -webkit-overflow-scrolling: touch;
+}
+.cross-app-nav-bar .nav-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+.cross-app-nav-bar .nav-link-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+.cross-app-nav-bar .nav-link-btn.active-master {
+    color: #ffffff;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    border-color: #c084fc;
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+    font-weight: 700;
+}
+.cross-app-nav-bar .nav-link-btn.active-reader {
+    color: #ffffff;
+    background: #2563eb;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+.cross-app-nav-bar .nav-link-btn.active-kanji {
+    color: #ffffff;
+    background: #059669;
+    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+.cross-app-nav-bar .nav-link-btn.active-flashcard {
+    color: #ffffff;
+    background: #6366f1;
+    border-color: #818cf8;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+@media (max-width: 640px) {
+    .cross-app-nav-bar {
+        padding: 6px 8px;
+    }
+    .cross-app-nav-bar .nav-brand {
+        display: none;
+    }
+    .cross-app-nav-bar .nav-group {
+        width: 100%;
+        justify-content: space-around;
+    }
+}
 </style>
 </head>
 <body data-theme="light">
 
-    <!-- 三站同源統一頂部導覽列 -->
+    <!-- 全站同源統一頂部導覽列 -->
     <nav class="cross-app-nav-bar">
-        <a href="index.html" class="nav-brand">
+        <a href="master.html" class="nav-brand">
             <span>🇯🇵 日語學習全方位生態系</span>
-            <span class="badge-sync">三站同源已打通</span>
+            <span class="badge-sync">學生專用公開版</span>
         </a>
         <div class="nav-group">
-            <a href="index.html" class="nav-link-btn active-reader">
-                <span>📖 日文閱讀助手</span>
+            <a href="master.html" class="nav-link-btn active-master" title="閱讀高手（大成版）：句解霸、941文法、沉浸雙語、跟讀聽力">
+                <span>👑 閱讀高手</span>
             </a>
-            <a href="kanji.html" class="nav-link-btn">
-                <span>🈩 漢字記憶道場</span>
+            <a href="index.html" class="nav-link-btn" title="日文閱讀助手：基礎閱讀拆解">
+                <span>📖 閱讀助手</span>
             </a>
-            <a href="flashcard.html" class="nav-link-btn">
-                <span>🎴 AnkiFlash 抽認卡</span>
+            <a href="kanji.html" class="nav-link-btn" title="漢字記憶道場：2101常用漢字音訓讀道場">
+                <span>🈩 漢字道場</span>
+            </a>
+            <a href="flashcard.html" class="nav-link-btn" title="AnkiFlash 抽認卡：間隔重複複習系統">
+                <span>🎴 AnkiFlash</span>
             </a>
         </div>
     </nav>
@@ -3893,6 +3994,20 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                         <i class="fa-solid fa-layer-group"></i> 單字文法複習
                     </button>
                 </nav>
+                <!-- 常駐全站操作功能 (跨所有模式皆可隨時開啟筆記本、抽認卡與深色主題切換) -->
+                <div class="header-actions" style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+                    <button class="action-btn" id="btnWordReview" onclick="openReviewModal()" title="開啟單字翻牌抽認卡複習 (文章單字 / 生詞本)">
+                        <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
+                        <span>單字抽認卡 🎴</span>
+                    </button>
+                    <button class="action-btn" id="btnOpenNotebook" onclick="openNotebookModal()" title="我的生詞與文法筆記本">
+                        <i class="fa-solid fa-book-bookmark text-amber-500"></i>
+                        <span>筆記本 (<strong id="notebookCount">0</strong>)</span>
+                    </button>
+                    <button class="theme-toggle-btn" id="btnThemeToggle" title="深色/淺色主題切換" style="background:var(--bg-sub);border:1px solid var(--border-color);border-radius:50%;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Reading Control Toolbar in Header (文章深度解析 標註假名與遮蔽自測控制列) -->
@@ -3945,18 +4060,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     <button class="pill-btn" id="btnTransMask" data-mode="mask" title="【遮蔽自測模式】中文預設遮蔽模糊，滑鼠懸浮或點擊即可即時揭示">遮蔽自測</button>
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Action Buttons in Deep Toolbar -->
                 <div class="header-actions">
                     <button class="action-btn" id="btnOpenParticleQuizTop" title="開啟全篇日文助詞測驗挑戰與換句話說特訓">
                         <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
                         <span>助詞特訓</span>
-                    </button>
-                    <button class="action-btn" id="btnOpenNotebook" title="我的生詞與文法筆記本">
-                        <i class="fa-solid fa-book-bookmark text-amber-500"></i>
-                        <span>筆記本</span>
-                    </button>
-                    <button class="theme-toggle-btn" id="btnThemeToggle" title="深色/淺色主題切換" style="background:var(--bg-sub);border:1px solid var(--border-color);border-radius:50%;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
-                        <i class="fa-solid fa-moon" id="themeIcon"></i>
                     </button>
                 </div>
             </div>
@@ -4378,10 +4486,13 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);"><i class="fa-solid fa-book-bookmark" style="color: #f59e0b;"></i> 我的學習複習庫</span>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                         <button class="pill-btn active" id="btnSubTabStarred">⭐ 收藏句 (<span id="revStarredCount">0</span>)</button>
                         <button class="pill-btn" id="btnSubTabVocab">📖 標記生詞 (<span id="revVocabCount">0</span>)</button>
                         <button class="pill-btn" id="btnSubTabGrammar">🎴 941 文法卡片</button>
+                        <button class="action-btn" onclick="openNotebookModal()" title="開啟生詞、文型與收藏文章完整筆記本管理" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:6px 14px; border-radius:8px; font-weight:700; box-shadow:0 2px 8px rgba(245,158,11,0.3); cursor:pointer; font-size:0.88rem;">
+                            <i class="fa-solid fa-book-bookmark"></i> 完整筆記本 (<strong id="paneReviewNotebookCount">0</strong>)
+                        </button>
                     </div>
                 </div>
 
@@ -5066,6 +5177,36 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         // 動詞與形容詞活用還原到原型 (辭書形) 演算法
         function deinflectWord(word) {
             if (!word || word.length < 2) return null;
+            if (word === 'する') return 'する';
+            if (word === 'できる') return 'できる';
+            if (word === 'す') return null; // 絕非動詞原型，嚴防誤配為「醋」
+
+            // サ変動詞優先規則 (含所有活用形，徹底防止分解為孤立的「す」或誤譯為「醋」)
+            const suruPatterns = [
+                'しませんでした', 'ませんでした', 'できませんでした', 'できなかった',
+                'できません', 'しなかった', 'させられる', 'しました', 'しません',
+                'できます', 'できない', 'できれば', 'しないで', 'すれば', 'しよう',
+                'される', 'された', 'されて', 'させる', 'させた', 'させて',
+                'します', 'しない', 'した', 'して'
+            ];
+            for (const sp of suruPatterns) {
+                if (word.endsWith(sp)) {
+                    const stem = word.slice(0, -sp.length);
+                    if (stem.length > 0) {
+                        return stem + 'する';
+                    } else {
+                        return 'する';
+                    }
+                }
+            }
+            const dekiruPatterns = ['できませんでした', 'できなかった', 'できません', 'できます', 'できない', 'できれば', 'できた', 'できて'];
+            for (const dp of dekiruPatterns) {
+                if (word.endsWith(dp)) {
+                    const stem = word.slice(0, -dp.length);
+                    return stem ? stem + 'できる' : 'できる';
+                }
+            }
+
             if (JLPT_VOCAB[word]) return word;
 
             const candidates = [];
@@ -5193,7 +5334,8 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             }
             if (word.endsWith('した') || word.endsWith('して')) {
                 const stem = word.slice(0, -2);
-                candidates.push(stem + 'す', stem + 'する');
+                candidates.push(stem + 'する');
+                if (stem.length > 0) candidates.push(stem + 'す');
             }
             if (word.endsWith('んだ') || word.endsWith('んで')) {
                 const stem = word.slice(0, -2);
@@ -5283,6 +5425,9 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             // 10. 比對 JLPT 單字庫，命中即回傳原型！
             for (const c of candidates) {
+                // 嚴禁回傳長度小於 2 的假名（如 'す' 絕非動詞原型，避免誤配為「醋」）
+                if (!c || c.length < 2) continue;
+                if (c === 'す') continue;
                 if (JLPT_VOCAB[c]) {
                     return c;
                 }
@@ -5432,6 +5577,58 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     i = protectedSpan.end;
                     continue;
                 }
+
+                // 0. サ変動詞與可能動詞活用形原子保護 (嚴禁 する/した/して/します/できる 等被錯誤切碎為 孤立假名「す」「し」「る」)
+                const SURU_ATOMIC_FORMS = [
+                    { pat: 'しませんでした', base: 'する', reading: 'しませんでした', jlpt: 'N5' },
+                    { pat: 'ませんでした', base: 'ます', reading: 'ませんでした', jlpt: 'N5' },
+                    { pat: 'できませんでした', base: 'できる', reading: 'できませんでした', jlpt: 'N5' },
+                    { pat: 'できなかった', base: 'できる', reading: 'できなかった', jlpt: 'N5' },
+                    { pat: 'できません', base: 'できる', reading: 'できません', jlpt: 'N5' },
+                    { pat: 'しなかった', base: 'する', reading: 'しなかった', jlpt: 'N5' },
+                    { pat: 'させられる', base: 'する', reading: 'させられる', jlpt: 'N3' },
+                    { pat: 'しました', base: 'する', reading: 'しました', jlpt: 'N5' },
+                    { pat: 'しません', base: 'する', reading: 'しません', jlpt: 'N5' },
+                    { pat: 'できます', base: 'できる', reading: 'できます', jlpt: 'N5' },
+                    { pat: 'できない', base: 'できる', reading: 'できない', jlpt: 'N5' },
+                    { pat: 'できれば', base: 'できる', reading: 'できれば', jlpt: 'N4' },
+                    { pat: 'しないで', base: 'する', reading: 'しないで', jlpt: 'N5' },
+                    { pat: 'すれば', base: 'する', reading: 'すれば', jlpt: 'N5' },
+                    { pat: 'しよう', base: 'する', reading: 'しよう', jlpt: 'N4' },
+                    { pat: 'される', base: 'する', reading: 'される', jlpt: 'N4' },
+                    { pat: 'された', base: 'する', reading: 'された', jlpt: 'N4' },
+                    { pat: 'されて', base: 'する', reading: 'されて', jlpt: 'N4' },
+                    { pat: 'させる', base: 'する', reading: 'させる', jlpt: 'N4' },
+                    { pat: 'させた', base: 'する', reading: 'させた', jlpt: 'N4' },
+                    { pat: 'させて', base: 'する', reading: 'させて', jlpt: 'N4' },
+                    { pat: 'します', base: 'する', reading: 'します', jlpt: 'N5' },
+                    { pat: 'しない', base: 'する', reading: 'しない', jlpt: 'N5' },
+                    { pat: 'できる', base: 'できる', reading: 'できる', jlpt: 'N5' },
+                    { pat: 'できた', base: 'できる', reading: 'できた', jlpt: 'N5' },
+                    { pat: 'できて', base: 'できる', reading: 'できて', jlpt: 'N5' },
+                    { pat: 'する', base: 'する', reading: 'する', jlpt: 'N5' },
+                    { pat: 'した', base: 'する', reading: 'した', jlpt: 'N5' },
+                    { pat: 'して', base: 'する', reading: 'して', jlpt: 'N5' }
+                ];
+                let suruMatched = false;
+                for (const sf of SURU_ATOMIC_FORMS) {
+                    if (text.startsWith(sf.pat, i)) {
+                        tokens.push({
+                            surface: sf.pat,
+                            base_form: sf.base,
+                            reading: sf.reading,
+                            jlpt: sf.jlpt,
+                            is_kanji: false,
+                            ruby_html: sf.pat,
+                            pos: '動詞',
+                            is_particle: false
+                        });
+                        i += sf.pat.length;
+                        suruMatched = true;
+                        break;
+                    }
+                }
+                if (suruMatched) continue;
 
                 // 1. JLPT 單字庫長詞比對或動詞原型還原 (8 down to 2)
                 let matched = false;
@@ -5702,6 +5899,21 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     continue;
                 }
 
+                // 1.5 サ變名詞 + 動詞活用形合併 (例: [勉強] + [する/した/して/します/できる] -> [勉強する/勉強した/勉強して/勉強します])
+                if (prev && (prev.pos === '名詞' || prev.pos === '單字' || prev.is_kanji)) {
+                    const isSuruForm = cur.base_form === 'する' || cur.base_form === 'できる' ||
+                        ['する', 'した', 'して', 'します', 'しました', 'しない', 'すれば', 'される', 'された', 'させる', 'できる', 'できた', 'できて', 'できない'].includes(cur.surface);
+                    if (isSuruForm) {
+                        const baseSuffix = (cur.base_form === 'できる' ? 'できる' : 'する');
+                        prev.surface += cur.surface;
+                        prev.base_form = prev.base_form ? (prev.base_form.endsWith(baseSuffix) ? prev.base_form : prev.base_form + baseSuffix) : (prev.surface + baseSuffix);
+                        prev.reading = (prev.reading || '') + (cur.reading || cur.surface);
+                        prev.ruby_html = (prev.ruby_html || prev.surface) + cur.surface;
+                        prev.pos = '動詞';
+                        continue;
+                    }
+                }
+
                 // 檢查是否為孤立假名
                 if (cur.surface.length === 1 && cur.pos === '符號' && !/[。、！？!?「」『』（）\s]/.test(cur.surface)) {
                     // 2. [よ] + [う] -> [よう]
@@ -5760,7 +5972,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     // 5. 孤立 [し] 或 [した] 與前項サ變名詞合併 (例：[勉強] + [し] -> [勉強し], [変化] + [した] -> [変化した])
                     if (cur.surface === 'し' && prev && (prev.pos === '單字' || prev.pos === '名詞')) {
                         prev.surface += 'し';
-                        prev.base_form = prev.surface + 'する';
+                        prev.base_form = prev.base_form ? (prev.base_form.endsWith('する') ? prev.base_form : prev.base_form + 'する') : (prev.surface.slice(0, -1) + 'する');
                         prev.reading = (prev.reading || '') + 'し';
                         prev.ruby_html += 'し';
                         prev.pos = '動詞';
@@ -5792,7 +6004,14 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             return merged;
         }
 
-        const TRANSLATE_CACHE = new Map();
+        const TRANSLATE_CACHE = new Map([
+            ['する', '做、幹、進行'],
+            ['できる', '能夠、會、可以'],
+            ['いる', '在、有'],
+            ['ある', '有、在'],
+            ['くる', '來'],
+            ['いく', '去、走']
+        ]);
         async function translateJaToZh(text) {
             const trimmed = text.trim();
             if (!trimmed) return '';
@@ -6031,19 +6250,19 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         });
 
         function loadSavedSettings() {
-            const savedRuby = localStorage.getItem('japanese_reader_ruby_mode') || 'show';
+            const savedRuby = localStorage.getItem('yuedu_gaoshou_ruby_mode') || localStorage.getItem('japanese_reader_ruby_mode') || 'show';
             setRubyMode(savedRuby, true);
-            const savedTheme = localStorage.getItem('japanese_reader_theme') || 'light';
+            const savedTheme = localStorage.getItem('yuedu_gaoshou_theme') || localStorage.getItem('japanese_reader_theme') || 'light';
             setTheme(savedTheme);
-            const savedWordColors = localStorage.getItem('japanese_reader_word_colors') !== 'false';
+            const savedWordColors = (localStorage.getItem('yuedu_gaoshou_word_colors') !== null ? localStorage.getItem('yuedu_gaoshou_word_colors') : localStorage.getItem('japanese_reader_word_colors')) !== 'false';
             setWordColors(savedWordColors);
-            const savedGrammar = localStorage.getItem('japanese_reader_grammar') !== 'false';
+            const savedGrammar = (localStorage.getItem('yuedu_gaoshou_grammar') !== null ? localStorage.getItem('yuedu_gaoshou_grammar') : localStorage.getItem('japanese_reader_grammar')) !== 'false';
             setGrammarHighlight(savedGrammar);
-            const savedTransMode = localStorage.getItem('japanese_reader_trans_mode') || 'show';
+            const savedTransMode = localStorage.getItem('yuedu_gaoshou_trans_mode') || localStorage.getItem('japanese_reader_trans_mode') || 'show';
             setTransMode(savedTransMode);
-            const savedJpMode = localStorage.getItem('japanese_reader_jp_mode') || 'show';
+            const savedJpMode = localStorage.getItem('yuedu_gaoshou_jp_mode') || localStorage.getItem('japanese_reader_jp_mode') || 'show';
             setJpMode(savedJpMode);
-            const savedGrammarMode = localStorage.getItem('japanese_reader_grammar_mode') || localStorage.getItem('japanese_reader_particle_mode') || 'show';
+            const savedGrammarMode = localStorage.getItem('yuedu_gaoshou_grammar_mode') || localStorage.getItem('japanese_reader_grammar_mode') || localStorage.getItem('japanese_reader_particle_mode') || 'show';
             setGrammarMode(savedGrammarMode, true);
         }
 
@@ -6075,32 +6294,42 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (dom.btnToggleGrammar) dom.btnToggleGrammar.addEventListener('click', () => setGrammarHighlight(!state.enableGrammar));
             if (dom.btnThemeToggle) dom.btnThemeToggle.addEventListener('click', () => setTheme(state.theme === 'light' ? 'dark' : 'light'));
 
-            dom.articleInput.addEventListener('input', () => {
-                dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
-            });
+            if (dom.articleInput) {
+                dom.articleInput.addEventListener('input', () => {
+                    if (dom.inputCharCount) dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
+                });
+            }
 
-            dom.btnClearInput.addEventListener('click', () => {
-                dom.articleInput.value = '';
-                dom.inputCharCount.textContent = '已輸入 0 字';
-                dom.articleInput.focus();
-            });
+            if (dom.btnClearInput) {
+                dom.btnClearInput.addEventListener('click', () => {
+                    if (dom.articleInput) {
+                        dom.articleInput.value = '';
+                        dom.articleInput.focus();
+                    }
+                    if (dom.inputCharCount) dom.inputCharCount.textContent = '已輸入 0 字';
+                });
+            }
 
-            dom.btnFetchUrl.addEventListener('click', handleFetchUrlClient);
-            dom.btnStartReading.addEventListener('click', handleStartReadingClient);
+            if (dom.btnFetchUrl) dom.btnFetchUrl.addEventListener('click', handleFetchUrlClient);
+            if (dom.btnStartReading) dom.btnStartReading.addEventListener('click', handleStartReadingClient);
 
-            dom.btnFontIncr.addEventListener('click', () => changeFontSize(1));
-            dom.btnFontDecr.addEventListener('click', () => changeFontSize(-1));
+            if (dom.btnFontIncr) dom.btnFontIncr.addEventListener('click', () => changeFontSize(1));
+            if (dom.btnFontDecr) dom.btnFontDecr.addEventListener('click', () => changeFontSize(-1));
 
-            dom.btnNewArticle.addEventListener('click', () => {
-                dom.inputCard.style.display = 'flex';
-                dom.inputCard.scrollIntoView({ behavior: 'smooth' });
-            });
+            if (dom.btnNewArticle) {
+                dom.btnNewArticle.addEventListener('click', () => {
+                    if (dom.inputCard) {
+                        dom.inputCard.style.display = 'flex';
+                        dom.inputCard.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
 
-            dom.btnPrevSentence.addEventListener('click', () => navigateSentence(-1));
-            dom.btnNextSentence.addEventListener('click', () => navigateSentence(1));
+            if (dom.btnPrevSentence) dom.btnPrevSentence.addEventListener('click', () => navigateSentence(-1));
+            if (dom.btnNextSentence) dom.btnNextSentence.addEventListener('click', () => navigateSentence(1));
 
             document.addEventListener('keydown', (e) => {
-                if (dom.reviewModal.classList.contains('open')) {
+                if (dom.reviewModal && dom.reviewModal.classList.contains('open')) {
                     if (e.key === ' ' || e.code === 'Space') {
                         e.preventDefault();
                         flipReviewCard();
@@ -6116,7 +6345,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     return;
                 }
 
-                if (state.analyzedData && dom.readerDeck.style.display !== 'none') {
+                if (state.analyzedData && dom.readerDeck && dom.readerDeck.style.display !== 'none') {
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
                     if (e.key === 'ArrowLeft') navigateSentence(-1);
                     if (e.key === 'ArrowRight') navigateSentence(1);
@@ -6128,21 +6357,25 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 }
             });
 
-            dom.btnPlaySentenceAudio.addEventListener('click', () => {
-                if (!state.analyzedData) return;
-                const s = state.analyzedData.sentences[state.currentSentenceIdx];
-                if (s) speakJapanese(s.text);
-            });
+            if (dom.btnPlaySentenceAudio) {
+                dom.btnPlaySentenceAudio.addEventListener('click', () => {
+                    if (!state.analyzedData) return;
+                    const s = state.analyzedData.sentences[state.currentSentenceIdx];
+                    if (s) speakJapanese(s.text);
+                });
+            }
 
-            dom.btnPlayWordAudio.addEventListener('click', () => {
-                const text = dom.popoverWordSurface.textContent;
-                if (text) speakJapanese(text);
-            });
+            if (dom.btnPlayWordAudio) {
+                dom.btnPlayWordAudio.addEventListener('click', () => {
+                    const text = dom.popoverWordSurface ? dom.popoverWordSurface.textContent : '';
+                    if (text) speakJapanese(text);
+                });
+            }
 
-            dom.btnWordReview.addEventListener('click', openReviewModal);
-            dom.btnOpenNotebook.addEventListener('click', openNotebookModal);
-            dom.btnExportNotebook.addEventListener('click', exportNotebook);
-            dom.btnClearNotebook.addEventListener('click', clearNotebook);
+            if (dom.btnWordReview) dom.btnWordReview.addEventListener('click', openReviewModal);
+            if (dom.btnOpenNotebook) dom.btnOpenNotebook.addEventListener('click', openNotebookModal);
+            if (dom.btnExportNotebook) dom.btnExportNotebook.addEventListener('click', exportNotebook);
+            if (dom.btnClearNotebook) dom.btnClearNotebook.addEventListener('click', clearNotebook);
 
             document.addEventListener('click', (e) => {
                 const r = e.target.closest('ruby');
@@ -6159,7 +6392,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
         function setJpMode(mode) {
             state.jpMode = mode;
-            localStorage.setItem('japanese_reader_jp_mode', mode);
+            localStorage.setItem('yuedu_gaoshou_jp_mode', mode);
             document.body.setAttribute('data-jp-mode', mode);
             if (dom.btnJpShow) dom.btnJpShow.classList.toggle('active', mode === 'show');
             if (dom.btnJpMask) dom.btnJpMask.classList.toggle('active', mode === 'mask');
@@ -6175,8 +6408,8 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         function setGrammarMode(mode, silent = false) {
             state.grammarMode = mode;
             state.particleMode = (mode === 'show') ? 'show' : 'mask';
-            localStorage.setItem('japanese_reader_grammar_mode', mode);
-            localStorage.setItem('japanese_reader_particle_mode', (mode === 'show') ? 'show' : 'mask');
+            localStorage.setItem('yuedu_gaoshou_grammar_mode', mode);
+            localStorage.setItem('yuedu_gaoshou_particle_mode', (mode === 'show') ? 'show' : 'mask');
             document.body.setAttribute('data-grammar-mode', mode);
             document.body.setAttribute('data-particle-mode', (mode === 'show') ? 'show' : 'mask');
 
@@ -6216,7 +6449,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (typeof masterState !== 'undefined') {
                 masterState.trancyFurigana = mode;
             }
-            localStorage.setItem('japanese_reader_ruby_mode', mode);
+            localStorage.setItem('yuedu_gaoshou_ruby_mode', mode);
             localStorage.setItem('master_trancy_furigana', mode);
             document.body.setAttribute('data-ruby-mode', mode);
 
@@ -6250,21 +6483,21 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
         function setWordColors(enable) {
             state.enableWordColors = enable;
-            localStorage.setItem('japanese_reader_word_colors', enable);
+            localStorage.setItem('yuedu_gaoshou_word_colors', enable);
             document.body.classList.toggle('enable-word-colors', enable);
             dom.btnToggleWordColors.classList.toggle('active', enable);
         }
 
         function setGrammarHighlight(enable) {
             state.enableGrammar = enable;
-            localStorage.setItem('japanese_reader_grammar', enable);
+            localStorage.setItem('yuedu_gaoshou_grammar', enable);
             document.body.classList.toggle('enable-grammar', enable);
             dom.btnToggleGrammar.classList.toggle('active', enable);
         }
 
         function setTransMode(mode) {
             state.transMode = mode;
-            localStorage.setItem('japanese_reader_trans_mode', mode);
+            localStorage.setItem('yuedu_gaoshou_trans_mode', mode);
             document.body.setAttribute('data-trans-mode', mode);
             if (dom.btnTransShow) dom.btnTransShow.classList.toggle('active', mode === 'show');
             if (dom.btnTransHide) dom.btnTransHide.classList.toggle('active', mode === 'hide');
@@ -6276,7 +6509,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
         function setTheme(theme) {
             state.theme = theme;
-            localStorage.setItem('japanese_reader_theme', theme);
+            localStorage.setItem('yuedu_gaoshou_theme', theme);
             document.body.setAttribute('data-theme', theme);
             dom.themeIcon.className = theme === 'dark' ? 'fa-solid fa-sun text-yellow-300' : 'fa-solid fa-moon';
         }
@@ -6608,13 +6841,23 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (/^[、。！？「」『』（）…—\s.,!?0-9a-zA-Z_\-+/:;~]+$/.test(surface)) return false;
 
             // 動詞/形容詞還原原型
-            const base = (deinflectWord(surface) || w.base_form || surface).trim();
+            let base = (deinflectWord(surface) || w.base_form || surface).trim();
+            if (base === 'す' && !KANJI_REGEX.test(surface)) {
+                base = 'する';
+            }
 
             // 排除純語法碎片、助詞與助動詞詞尾
             if (EXCLUDED_GRAMMAR_AND_PARTICLES.has(surface) || EXCLUDED_GRAMMAR_AND_PARTICLES.has(base)) return false;
 
+            // 平假名「す」絕不單獨視為單字（排除誤判為醋）
+            if (surface === 'す' && !KANJI_REGEX.test(surface)) return false;
+            if (base === 'す' && !KANJI_REGEX.test(surface)) return false;
+
             // 單一平/片假名且無漢字通常為殘留助詞或贅字，排除
             if (/^[\u3040-\u309f\u30a0-\u30ff]$/.test(surface) && !KANJI_REGEX.test(surface)) return false;
+
+            // 原型長度小於等於 1 且無漢字，排除
+            if (base.length <= 1 && !KANJI_REGEX.test(base)) return false;
 
             // 若長度 < 2 且無漢字，且未收錄於 JLPT 單字庫，排除
             if (surface.length < 2 && !KANJI_REGEX.test(surface) && (!JLPT_VOCAB || !JLPT_VOCAB[surface])) return false;
@@ -6632,7 +6875,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             validWords.forEach((w, wIdx) => {
                 // 2. 動詞與形容詞還原為原型 (辭書形)
-                const baseForm = deinflectWord(w.surface) || w.base_form || w.surface;
+                let baseForm = deinflectWord(w.surface) || w.base_form || w.surface;
+                if (baseForm === 'す' && !KANJI_REGEX.test(w.surface)) {
+                    baseForm = 'する';
+                }
+                if (baseForm.length <= 1 && !KANJI_REGEX.test(baseForm)) return;
                 let displayReading = w.reading || '-';
                 let displayLevel = w.jlpt;
 
@@ -6931,25 +7178,45 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         // ==========================================================================
         function loadNotebook() {
             try {
-                const s = localStorage.getItem('japanese_reader_notebook');
+                let s = localStorage.getItem('yuedu_gaoshou_notebook');
+                if (!s) {
+                    s = localStorage.getItem('japanese_reader_notebook');
+                }
                 if (s) state.notebook = JSON.parse(s);
             } catch (e) {
                 state.notebook = { words: [], grammars: [] };
             }
+            if (!state.notebook) state.notebook = { words: [], grammars: [] };
+            if (!state.notebook.words) state.notebook.words = [];
+            if (!state.notebook.grammars) state.notebook.grammars = [];
             updateNotebookHeaderCount();
         }
 
         function saveNotebook() {
-            localStorage.setItem('japanese_reader_notebook', JSON.stringify(state.notebook));
+            localStorage.setItem('yuedu_gaoshou_notebook', JSON.stringify(state.notebook));
             updateNotebookHeaderCount();
         }
 
         function updateNotebookHeaderCount() {
-            const total = state.notebook.words.length + state.notebook.grammars.length;
-            dom.notebookCount.textContent = total;
-            dom.nbWordCount.textContent = state.notebook.words.length;
-            dom.nbGrammarCount.textContent = state.notebook.grammars.length;
-            dom.reviewNotebookWordCount.textContent = state.notebook.words.length;
+            const wordCount = state.notebook?.words?.length || 0;
+            const grammarCount = state.notebook?.grammars?.length || 0;
+            const total = wordCount + grammarCount;
+
+            if (dom.notebookCount) dom.notebookCount.textContent = total;
+            if (dom.nbWordCount) dom.nbWordCount.textContent = wordCount;
+            if (dom.nbGrammarCount) dom.nbGrammarCount.textContent = grammarCount;
+            if (dom.reviewNotebookWordCount) dom.reviewNotebookWordCount.textContent = wordCount;
+
+            const prCount = document.getElementById('paneReviewNotebookCount');
+            if (prCount) prCount.textContent = total;
+
+            const revVocabCount = document.getElementById('revVocabCount');
+            if (revVocabCount) revVocabCount.textContent = wordCount;
+
+            const revStarredCount = document.getElementById('revStarredCount');
+            if (revStarredCount && typeof masterState !== 'undefined' && masterState.starredSentences) {
+                revStarredCount.textContent = masterState.starredSentences.length;
+            }
         }
 
         function toggleWordNotebook(surface, baseForm, reading, jlpt, pos) {
@@ -6994,18 +7261,18 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         }
 
         function openNotebookModal() {
-            dom.notebookModal.classList.add('open');
+            if (dom.notebookModal) dom.notebookModal.classList.add('open');
             switchNotebookTab('words');
         }
 
         function closeNotebookModal() {
-            dom.notebookModal.classList.remove('open');
+            if (dom.notebookModal) dom.notebookModal.classList.remove('open');
         }
 
         function switchNotebookTab(tab) {
-            dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
-            dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
-            dom.notebookListArea.innerHTML = '';
+            if (dom.tabNotebookWordsBtn) dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
+            if (dom.tabNotebookGrammarsBtn) dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
+            if (dom.notebookListArea) dom.notebookListArea.innerHTML = '';
 
             if (tab === 'words') {
                 if (state.notebook.words.length === 0) {
@@ -7068,7 +7335,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         }
 
         function exportNotebook() {
-            let content = "=== 日文閱讀助手・學習筆記本 ===\n\n";
+            let content = "=== 閱讀高手 (Reading Master)・學習筆記本 ===\n\n";
             content += "【生詞本】\n";
             state.notebook.words.forEach((w, i) => {
                 content += `${i + 1}. ${w.surface} [${w.reading}] (${w.jlpt || 'Other'})\n`;
@@ -7773,7 +8040,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             }
             const res = window.AnkiBridge.addCard({
                 deckId: 'deck_reader_notes',
-                deckName: '📖 閱讀助手收藏生詞',
+                deckName: '📖 閱讀高手收藏生詞',
                 deckIcon: '⭐',
                 deckColor: '#f59e0b',
                 front: surface,
@@ -7794,7 +8061,10 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             const wordsMap = new Map();
             state.analyzedData.sentences.forEach(s => {
                 (s.words || []).forEach(w => {
-                    const base = deinflectWord(w.surface) || w.base_form || w.surface;
+                    if (!isValidVocabularyWord(w)) return;
+                    let base = deinflectWord(w.surface) || w.base_form || w.surface;
+                    if (base === 'す' && !KANJI_REGEX.test(w.surface)) base = 'する';
+                    if (base.length <= 1 && !KANJI_REGEX.test(base)) return;
                     if (base && !wordsMap.has(base)) {
                         wordsMap.set(base, {
                             surface: base,
@@ -7812,7 +8082,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 return;
             }
 
-            const rawTitle = (dom.articleTextarea.value || '').trim().split('\n')[0] || '';
+            const rawTitle = (dom.articleTextarea?.value || dom.articleInput?.value || '').trim().split('\n')[0] || '';
             const articleTitle = rawTitle.slice(0, 16) || `閱讀_${new Date().toISOString().slice(5, 10)}`;
 
             const cards = wordList.map(w => ({
@@ -7855,7 +8125,10 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         // 初始化文章收藏庫
         if (!state.savedArticles) {
             try {
-                const rawArts = localStorage.getItem('japanese_reader_saved_articles');
+                let rawArts = localStorage.getItem('yuedu_gaoshou_saved_articles');
+                if (!rawArts) {
+                    rawArts = localStorage.getItem('japanese_reader_saved_articles');
+                }
                 state.savedArticles = rawArts ? JSON.parse(rawArts) : [];
             } catch(e) {
                 state.savedArticles = [];
@@ -7903,7 +8176,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 showToast(`⭐ 已成功收藏文章《${newArt.title}》！可在筆記本中隨時載入`);
             }
 
-            localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+            localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
             updateSavedArticlesCount();
         }
 
@@ -7924,7 +8197,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         function deleteSavedArticle(artId) {
             if (!confirm('確定要從收藏中移除這篇文章嗎？')) return;
             state.savedArticles = state.savedArticles.filter(a => a.id !== artId);
-            localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+            localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
             updateSavedArticlesCount();
             switchNotebookTab('articles');
             showToast('已移除該收藏文章');
@@ -7942,8 +8215,10 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     if (!isValidVocabularyWord(w)) return;
 
                     const surface = (w.surface || '').trim();
-                    const baseForm = (deinflectWord(surface) || w.base_form || surface).trim();
+                    let baseForm = (deinflectWord(surface) || w.base_form || surface).trim();
                     if (!baseForm) return;
+                    if (baseForm === 'す' && !KANJI_REGEX.test(surface)) baseForm = 'する';
+                    if (baseForm.length <= 1 && !KANJI_REGEX.test(baseForm)) return;
                     let displayReading = w.reading || '-';
                     let displayLevel = w.jlpt || 'Other';
 
@@ -8445,7 +8720,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 saveNotebook();
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = state.savedArticles.filter((_, idx) => !selectedNotebookIndices.has(idx));
-                localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+                localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
                 updateSavedArticlesCount();
             }
 
@@ -8479,7 +8754,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 });
                 const res = window.AnkiBridge.addCardsBatch(cards, {
                     deckId: 'deck_reader_notes',
-                    deckName: '📖 閱讀助手收藏生詞',
+                    deckName: '📖 閱讀高手收藏生詞',
                     deckIcon: '⭐',
                     deckColor: '#f59e0b'
                 });
@@ -8499,7 +8774,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 });
                 const res = window.AnkiBridge.addCardsBatch(cards, {
                     deckId: 'deck_grammar_notes',
-                    deckName: '🔖 閱讀助手收藏文法',
+                    deckName: '🔖 閱讀高手收藏文法',
                     deckIcon: '🔖',
                     deckColor: '#10b981'
                 });
@@ -8538,7 +8813,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 saveNotebook();
             } else if (currentNotebookTab === 'articles') {
                 state.savedArticles = [];
-                localStorage.setItem('japanese_reader_saved_articles', JSON.stringify(state.savedArticles));
+                localStorage.setItem('yuedu_gaoshou_saved_articles', JSON.stringify(state.savedArticles));
                 updateSavedArticlesCount();
             }
 
@@ -8552,17 +8827,17 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             currentNotebookTab = tab;
             selectedNotebookIndices.clear();
 
-            dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
-            dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
+            if (dom.tabNotebookWordsBtn) dom.tabNotebookWordsBtn.classList.toggle('active', tab === 'words');
+            if (dom.tabNotebookGrammarsBtn) dom.tabNotebookGrammarsBtn.classList.toggle('active', tab === 'grammars');
             const artBtn = document.getElementById('tabNotebookArticlesBtn');
             if (artBtn) artBtn.classList.toggle('active', tab === 'articles');
 
-            dom.notebookListArea.innerHTML = '';
+            if (dom.notebookListArea) dom.notebookListArea.innerHTML = '';
             updateNotebookBatchToolbarUI();
 
             if (tab === 'words') {
                 if (state.notebook.words.length === 0) {
-                    dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.95rem;">生詞本目前為空<br><small>在閱讀文章時點擊單字旁的 ⭐ 即可收藏</small></div>';
+                    if (dom.notebookListArea) dom.notebookListArea.innerHTML = '<div class="empty-hint" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.95rem;">生詞本目前為空<br><small>在閱讀文章時點擊單字旁的 ⭐ 即可收藏</small></div>';
                     return;
                 }
                 state.notebook.words.forEach((w, idx) => {
@@ -8703,7 +8978,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             if (!g || !window.AnkiBridge) return;
             const res = window.AnkiBridge.addCard({
                 deckId: 'deck_grammar_notes',
-                deckName: '🔖 閱讀助手收藏文法',
+                deckName: '🔖 閱讀高手收藏文法',
                 deckIcon: '🔖',
                 deckColor: '#10b981',
                 front: g.title,
@@ -8779,7 +9054,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             const res = window.AnkiBridge.addCard({
                 deckId: 'deck_reader_notes',
-                deckName: '📖 閱讀助手收藏生詞',
+                deckName: '📖 閱讀高手收藏生詞',
                 deckIcon: '⭐',
                 deckColor: '#f59e0b',
                 front: surface,
