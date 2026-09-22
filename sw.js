@@ -1,5 +1,5 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v13-moji-companion';
+const CACHE_NAME = 'ankiflash-v14-master-mobile';
 const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
@@ -9,7 +9,8 @@ const ASSETS_TO_CACHE = [
   './static/flashcards/js/ankiflash_bridge.js', './static/flashcards/js/photo_ocr_engine.js',
   './static/flashcards/js/moji_bridge.js', './static/flashcards/js/app.js', './static/flashcards/js/excel_import.js',
   './static/flashcards/vendor/xlsx.full.min.js', './static/flashcards/icons/icon-192.svg'
-].map(path => /\.(js|css)$/.test(path) ? `${path}?v=${VERSION}` : path);
+].map(path => /\.(js|css)$/.test(path) ? `${path}?v=${VERSION}` : path)
+.concat(['./master.html', './master.webmanifest', './static/master/master-mobile.css?v=20260922-1', './static/master/master-mobile.js?v=20260922-1', './static/master/icon-180.png', './static/master/icon-192.png', './static/master/icon-512.png', './static/cross_nav.css', './static/flashcards/js/ankiflash_bridge.js']);
 
 self.addEventListener('install', event => {
   self.skipWaiting();

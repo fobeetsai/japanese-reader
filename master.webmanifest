@@ -1,0 +1,17 @@
+{
+  "id": "./master.html",
+  "name": "閱讀高手・日語學習",
+  "short_name": "閱讀高手",
+  "lang": "zh-TW",
+  "description": "逐句精讀、沉浸雙語、跟讀聽力與單字文法複習",
+  "start_url": "./master.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    {"src": "static/master/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "static/master/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "categories": ["education"]
+}

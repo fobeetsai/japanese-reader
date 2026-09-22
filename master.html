@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://translate.googleapis.com/translate_a/single https://api.allorigins.win/raw;">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3935,11 +3935,20 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     }
 }
 </style>
+
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="閱讀高手">
+    <link rel="manifest" href="master.webmanifest">
+    <link rel="apple-touch-icon" href="static/master/icon-180.png">
+    <link rel="icon" type="image/png" href="static/master/icon-192.png">
+    <link rel="stylesheet" href="static/master/master-mobile.css?v=20260922-1">
 </head>
 <body data-theme="light">
 
     <!-- 全站同源統一頂部導覽列 -->
-    <nav class="cross-app-nav-bar">
+    <nav class="cross-app-nav-bar" id="learningAppsNav" aria-label="其他學習工具">
         <a href="master.html" class="nav-brand">
             <span>🇯🇵 日語學習全方位生態系</span>
             <span class="badge-sync">學生專用公開版</span>
@@ -3981,17 +3990,17 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
                 <!-- 核心四大模式導航頁籤 -->
                 <nav class="master-nav-wrap" role="tablist">
-                    <button class="master-tab-btn active" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
-                        <i class="fa-solid fa-microscope"></i> 文章深度解析
+                    <button class="master-tab-btn active" role="tab" aria-selected="true" aria-controls="paneDeep" data-view="deep" id="tabModeDeep" title="句解霸風格：整句拆解、941文法抽屜、助詞與換句話說">
+                        <i class="fa-solid fa-microscope"></i> <span class="desktop-label">文章深度解析</span><span class="mobile-only">精讀</span>
                     </button>
-                    <button class="master-tab-btn" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮/字幕挖空、單句復讀">
-                        <i class="fa-solid fa-closed-captioning"></i> 沉浸雙語閱讀
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneTrancy" data-view="trancy" id="tabModeTrancy" title="Trancy 風格：雙語字幕對照、全顯/遮日/遮中/雙遮/字幕挖空、單句復讀">
+                        <i class="fa-solid fa-closed-captioning"></i> <span class="desktop-label">沉浸雙語閱讀</span><span class="mobile-only">雙語</span>
                     </button>
-                    <button class="master-tab-btn" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、單句重複磨耳朵、麥克風錄音、聽寫填空">
-                        <i class="fa-solid fa-microphone-lines"></i> 跟讀聽力特訓
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneShadowing" data-view="shadowing" id="tabModeShadowing" title="影子跟讀與口語特訓：原聲隨讀變色、單句重複磨耳朵、麥克風錄音、聽寫填空">
+                        <i class="fa-solid fa-microphone-lines"></i> <span class="desktop-label">跟讀聽力特訓</span><span class="mobile-only">跟讀</span>
                     </button>
-                    <button class="master-tab-btn" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
-                        <i class="fa-solid fa-layer-group"></i> 單字文法複習
+                    <button class="master-tab-btn" role="tab" aria-selected="false" aria-controls="paneReview" data-view="review" id="tabModeReview" title="SRS 單字與文法抽認卡、生詞本、星號收藏句">
+                        <i class="fa-solid fa-layer-group"></i> <span class="desktop-label">單字文法複習</span><span class="mobile-only">複習</span>
                     </button>
                 </nav>
                 <!-- 常駐全站操作功能 (跨所有模式皆可隨時開啟筆記本、抽認卡與深色主題切換) -->
@@ -4010,6 +4019,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 </div>
             </div>
 
+            <div class="mobile-toolbar mobile-only">
+                <button id="btnMobileSettings" aria-expanded="false" aria-controls="deepHeaderToolbar">☷ 閱讀設定</button>
+                <button id="btnMobileInstall">＋ 加入主畫面</button>
+                <button id="btnMobileApps" aria-label="其他學習工具" aria-expanded="false" aria-controls="learningAppsNav">⋯</button>
+            </div>
             <!-- Reading Control Toolbar in Header (文章深度解析 標註假名與遮蔽自測控制列) -->
             <div class="header-toolbar deep-mode-toolbar" id="deepHeaderToolbar">
                 <!-- Japanese Original Mode Switch (中日雙向翻譯練習) -->
@@ -4073,6 +4087,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
     <!-- Main Workspace Container -->
     <main class="app-main">
+        <div class="mobile-welcome mobile-only">
+            <span class="eyebrow">READING MASTER · 日本語</span>
+            <h2>今天，讀一點日文。</h2>
+            <p>貼上文章或選一篇範例，從讀懂一句開始。</p>
+        </div>
 
         <!-- Input Section (Collapsible) -->
         <section class="input-card" id="inputCard">
@@ -4097,7 +4116,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             <!-- Tab 1: Paste Text -->
             <div class="tab-panel active" id="panelPaste">
                 <div class="textarea-wrap">
-                    <textarea id="articleInput" class="article-textarea" rows="6" placeholder="請在此貼上欲閱讀之日文文章、章節、NHK 新聞或小說段落...&#10;點擊下方「開始閱讀與智慧解析」即可全自動生成漢字假名、JLPT 著色、文型標註與繁中對照！"></textarea>
+                    <textarea aria-label="日文文章" id="articleInput" class="article-textarea" rows="6" placeholder="請在此貼上欲閱讀之日文文章、章節、NHK 新聞或小說段落...&#10;點擊下方「開始閱讀與智慧解析」即可全自動生成漢字假名、JLPT 著色、文型標註與繁中對照！"></textarea>
                     <button class="clear-input-btn" id="btnClearInput" title="清空內容">
                         <i class="fa-solid fa-trash-can"></i> 清空
                     </button>
@@ -4109,7 +4128,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <div class="url-input-wrap">
                     <div class="url-input-box">
                         <i class="fa-solid fa-globe url-icon"></i>
-                        <input type="text" id="urlInput" class="url-input" placeholder="請輸入日文新聞或文章網址 (例如：https://www3.nhk.or.jp/news/easy/...)">
+                        <input type="url" inputmode="url" autocomplete="url" aria-label="日文文章網址" id="urlInput" class="url-input" placeholder="請輸入日文新聞或文章網址 (例如：https://www3.nhk.or.jp/news/easy/...)">
                         <button class="btn-fetch-url" id="btnFetchUrl">
                             <i class="fa-solid fa-cloud-arrow-down"></i> 一鍵抓取網頁正文
                         </button>
@@ -4202,6 +4221,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     </div>
                 </div>
 
+                <button class="tool-btn mobile-only" id="btnMobileAnalyze" hidden>查看選句解析 ↓</button>
                 <!-- Article Content Container -->
                 <div class="article-content-box" id="articleContentBox">
                     <!-- Sentences injected dynamically -->
@@ -4468,8 +4488,8 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 <div style="margin-top: 36px; padding-top: 24px; border-top: 1px dashed var(--border-color);">
                     <h3 style="font-size: 1.2rem; margin-bottom: 10px; color: var(--text-main);"><i class="fa-solid fa-keyboard"></i> 聽打克漏字挑戰</h3>
                     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">聽取自然人聲發音後，在下方輸入聽到的日文句子：</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; max-width: 650px; margin: 0 auto;">
-                        <input type="text" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.1rem; outline: none; background: var(--bg-body); color: var(--text-main);">
+                    <div class="dictation-entry" style="display: flex; gap: 10px; justify-content: center; max-width: 650px; margin: 0 auto;">
+                        <input type="text" aria-label="聽寫日文句子" id="dictationInput" placeholder="請在此輸入聽到的日語句子..." style="flex: 1; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-family: var(--font-jp); font-size: 1.1rem; outline: none; background: var(--bg-body); color: var(--text-main);">
                         <button class="tool-btn btn-quiz-accent" id="btnCheckDictation" style="padding: 10px 18px; font-weight: 700;">驗證答案</button>
                     </div>
                     <div id="dictationFeedback" style="margin-top: 14px; font-size: 1rem; font-weight: 700;"></div>
@@ -4481,6 +4501,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
              VIEW 4: 單字與文法複習中心 (REVIEW CENTER)
              ========================================================================== -->
         <section class="master-view-pane" id="paneReview">
+            <button class="tool-btn mobile-only" style="margin-bottom:12px" onclick="openReviewModal()">🎴 單字翻牌複習</button>
             <div style="max-width: 1080px; margin: 0 auto; padding-bottom: 120px;">
                 <div class="trancy-stream-toolbar">
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -9486,13 +9507,14 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             </div>
         </div>
 
-        <div class="audio-bar-center">
+        <button id="btnMobileAudio" class="audio-expand mobile-only" aria-label="展開播放設定" aria-expanded="false" aria-controls="mobileAudioControls mobileAudioOptions">⌃</button>
+        <div class="audio-bar-center" id="mobileAudioControls">
             <button class="btn-player-icon" id="btnGlobalPrev" title="上一句 (J)"><i class="fa-solid fa-backward-step"></i></button>
             <button class="btn-player-icon active" id="btnGlobalAutoNext" title="朗讀完畢自動連播下一句"><i class="fa-solid fa-forward"></i></button>
             <button class="btn-player-icon" id="btnGlobalNext" title="下一句 (K)"><i class="fa-solid fa-forward-step"></i></button>
         </div>
 
-        <div class="audio-bar-right">
+        <div class="audio-bar-right" id="mobileAudioOptions">
             <!-- 語音引擎選單 -->
             <select class="audio-voice-select" id="globalVoiceSelect" title="選取自然真人發音引擎">
                 <option value="nanami">🌸 微軟 Nanami (七海・自然女聲)</option>
@@ -10449,7 +10471,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             // 鍵盤快捷鍵 (Space: 播放/暫停, R: 重啟本句, L: 單句復讀, J: 上一句, K: 下一句)
             document.addEventListener('keydown', (e) => {
-                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(e.target.tagName) || e.target.isContentEditable || document.querySelector('dialog[open]')) return;
                 if (e.code === 'Space') {
                     e.preventDefault();
                     document.getElementById('btnGlobalPlay')?.click();
@@ -10491,7 +10513,14 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 const sentences = getSentences();
                 if ((!sentences || sentences.length === 0) && typeof SAMPLE_ARTICLES !== 'undefined' && SAMPLE_ARTICLES.length > 0) {
                     console.log('[閱讀高手] 自動預載入範例文章一...');
-                    window.quickLoadSample(0);
+                    if (matchMedia('(max-width: 900px)').matches) {
+                        if (!dom.articleInput.value) {
+                            dom.articleInput.value = SAMPLE_ARTICLES[0].content;
+                            dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
+                        }
+                    } else {
+                        window.quickLoadSample(0);
+                    }
                 }
             }, 350);
         }
@@ -10499,5 +10528,15 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
     })();
     
 </script>
+
+<dialog id="mobileInstallHelp" class="install-help" aria-labelledby="installTitle">
+    <button id="btnCloseInstall" class="install-close" aria-label="關閉安裝說明">✕</button>
+    <h2 id="installTitle">把閱讀高手放進主畫面</h2>
+    <p><strong>iPhone / iPad</strong><br>使用 Safari 開啟本頁，點「分享」，再選「加入主畫面」。若看到「以網頁 App 打開」，請開啟它。</p>
+    <p><strong>Android</strong><br>使用 Chrome 開啟本頁，點右上角選單，再選「安裝應用程式」或「加到主畫面」。</p>
+    <p>加入後，點主畫面的「閱讀高手」圖示即可開始。線上翻譯與網址抓取仍需要網路。</p>
+    <button id="btnConfirmInstall" class="install-confirm" hidden>安裝閱讀高手</button>
+</dialog>
+<script src="static/master/master-mobile.js?v=20260922-1"></script>
 </body>
 </html>
