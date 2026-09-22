@@ -2743,62 +2743,120 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
 /* ==========================================================
    全篇單字抽取總表、全篇文型一覽表、模式切換標籤與強化筆記本樣式
    ========================================================== */
+/* ==========================================================
+   閱讀模式切換分段控制器與美化樣式
+   ========================================================== */
 .reader-mode-tabs-bar {
     display: flex;
-    gap: 10px;
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-top: 0.75rem;
+    margin-top: 0.2rem;
+    border-top: 1px solid var(--border-color);
     flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.reader-segmented-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-sub);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
 }
 
 .btn-mode-tab {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    gap: 7px;
+    padding: 7px 15px;
     border-radius: 8px;
-    font-size: 0.92rem;
-    font-weight: 700;
+    font-size: 0.88rem;
+    font-weight: 600;
     cursor: pointer;
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
+    border: none;
+    background: transparent;
     color: var(--text-muted);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    user-select: none;
 }
 
 .btn-mode-tab:hover {
-    color: var(--primary);
-    border-color: var(--primary-border);
+    color: var(--text-main);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .btn-mode-tab:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .btn-mode-tab.active {
-    background: var(--primary);
-    color: #ffffff;
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    background: var(--bg-card);
+    color: var(--primary) !important;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .btn-mode-tab.active {
+    background: #1e293b;
+    color: #60a5fa !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tab-count-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary);
+    line-height: 1.35;
+    vertical-align: middle;
+}
+
+[data-theme="dark"] .tab-count-badge {
+    background: rgba(37, 99, 235, 0.25);
+    color: #93c5fd;
+}
+
+.reader-mode-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-save-article-bookmark {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 0.88rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.86rem;
     font-weight: 700;
     cursor: pointer;
-    background: rgba(245, 158, 11, 0.12);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.06));
     color: #d97706;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    transition: all 0.2s;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+[data-theme="dark"] .btn-save-article-bookmark {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.4);
 }
 
 .btn-save-article-bookmark:hover {
     background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.6);
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+    transform: translateY(-1px);
 }
 
 /* 全篇單字抽取容器與全篇文型一覽容器 */
@@ -3225,29 +3283,31 @@ body[data-grammar-mode^="mask"] .grammar-elem-token.revealed::before,
                 
                 <!-- Article Meta Header -->
                 <div class="article-meta-card">
+                    <!-- 第一列：文章標題與數據摘要徽章 (純粹獨立對齊) -->
                     <div class="article-title-wrap">
                         <h2 id="readerArticleTitle">日文文章閱讀</h2>
                         <div class="article-badges" id="articleStatsBadges">
                             <!-- Stats Badges injected dynamically -->
                         </div>
-                        <!-- Mode Switcher Tabs (逐句精讀 vs 全篇單字抽取總表 vs 全篇文型一覽表) -->
-                        <div class="reader-mode-tabs-bar">
-                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                <button class="btn-mode-tab active" id="btnModeSentences" onclick="switchReaderMode('sentences')">
-                                    <i class="fa-solid fa-list-ol"></i> 📖 逐句精讀拆解模式
-                                </button>
-                                <button class="btn-mode-tab" id="btnModeAllWords" onclick="switchReaderMode('all_words')">
-                                    <i class="fa-solid fa-table-list"></i> 📑 本篇全文章單字抽取總表 (<span id="allExtractedWordsCount">0</span>)
-                                </button>
-                                <button class="btn-mode-tab" id="btnModeAllGrammars" onclick="switchReaderMode('all_grammars')">
-                                    <i class="fa-solid fa-bookmark"></i> 🔖 本篇命中941文型一覽表 (<span id="allExtractedGrammarsCount">0</span>)
-                                </button>
-                            </div>
-                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                <button class="btn-save-article-bookmark" id="btnBookmarkArticle" onclick="saveCurrentArticle()" title="收藏本篇貼附的文章，以便日後在筆記本隨時載入重讀">
-                                    <i class="fa-solid fa-bookmark"></i> ⭐ 收藏本篇文章
-                                </button>
-                            </div>
+                    </div>
+
+                    <!-- 第二列：模式切換分段控制器與儲存按鈕 (專屬整行獨立佈局，俐落整齊) -->
+                    <div class="reader-mode-tabs-bar">
+                        <div class="reader-segmented-group">
+                            <button class="btn-mode-tab active" id="btnModeSentences" onclick="switchReaderMode('sentences')" title="逐句精讀、假名注音與助詞深度解析">
+                                <i class="fa-solid fa-book-open"></i> 逐句精讀
+                            </button>
+                            <button class="btn-mode-tab" id="btnModeAllWords" onclick="switchReaderMode('all_words')" title="查看本篇文章所有抽取單字總覽">
+                                <i class="fa-solid fa-spell-check"></i> 單字一覽表 <span class="tab-count-badge" id="allExtractedWordsCount">0</span>
+                            </button>
+                            <button class="btn-mode-tab" id="btnModeAllGrammars" onclick="switchReaderMode('all_grammars')" title="查看本篇文章命中的 941 文型總覽">
+                                <i class="fa-solid fa-layer-group"></i> 文型一覽表 <span class="tab-count-badge" id="allExtractedGrammarsCount">0</span>
+                            </button>
+                        </div>
+                        <div class="reader-mode-actions">
+                            <button class="btn-save-article-bookmark" id="btnBookmarkArticle" onclick="saveCurrentArticle()" title="收藏本篇貼附的文章，以便日後在筆記本隨時載入重讀">
+                                <i class="fa-solid fa-star"></i> 儲存文章
+                            </button>
                         </div>
                     </div>
 
