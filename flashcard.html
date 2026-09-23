@@ -687,9 +687,12 @@
       </div>
       <div class="modal-body">
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" for="excel-file" style="font-weight: 700; font-size: 0.95rem;">1. 選擇 Excel 檔案（.xlsx / .xls，選入後將自動讀入並解析）</label>
+          <p class="help-text" style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px; color: var(--text-primary); margin-top: 0; margin-bottom: 10px; font-weight: 500;">
+            💡 <strong>單字欄位</strong>：Excel 單字只需「<strong>日文、讀音、中文</strong>」（日文為正面，讀音與中文為背面；讀音若無可留白）。選入檔案即可直接讀入。
+          </p>
+          <label class="form-label" for="excel-file" style="font-weight: 700; font-size: 0.95rem;">1. 選擇 Excel 檔案（.xlsx / .xls，選入後將自動讀入）</label>
           <input class="form-input" type="file" id="excel-file" accept=".xlsx,.xls" style="padding: 8px;">
-          <p class="help-text" style="margin-top: 4px;">支援任意欄位順序與格式。檔案僅在瀏覽器端本機解析，不經外部伺服器。</p>
+          <p class="help-text" style="margin-top: 4px;">支援任意欄位順序。檔案僅在瀏覽器端本機解析，不經外部伺服器。</p>
         </div>
 
         <div class="form-group" style="background: var(--bg-secondary, #f8fafc); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); margin-bottom: 14px;">
@@ -720,21 +723,6 @@
               <input class="form-input" id="excel-group-size" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
             </div>
           </div>
-        </div>
-
-        <div style="margin-bottom: 14px;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.92rem; font-weight: 600;">
-            <input type="checkbox" id="excel-auto-enrich" checked style="width: 18px; height: 18px;">
-            <span>⚡ 自動智慧補全缺少的讀音、繁體中文釋義與實用例句</span>
-          </label>
-          <small style="color: var(--text-secondary, #64748b); display: block; margin-left: 26px; margin-top: 2px;">若 Excel 缺少讀音或中文，系統會自動在背景為您補齊。</small>
-        </div>
-
-        <div id="excel-enrich-progress-wrap" style="display: none; margin: 12px 0;">
-          <div class="progress-bar-bg" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-            <div class="progress-fill" id="excel-enrich-progress-bar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.2s;"></div>
-          </div>
-          <div id="excel-enrich-progress-text" style="font-size: 0.85rem; color: var(--text-secondary, #64748b); margin-top: 4px; text-align: center;"></div>
         </div>
 
         <div id="excel-options" hidden style="margin-top: 10px; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 10px;">
@@ -805,7 +793,7 @@
 
   <script src="static/flashcards/js/moji_bridge.js?v=20260916-13"></script>
   <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260916-13"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260923-01"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260923-02"></script>
   <script src="static/flashcards/js/anki_engine.js?v=20260916-13"></script>
   <script src="static/flashcards/js/sync_manager.js?v=20260916-13"></script>
   <script src="static/flashcards/js/builtin_data.js?v=20260916-13"></script>

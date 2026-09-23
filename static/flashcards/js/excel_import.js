@@ -1,4 +1,4 @@
-/* Excel Import - Seamless auto-detection, tolerant parsing, and flexible group/deck targeting */
+/* Excel Import - Clean import of Japanese, Reading, and Chinese words */
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
   const modal = $('modal-excel-import');
@@ -42,8 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     $('excel-options').hidden = true;
     $('excel-preview').replaceChildren();
     $('excel-submit').disabled = true;
-    const progressWrap = $('excel-enrich-progress-wrap');
-    if (progressWrap) progressWrap.style.display = 'none';
   }
 
   function populateTargetDecks(selectedDeckId = null) {
@@ -88,9 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     $('excel-name').value = '';
     $('excel-header').checked = true;
     $('excel-group-size').value = '20';
-    $('excel-auto-enrich').checked = true;
     populateTargetDecks(targetDeckId);
-    status('請選擇 Excel 檔案，選入後將自動讀入並解析單字。');
+    status('請選擇 Excel 檔案，選入後將自動讀入單字。');
     modal.classList.add('open');
     $('excel-file').focus();
   }
@@ -128,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const defaultName = file.name.replace(/\.[^.]+$/, '').slice(0, 100);
     $('excel-name').value = defaultName;
-    status('⚡ 正在讀取並自動解析 Excel…');
+    status('⚡ 正在讀取並解析 Excel…');
 
     try {
       if (!window.XLSX) throw new Error('Excel 讀取元件尚未載入，請重新整理網頁後再試。');
@@ -198,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
       txt && (aliases.ja.includes(txt) || aliases.zh.includes(txt) || aliases.reading.includes(txt) ||
               ['id', 'no', '編號', '序號', '題號', '項目'].includes(txt))
     );
-    // If row 0 matches headers or contains "日文"/"中文" keyword, check header
     if (matchesAnyAlias) {
       $('excel-header').checked = true;
     }
@@ -345,11 +341,12 @@ document.addEventListener('DOMContentLoaded', () => {
         continue;
       }
 
-      // If back is empty, don't fail! Fill with reading or placeholder for auto-enrich
+      // If back is empty, use reading or placeholder
       if (!back) {
-        back = read || '（待補全釋義）';
+        back = read || '—';
       }
 
+      // Card only needs: front (日文), reading (讀音), back (中文)
       cards.push({ front, back, reading: read });
     }
 
@@ -373,12 +370,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let infoMsg = `✅ 成功讀入 ${cards.length} 筆單字卡`;
+    let infoMsg = `✅ 成功讀入 ${cards.length} 筆單字（日文、讀音、中文）`;
     const notes = [];
     if (blankCount) notes.push(`略過 ${blankCount} 列空白`);
     if (skippedCount) notes.push(`略過 ${skippedCount} 列非單字行`);
     if (notes.length) infoMsg += `（${notes.join('、')}）`;
-    infoMsg += '。點擊下方按鈕即可立即匯入！';
+    infoMsg += '。點擊下方按鈕即可直接匯入！';
     status(infoMsg);
 
     updateSubmitButton();
@@ -415,18 +412,16 @@ document.addEventListener('DOMContentLoaded', () => {
   fields.forEach(field => $('excel-' + field).addEventListener('change', preview));
 
   // Execute Import on Submit
-  $('excel-submit').addEventListener('click', async () => {
+  $('excel-submit').addEventListener('click', () => {
     if ($('excel-submit').disabled || !cards.length) return;
     const app = window.app;
     if (!app) return status('應用程式尚未就緒，請重新整理再試。');
 
     const submitBtn = $('excel-submit');
-    const cancelBtn = modal.querySelector('.modal-close');
     const mode = $('excel-mode-existing').checked ? 'existing' : 'new';
 
     let targetDeckId = null;
     let targetDeckName = '';
-    let targetCategory = 'daily';
     let newDecks = [...app.decks];
 
     if (mode === 'existing') {
@@ -437,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       targetDeckName = deck.name;
-      targetCategory = deck.category || 'daily';
     } else {
       targetDeckName = $('excel-name').value.trim() || 'Excel 匯入牌組';
       const groupSize = Number($('excel-group-size').value) || 20;
@@ -455,48 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
       newDecks.push(newDeck);
     }
 
-    // Auto-Enrichment if requested
-    const autoEnrich = $('excel-auto-enrich').checked;
-    let cardsToProcess = [...cards];
-
-    if (autoEnrich && app.enricher) {
-      submitBtn.disabled = true;
-      if (cancelBtn) cancelBtn.disabled = true;
-
-      const progressWrap = $('excel-enrich-progress-wrap');
-      const progressBar = $('excel-enrich-progress-bar');
-      const progressText = $('excel-enrich-progress-text');
-
-      if (progressWrap) progressWrap.style.display = 'block';
-
-      try {
-        const enrichedList = await app.enricher.batchEnrichWords(
-          cardsToProcess.map(c => ({ front: c.front, back: c.back, reading: c.reading })),
-          { category: targetCategory },
-          (current, total, word) => {
-            if (progressText) progressText.textContent = `⚡ 正在自動補全單字 (${current}/${total})：${word}…`;
-            if (progressBar) progressBar.style.width = `${Math.round((current / total) * 100)}%`;
-          }
-        );
-        cardsToProcess = enrichedList;
-      } catch (e) {
-        console.warn('Excel 自動補全過程異常，使用原始內容匯入:', e);
-      } finally {
-        if (progressWrap) progressWrap.style.display = 'none';
-        submitBtn.disabled = false;
-        if (cancelBtn) cancelBtn.disabled = false;
-      }
-    }
-
-    // Build card models
-    const createdCards = cardsToProcess.map(c =>
+    // Build card models: purely front (日文), reading (讀音), back (中文)
+    const createdCards = cards.map(c =>
       app.anki.createCard({
         id: 'card_' + crypto.randomUUID(),
         front: c.front,
         back: c.back,
         reading: c.reading || '',
-        example: c.example || '',
-        tags: c.tags || ['Excel匯入'],
+        example: '',
+        tags: ['Excel匯入'],
         deckId: targetDeckId
       })
     );
@@ -528,6 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `，每組 ${$('excel-group-size').value} 個字收在複習群組中`
       : '，已自動納入該牌組的群組複習中';
 
-    alert(`🎉 成功匯入 ${cardsToProcess.length} 張單字卡至「${targetDeckName}」${groupSizeMsg}！`);
+    alert(`🎉 成功匯入 ${cards.length} 個單字（日文、讀音、中文）至「${targetDeckName}」${groupSizeMsg}！`);
   });
 });
