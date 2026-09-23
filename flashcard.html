@@ -122,7 +122,7 @@
             📥 批次匯入
           </button>
           <button class="btn-secondary" id="btn-moji-workspace">📖 MOJi 學習工作台</button>
-          <button class="btn-secondary" id="btn-excel-import">📊 匯入 Excel 建立牌組</button>
+          <button class="btn-secondary" id="btn-excel-import">📊 匯入 Excel</button>
           <button class="btn-secondary" onclick="window.app.openDeckCardManager(null)">📋 全部單字</button>
           <button class="btn-secondary" id="btn-manual-review" onclick="window.app.openDeckCardManager(null, 'manual')">手動複習</button>
           <button class="btn-primary" id="btn-open-add-card" style="background: linear-gradient(135deg, #10b981, #059669);">
@@ -161,6 +161,7 @@
         <input id="review-group-size" class="form-input" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
         <datalist id="group-size-presets"><option value="20"><option value="40"><option value="50"><option value="100"></datalist>
         <button class="btn-primary" onclick="window.app.applyGroupSize()">套用分組</button>
+        <button class="btn-secondary" onclick="window.openExcelImportModal ? window.openExcelImportModal(window.app.activeFamilyId) : document.getElementById('btn-excel-import').click()">📊 匯入 Excel 至本牌組</button>
         <select id="group-display-mode" class="form-select" aria-label="小組顯示方式" onchange="window.app.renderGroupList()">
           <option value="current">只顯示目前小組</option><option value="all">同時顯示全部小組</option>
         </select>
@@ -681,42 +682,96 @@
   <div class="modal-backdrop" id="modal-excel-import" role="dialog" aria-modal="true" aria-labelledby="excel-title">
     <div class="modal-box" style="max-width: 720px;">
       <div class="modal-header">
-        <h3 class="modal-title" id="excel-title">📊 匯入 Excel 建立新牌組</h3>
+        <h3 class="modal-title" id="excel-title">📊 匯入 Excel 單字卡</h3>
         <button class="modal-close" aria-label="關閉">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="help-text">第一列填「中文、日文、讀音」，每列一張卡。日文作為正面，中文與讀音顯示在背面；讀音可留白。檔案只在此瀏覽器讀取。</p>
-        <div class="form-group">
-          <label class="form-label" for="excel-file">Excel 檔案（.xlsx / .xls，最多 10 MB）</label>
-          <input class="form-input" type="file" id="excel-file" accept=".xlsx,.xls">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="excel-file" style="font-weight: 700; font-size: 0.95rem;">1. 選擇 Excel 檔案（.xlsx / .xls，選入後將自動讀入並解析）</label>
+          <input class="form-input" type="file" id="excel-file" accept=".xlsx,.xls" style="padding: 8px;">
+          <p class="help-text" style="margin-top: 4px;">支援任意欄位順序與格式。檔案僅在瀏覽器端本機解析，不經外部伺服器。</p>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="excel-name">新牌組名稱</label>
-          <input class="form-input" id="excel-name" maxlength="100" placeholder="預設使用檔名，可自行修改">
+
+        <div class="form-group" style="background: var(--bg-secondary, #f8fafc); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); margin-bottom: 14px;">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 8px;">2. 匯入目標牌組 / 群組</label>
+          <div style="display: flex; gap: 20px; margin-bottom: 10px; font-size: 0.95rem;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="excel-target-mode" id="excel-mode-existing" value="existing" checked>
+              <span>加入現有牌組 / 群組</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="excel-target-mode" id="excel-mode-new" value="new">
+              <span>建立全新來源牌組</span>
+            </label>
+          </div>
+
+          <div id="excel-target-existing-wrap">
+            <label class="form-label" for="excel-target-deck">選擇目標牌組</label>
+            <select class="form-select" id="excel-target-deck"></select>
+          </div>
+
+          <div id="excel-target-new-wrap" style="display: none;">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" for="excel-name">新牌組名稱</label>
+              <input class="form-input" id="excel-name" maxlength="100" placeholder="預設使用檔名，可自行修改">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="excel-group-size">牌組內每組字數（小組複習上限）</label>
+              <input class="form-input" id="excel-group-size" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
+            </div>
+          </div>
         </div>
-        <label class="form-label" for="excel-group-size">牌組內每組字數（之後可修改）</label>
-        <input class="form-input" id="excel-group-size" type="number" min="1" max="1000" step="1" value="20" list="group-size-presets">
-        <div id="excel-options" hidden>
-          <div class="form-group">
-            <label class="form-label" for="excel-sheet">選擇工作表</label>
-            <select class="form-select" id="excel-sheet"></select>
-          </div>
-          <label><input type="checkbox" id="excel-header" checked> 第一列是欄位名稱</label>
-          <p class="help-text">請確認各欄對應正確。沒有標題列時，取消上方勾選並手動選欄。</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-zh">中文欄</label><select class="form-select" id="excel-zh"></select></div>
-            <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-ja">日文欄</label><select class="form-select" id="excel-ja"></select></div>
-            <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-reading">讀音欄（選填）</label><select class="form-select" id="excel-reading"></select></div>
-          </div>
-          <div style="overflow: auto; max-height: 240px;">
-            <table style="width: 100%; border-spacing: 10px; text-align: left;"><thead><tr><th>中文</th><th>日文</th><th>讀音</th></tr></thead><tbody id="excel-preview"></tbody></table>
-          </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.92rem; font-weight: 600;">
+            <input type="checkbox" id="excel-auto-enrich" checked style="width: 18px; height: 18px;">
+            <span>⚡ 自動智慧補全缺少的讀音、繁體中文釋義與實用例句</span>
+          </label>
+          <small style="color: var(--text-secondary, #64748b); display: block; margin-left: 26px; margin-top: 2px;">若 Excel 缺少讀音或中文，系統會自動在背景為您補齊。</small>
         </div>
-        <p id="excel-status" role="status" aria-live="polite" class="help-text">選檔後可預覽，再確認建立。</p>
+
+        <div id="excel-enrich-progress-wrap" style="display: none; margin: 12px 0;">
+          <div class="progress-bar-bg" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+            <div class="progress-fill" id="excel-enrich-progress-bar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.2s;"></div>
+          </div>
+          <div id="excel-enrich-progress-text" style="font-size: 0.85rem; color: var(--text-secondary, #64748b); margin-top: 4px; text-align: center;"></div>
+        </div>
+
+        <div id="excel-options" hidden style="margin-top: 10px; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 10px;">
+          <details id="excel-details-toggle">
+            <summary style="cursor: pointer; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; user-select: none;">
+              🔍 欄位對應與預覽（已自動為您識別，點擊可展開調整）
+            </summary>
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 160px;">
+                <label class="form-label" for="excel-sheet">選擇工作表</label>
+                <select class="form-select" id="excel-sheet"></select>
+              </div>
+              <div style="margin-top: 20px;">
+                <label style="cursor: pointer;"><input type="checkbox" id="excel-header" checked> 第一列是欄位名稱</label>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-ja">日文欄（正面）</label><select class="form-select" id="excel-ja"></select></div>
+              <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-zh">中文欄（背面）</label><select class="form-select" id="excel-zh"></select></div>
+              <div class="form-group" style="flex: 1; min-width: 140px;"><label class="form-label" for="excel-reading">讀音欄（選填）</label><select class="form-select" id="excel-reading"></select></div>
+            </div>
+            <div style="overflow: auto; max-height: 200px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 6px;">
+              <table style="width: 100%; border-spacing: 0; font-size: 0.88rem; text-align: left;">
+                <thead style="background: var(--bg-secondary, #f8fafc); position: sticky; top: 0;">
+                  <tr><th style="padding: 8px 10px; border-bottom: 1px solid var(--border-color, #e2e8f0);">日文（正面）</th><th style="padding: 8px 10px; border-bottom: 1px solid var(--border-color, #e2e8f0);">讀音</th><th style="padding: 8px 10px; border-bottom: 1px solid var(--border-color, #e2e8f0);">中文（背面）</th></tr>
+                </thead>
+                <tbody id="excel-preview"></tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+
+        <p id="excel-status" role="status" aria-live="polite" class="help-text" style="margin-top: 12px; font-weight: 500;">選檔後系統將自動讀入並解析單字，再確認匯入即可。</p>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary modal-close">取消</button>
-        <button class="btn-primary" id="excel-submit" disabled>建立新牌組</button>
+        <button class="btn-primary" id="excel-submit" disabled>🚀 確認匯入單字</button>
       </div>
     </div>
   </div>
@@ -750,7 +805,7 @@
 
   <script src="static/flashcards/js/moji_bridge.js?v=20260916-13"></script>
   <script src="static/flashcards/vendor/xlsx.full.min.js?v=20260916-13"></script>
-  <script src="static/flashcards/js/excel_import.js?v=20260916-13"></script>
+  <script src="static/flashcards/js/excel_import.js?v=20260923-01"></script>
   <script src="static/flashcards/js/anki_engine.js?v=20260916-13"></script>
   <script src="static/flashcards/js/sync_manager.js?v=20260916-13"></script>
   <script src="static/flashcards/js/builtin_data.js?v=20260916-13"></script>
