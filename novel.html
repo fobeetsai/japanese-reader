@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: wss:; connect-src 'self' https: wss: data: blob:; media-src 'self' blob: data: https:;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>日文小說閱讀器 (Novel Master) | PDF/EPUB/TXT多格式導入・自選頁數・縱橫排切換・941文法與自然朗讀</title>
+    <title>日文小說閱讀器 (Novel Master) | PDF/EPUB/TXT/拍照OCR・自選頁數・縱橫排切換・941文法與微軟七海真人音</title>
     
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +21,9 @@
     
     <!-- JSZip (EPUB / Word docx 萬能解包解析庫) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Tesseract.js (日文拍照 / 書頁圖片 OCR 辨識引擎) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 
     <!-- 站台統一整合樣式 -->
     <link rel="stylesheet" href="static/cross_nav.css">
@@ -3687,6 +3692,7 @@ body[data-novel-theme="dark"] .file-badge {
 .file-badge.epub { color: #2563eb; }
 .file-badge.txt { color: #059669; }
 .file-badge.docx { color: #0284c7; }
+.file-badge.camera { color: #8b5cf6; }
 
 /* 範本名作推薦鈕 */
 .novel-samples-row {
@@ -3959,9 +3965,7 @@ body[data-novel-theme="dark"] .novel-progress-bar-container {
     transition: width 0.3s ease;
 }
 
-/* ==========================================================================
-   小說閱讀核心區域 (支援 縱書 vertical-rl 與 橫書 horizontal-tb)
-   ========================================================================== */
+/* 小說閱讀核心區域 */
 .novel-reader-deck {
     background: var(--novel-card-bg);
     border: 1px solid var(--novel-border);
@@ -4186,7 +4190,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);
 }
 
-/* 句子專屬浮動操作欄 (Floating Sentence Action Toolbar) */
+/* 句子專屬浮動操作欄 */
 .sentence-floating-toolbar {
     position: fixed;
     bottom: 24px;
@@ -4244,7 +4248,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 }
 
 /* 句子收藏中心抽屜 / 彈窗 */
-.saved-sentences-modal {
+.saved-sentences-modal, .ocr-preview-modal {
     display: none;
     position: fixed;
     inset: 0;
@@ -4254,7 +4258,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     justify-content: center;
     backdrop-filter: blur(5px);
 }
-.saved-sentences-content {
+.saved-sentences-content, .ocr-preview-content {
     background: var(--novel-card-bg);
     border: 1.5px solid var(--novel-border);
     border-radius: 20px;
@@ -4285,6 +4289,21 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 .saved-sentence-item:hover {
     border-color: var(--novel-accent);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* 拍照辨識 OCR 區域 */
+.ocr-drop-box {
+    border: 2px dashed var(--novel-accent);
+    background: rgba(217, 119, 6, 0.05);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+.ocr-drop-box:hover {
+    background: rgba(217, 119, 6, 0.1);
 }
 
 /* 底部導覽 */
@@ -4340,8 +4359,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             <a href="master.html" class="nav-link-btn" title="閱讀高手（大成版）：句解霸、941文法、沉浸雙語、跟讀聽力">
                 <span>👑 閱讀高手</span>
             </a>
-            <a href="novel.html" class="nav-link-btn active-novel" title="日文小說閱讀器：PDF/EPUB/TXT多格式導入・自選頁數・縱橫排切換">
+            <a href="novel.html" class="nav-link-btn active-novel" title="日文小說閱讀器：PDF/EPUB/TXT/拍照OCR・自選頁數・縱橫排切換">
                 <span>📚 小說閱讀</span>
+            </a>
+            <a href="https://fobeetsai.github.io/japanese-grammar/" target="_blank" class="nav-link-btn" title="絵でわかる日本語：941條完整文法檢索系統">
+                <span>🔖 941文法庫</span>
             </a>
             <a href="index.html" class="nav-link-btn" title="日文閱讀助手：基礎閱讀拆解">
                 <span>📖 閱讀助手</span>
@@ -4357,14 +4379,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
     <div class="novel-app-container">
 
-        <!-- 檔案匯入面板 (可導入任何類型的檔案 如PDF 等) -->
+        <!-- 檔案匯入面板 (可導入任何類型的檔案 如PDF、拍照 等) -->
         <section class="novel-import-card" id="novelImportCard">
             <div class="novel-dropzone-icon">
                 <i class="fa-solid fa-book-open-reader"></i>
             </div>
-            <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">開啟日文小說與萬能文件</h2>
+            <h2 style="font-size: 1.65rem; font-weight: 800; margin-bottom: 8px;">開啟日文小說、文件或書頁拍照</h2>
             <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
-                支援拖曳或上傳各類日文書籍，支援<strong>自訂頁數範圍解析</strong>，一本再厚也能輕鬆分頁精讀！
+                支援拖曳或上傳各類日文書籍、<strong>手機拍照/圖片辨識 (OCR)</strong>，支援<strong>自訂頁數範圍解析</strong>，一本再厚也能輕鬆分頁精讀！
             </p>
 
             <div class="novel-file-types">
@@ -4372,14 +4394,20 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 <span class="file-badge epub"><i class="fa-solid fa-book"></i> EPUB (.epub)</span>
                 <span class="file-badge txt"><i class="fa-solid fa-file-lines"></i> 青空文庫/純文字 (.txt)</span>
                 <span class="file-badge docx"><i class="fa-solid fa-file-word"></i> Word (.docx)</span>
-                <span class="file-badge"><i class="fa-solid fa-file-code"></i> Markdown (.md)</span>
+                <span class="file-badge camera"><i class="fa-solid fa-camera"></i> 拍照/書頁截圖 (OCR)</span>
             </div>
 
-            <div style="display: flex; justify-content: center; gap: 12px; margin-top: 14px;">
-                <label class="btn-primary" style="padding: 10px 24px; font-size: 1.05rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #d97706, #b45309); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);">
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
+                <label class="btn-primary" style="padding: 10px 22px; font-size: 1.05rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #d97706, #b45309); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);">
                     <i class="fa-solid fa-folder-open"></i> 選擇檔案 (PDF/EPUB/TXT/DOCX)
                     <input type="file" id="novelFileInput" accept=".pdf,.epub,.txt,.docx,.md,.text" style="display: none;">
                 </label>
+
+                <!-- 拍照 / 圖片辨識按鈕 -->
+                <button class="pill-btn" id="btnOpenOcrModal" style="padding: 10px 18px; font-weight: 700; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.15)); border-color: #8b5cf6; color: #7c3aed;">
+                    <i class="fa-solid fa-camera"></i> 拍照 / 圖片辨識 (OCR)
+                </button>
+
                 <button class="pill-btn" id="btnOpenPasteModal" style="padding: 10px 18px; font-weight: 700;">
                     <i class="fa-solid fa-paste"></i> 貼上文章
                 </button>
@@ -4528,7 +4556,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     </button>
                 </div>
 
-                <!-- 語音朗讀與重複次數控制組 (全新強化) -->
+                <!-- 語音朗讀與重複次數控制組 (鎖定微軟 Edge 自然真人音) -->
                 <div class="novel-nav-group" style="background: rgba(0, 0, 0, 0.04); padding: 4px 8px; border-radius: 10px;">
                     <!-- 朗讀 / 暫停 / 繼續 主按鈕 -->
                     <button class="novel-tool-btn btn-audio-play" id="btnPlayNovelAudio" title="朗讀整頁 / 暫停">
@@ -4552,12 +4580,10 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                         </select>
                     </div>
 
-                    <!-- 人聲語音選擇 -->
-                    <select id="novelVoiceSelect" class="novel-tool-btn" style="padding: 4px 6px; font-size: 0.84rem;" title="選擇發音人聲">
-                        <option value="auto">日語真人音 (自動最佳)</option>
-                        <option value="nanami">女聲：七海 (Nanami)</option>
-                        <option value="keita">男聲：圭太 (Keita)</option>
-                        <option value="google">Google 日本語</option>
+                    <!-- 人聲語音選擇：強制微軟自然女聲七海 / 男聲圭太 -->
+                    <select id="novelVoiceSelect" class="novel-tool-btn" style="padding: 4px 6px; font-size: 0.84rem; font-weight: 700; color: #047857;" title="發音人聲：已鎖定微軟 Edge 自然真人真音">
+                        <option value="nanami" selected>微軟真人女聲：七海 (Nanami)</option>
+                        <option value="keita">微軟真人男聲：圭太 (Keita)</option>
                     </select>
 
                     <button class="novel-tool-btn" onclick="openFilePicker()" title="開啟其他檔案">
@@ -4628,11 +4654,60 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         </div>
     </div>
 
+    <!-- 📷 拍照 / 圖片辨識 (OCR) 模態視窗 -->
+    <div class="ocr-preview-modal" id="ocrModal">
+        <div class="ocr-preview-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--novel-border); padding-bottom: 12px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-camera text-purple-600" style="font-size: 1.4rem;"></i>
+                    <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin: 0;">日文小說書頁拍照 / 圖片辨識 (OCR)</h3>
+                </div>
+                <button onclick="closeOcrModal()" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- 拍照/圖片上傳區域 -->
+            <div class="ocr-drop-box" id="ocrDropZone" onclick="document.getElementById('ocrCameraInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: #8b5cf6; margin-bottom: 8px;"></i>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">點此拍照、選取書頁照片，或直接按 Ctrl+V 貼上截圖</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">支援直排小說與橫排書籍拍照，自動執行高精準日文文字辨識</div>
+                <input type="file" id="ocrCameraInput" accept="image/*" capture="environment" style="display: none;">
+            </div>
+
+            <!-- OCR 設定選項 -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.92rem; font-weight: 700;">
+                    <span>排版走向：</span>
+                    <label style="cursor: pointer;"><input type="radio" name="ocrDirection" value="vert" checked> 縱書 (日文直排小說)</label>
+                    <label style="cursor: pointer;"><input type="radio" name="ocrDirection" value="horiz"> 橫書 (現代橫排書頁)</label>
+                </div>
+                <div id="ocrProgressStatus" style="font-size: 0.9rem; font-weight: 700; color: #8b5cf6; display: none;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> 辨識中 0%
+                </div>
+            </div>
+
+            <!-- 辨識結果文字預覽與編輯區 -->
+            <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted);">辨識結果預覽（可自由微調編輯）：</span>
+                    <span id="ocrCharCount" style="font-size: 0.84rem; color: var(--text-muted);">0 字</span>
+                </div>
+                <textarea id="ocrResultText" style="flex: 1; width: 100%; min-height: 160px; border: 1.5px solid var(--novel-border); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 1.05rem; line-height: 1.8; background: var(--novel-bg); color: var(--novel-text); outline: none;" placeholder="拍照辨識出的日文文字將顯示於此..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="pill-btn" onclick="closeOcrModal()">取消</button>
+                <button class="btn-primary" id="btnConfirmOcrText" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; padding: 10px 24px; border-radius: 10px; font-weight: 800; cursor: pointer;">
+                    <i class="fa-solid fa-book-open"></i> 載入小說並開啟 941 文法解析
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 剪貼簿貼上彈窗 -->
     <div id="pasteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div style="background: var(--novel-card-bg); border: 1px solid var(--novel-border); border-radius: 16px; padding: 24px; max-width: 650px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="font-weight: 800; font-size: 1.25rem; color: var(--novel-accent);"><i class="fa-solid fa-paste"></i> 貼上日文小說文字</h3>
+                <h3 style="font-weight: 800; font-size: 1.25rem; color: var(--novel-accent); margin: 0;"><i class="fa-solid fa-paste"></i> 貼上日文小說文字</h3>
                 <button onclick="closePasteModal()" style="border: none; background: transparent; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <textarea id="pastedNovelText" rows="10" style="width: 100%; border: 1px solid var(--novel-border); border-radius: 10px; padding: 12px; font-family: inherit; font-size: 1rem; line-height: 1.8; background: var(--novel-bg); color: var(--novel-text); outline: none;" placeholder="請在此貼上日文小說內容、青空文庫章節或任何日語長文..."></textarea>
@@ -4667,18 +4742,28 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         </div>
     </div>
 
-    <!-- 941 文法深度解說彈窗卡片 (全面即時彈出) -->
+    <!-- 941 文法深度解說彈窗卡片 (全面即時彈出 + 連動《絵でわかる日本語》檢索系統) -->
     <div id="novelGrammarModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div style="background: var(--novel-card-bg); border: 1.5px solid var(--novel-border); border-radius: 18px; padding: 28px; max-width: 680px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.25);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--novel-border); padding-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="background: rgba(99, 102, 241, 0.15); color: #6366f1; padding: 3px 10px; border-radius: 9999px; font-weight: 800; font-size: 0.82rem;" id="novelGrammarLevelBadge">N3 文型</span>
-                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0;" id="novelGrammarTitle">文法標題</h3>
+        <div style="background: var(--novel-card-bg); border: 1.5px solid var(--novel-border); border-radius: 20px; padding: 28px; max-width: 720px; width: 92%; max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 45px rgba(0,0,0,0.25);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1.5px solid var(--novel-border); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="background: #fae8ff; color: #86198f; border: 1px solid #f0abfc; padding: 3px 10px; border-radius: 8px; font-weight: 800; font-size: 0.82rem;" id="novelGrammarLevelBadge">N2 文型</span>
+                    <span style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 0.82rem;" id="novelGrammarCatBadge">分類</span>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin: 0;" id="novelGrammarTitle">文法標題</h3>
                 </div>
-                <button onclick="closeNovelGrammarModal()" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeNovelGrammarModal()" style="border: none; background: transparent; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="novelGrammarBody" style="line-height: 1.8; font-size: 1.02rem;">
+            
+            <div id="novelGrammarBody" style="line-height: 1.85; font-size: 1.05rem;">
                 <!-- 動態注入文法解說、接續、中文意義與例句 -->
+            </div>
+
+            <!-- 連動《絵でわかる日本語》檢索系統之底部導航列 -->
+            <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--novel-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <a id="novelGrammarExternalLink" href="https://fobeetsai.github.io/japanese-grammar/" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; color: #4f46e5; font-weight: 800; font-size: 0.95rem; text-decoration: none; padding: 6px 14px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 在《絵でわかる日本語》檢索系統中開啟完整解析
+                </a>
+                <button class="pill-btn" onclick="closeNovelGrammarModal()" style="padding: 6px 18px;">關閉</button>
             </div>
         </div>
     </div>
@@ -8311,92 +8396,157 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     </script>
 
     <!-- ==========================================================================
-         小說專屬核心引擎 (Novel Engine) - 全面強化版
-         包含：
-         1. 獨立強韌日語語音引擎 (NovelAudio)：播放、暫停、繼續、停止、自選重複次數、Karaoke
-         2. 單句選取與朗讀、收藏句子管理 (NovelBookmark)
-         3. 941 文法點擊彈出 (NovelGrammar)
+         小說專屬核心引擎 (Novel Engine) - 終極大成版
          ========================================================================== -->
     <script>
     (function() {
-        // 小說專屬狀態管理
         window.novelState = {
-            currentBook: null,          // 當前書籍對象 { title, type, totalPages, pagesData: [] }
-            loadedBatchStart: 1,        // 當前載入的起始頁
-            loadedBatchEnd: 5,          // 當前載入的結束頁
-            currentPageIndex: 1,        // 目前正在閱讀的頁碼 (1-indexed)
-            pagesCache: {},            // 各頁純文字與解析結果快取 { [pageNum]: { text, analyzed } }
-            selectedSentenceIdx: null,  // 當前選取之句子索引
-            writingMode: 'horizontal',  // 'horizontal' | 'vertical'
-            rubyMode: 'show',           // 'show' | 'hard-only' | 'hide'
-            theme: 'sepia',             // 'sepia' | 'mint' | 'dark' | 'white'
-            fontFamily: 'serif',        // 'serif' | 'sans'
-            fontSize: 1.25,             // rem
+            currentBook: null,
+            loadedBatchStart: 1,
+            loadedBatchEnd: 5,
+            currentPageIndex: 1,
+            pagesCache: {},
+            selectedSentenceIdx: null,
+            writingMode: 'horizontal',
+            rubyMode: 'show',
+            theme: 'sepia',
+            fontFamily: 'serif',
+            fontSize: 1.25,
             showGrammar: true,
             showVocabColor: true,
-            repeatCount: 3              // 每句重複次數 (預設 3 次跟讀)
+            repeatCount: 3,
+            selectedVoice: 'nanami'
         };
 
         // ==========================================================================
-        // 1. 獨立強韌日語語音引擎 (NovelAudio)
-        // 具備：播放、暫停 (Pause)、繼續 (Resume)、停止 (Stop)、重複次數、Karaoke
+        // 1. 微軟 Edge 自然真人語音引擎 (NovelAudio) - 杜絕機械音
+        // 方案 A: 若在 Edge 瀏覽器，優先使用原生 Nanami / Keita Online (Natural)
+        // 方案 B: 在 Chrome / Firefox 等其他瀏覽器，使用微軟 Edge TTS 雲端音訊串流
         // ==========================================================================
         window.NovelAudio = {
-            status: 'idle', // 'idle' | 'playing' | 'paused'
+            status: 'idle',
+            currentAudio: null,
             currentUtterance: null,
-            currentAudioElement: null,
             activeTokens: [],
             repeatLeft: 1,
             totalRepeats: 3,
             currentText: '',
             onEndCallback: null,
-            availableVoices: [],
+            audioCache: {},
 
             init() {
                 if ('speechSynthesis' in window) {
-                    const updateVoices = () => {
-                        this.availableVoices = window.speechSynthesis.getVoices() || [];
-                    };
-                    updateVoices();
-                    window.speechSynthesis.onvoiceschanged = updateVoices;
+                    window.speechSynthesis.onvoiceschanged = () => {};
                 }
             },
 
-            // 尋找最佳日語語音人聲 (多重降級保障，確保絕對能發聲)
-            getBestJapaneseVoice(preferred = 'auto') {
+            // 尋找 Edge 原生自然人聲 (嚴格排除任何 Desktop 機械音)
+            getEdgeNativeVoice(voiceType) {
                 if (!('speechSynthesis' in window)) return null;
-                const voices = this.availableVoices.length > 0 ? this.availableVoices : (window.speechSynthesis.getVoices() || []);
-                if (voices.length === 0) return null;
-
+                const voices = window.speechSynthesis.getVoices() || [];
                 const jaVoices = voices.filter(v => v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP')));
-                if (jaVoices.length === 0) {
-                    return voices.find(v => /ja|japanese/i.test(v.name || '')) || null;
-                }
+                
+                // 絕對排除 Desktop / Haruka / Ichiro / Ayumi 機械音
+                const naturalVoices = jaVoices.filter(v => 
+                    !v.name.includes('Desktop') && 
+                    !v.name.includes('Haruka') && 
+                    !v.name.includes('Ichiro') && 
+                    !v.name.includes('Ayumi') &&
+                    (/Natural|Online/i.test(v.name))
+                );
 
-                if (preferred === 'nanami') {
-                    const nanami = jaVoices.find(v => /七海|Nanami|Natural/i.test(v.name) && !/Desktop/i.test(v.name));
-                    if (nanami) return nanami;
-                } else if (preferred === 'keita') {
-                    const keita = jaVoices.find(v => /圭太|Keita|Natural/i.test(v.name) && !/Desktop/i.test(v.name));
-                    if (keita) return keita;
-                } else if (preferred === 'google') {
-                    const gVoice = jaVoices.find(v => /Google|Chrome/i.test(v.name));
-                    if (gVoice) return gVoice;
+                if (voiceType === 'keita') {
+                    return naturalVoices.find(v => /Keita|圭太/i.test(v.name)) || naturalVoices[0] || null;
                 }
-
-                // 自動推薦順序：Edge Natural > Google 日本語 > 本機日語音
-                return jaVoices.find(v => /Natural|Online/i.test(v.name) && !/Desktop/i.test(v.name)) ||
-                       jaVoices.find(v => /Google/i.test(v.name)) ||
-                       jaVoices[0];
+                return naturalVoices.find(v => /Nanami|七海/i.test(v.name)) || naturalVoices[0] || null;
             },
 
-            // 朗讀指定文本 (支援 Karaoke 與重複次數)
+            // 使用微軟 Edge TTS 雲端合成串流 (全瀏覽器通用之微軟自然真人音)
+            async synthesizeEdgeTts(text, voiceType = 'nanami') {
+                const voiceName = voiceType === 'keita' ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+                const cacheKey = voiceName + '_' + text;
+                if (this.audioCache[cacheKey]) {
+                    return this.audioCache[cacheKey];
+                }
+
+                return new Promise((resolve, reject) => {
+                    try {
+                        const token = "6A5AA1D4EA65408183E4CBA755712614";
+                        const connId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+                        const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${token}&ConnectionId=${connId}`;
+                        const ws = new WebSocket(wsUrl);
+                        const audioChunks = [];
+                        let isResolved = false;
+
+                        ws.binaryType = 'arraybuffer';
+
+                        const timeoutTimer = setTimeout(() => {
+                            if (!isResolved) {
+                                ws.close();
+                                reject(new Error('Edge TTS 串流連線逾時'));
+                            }
+                        }, 7000);
+
+                        ws.onopen = () => {
+                            const date = new Date().toString();
+                            const configMsg = `X-Timestamp:${date}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}\r\n`;
+                            ws.send(configMsg);
+
+                            const cleanSnippet = text.replace(/[<>&"']/g, '');
+                            const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ja-JP'><voice name='${voiceName}'><prosody pitch='+0Hz' rate='+0%'>${cleanSnippet}</prosody></voice></speak>`;
+                            const reqId = Math.random().toString(36).substring(2);
+                            const ssmlMsg = `X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${date}\r\nPath:ssml\r\n\r\n${ssml}`;
+                            ws.send(ssmlMsg);
+                        };
+
+                        ws.onmessage = (event) => {
+                            if (typeof event.data === 'string') {
+                                if (event.data.includes('Path:turn.end')) {
+                                    clearTimeout(timeoutTimer);
+                                    isResolved = true;
+                                    ws.close();
+                                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                                    const audioUrl = URL.createObjectURL(audioBlob);
+                                    this.audioCache[cacheKey] = audioUrl;
+                                    resolve(audioUrl);
+                                }
+                            } else if (event.data instanceof ArrayBuffer) {
+                                const view = new DataView(event.data);
+                                const headerLength = view.getUint16(0);
+                                if (event.data.byteLength > headerLength + 2) {
+                                    const audioBody = event.data.slice(headerLength + 2);
+                                    audioChunks.push(audioBody);
+                                }
+                            }
+                        };
+
+                        ws.onerror = (err) => {
+                            clearTimeout(timeoutTimer);
+                            if (!isResolved) reject(err);
+                        };
+
+                        ws.onclose = () => {
+                            clearTimeout(timeoutTimer);
+                            if (!isResolved && audioChunks.length > 0) {
+                                isResolved = true;
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                                const audioUrl = URL.createObjectURL(audioBlob);
+                                this.audioCache[cacheKey] = audioUrl;
+                                resolve(audioUrl);
+                            }
+                        };
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            },
+
+            // 朗讀執行器
             speak(text, containerEl, onEnd, customRepeats = null) {
                 if (!text) return;
                 const cleanText = text.replace(/<[^>]+>/g, '').trim();
                 if (!cleanText) return;
 
-                // 若為暫停狀態且文本相同 -> 直接 Resume
                 if (this.status === 'paused' && this.currentText === cleanText) {
                     this.resume();
                     return;
@@ -8406,7 +8556,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 this.currentText = cleanText;
                 this.onEndCallback = onEnd;
 
-                // 設定重複次數
                 const repeatSetting = customRepeats !== null ? customRepeats : parseInt(document.getElementById('novelRepeatCountSelect')?.value || '3', 10);
                 this.totalRepeats = repeatSetting;
                 this.repeatLeft = repeatSetting;
@@ -8414,7 +8563,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 this.executePlay(cleanText, containerEl);
             },
 
-            executePlay(cleanText, containerEl) {
+            async executePlay(cleanText, containerEl) {
                 this.status = 'playing';
                 this.updateUIStatus('playing');
 
@@ -8424,26 +8573,24 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }
                 this.activeTokens = tokens;
 
-                const voicePref = document.getElementById('novelVoiceSelect')?.value || 'auto';
-                const matchedVoice = this.getBestJapaneseVoice(voicePref);
+                const voicePref = document.getElementById('novelVoiceSelect')?.value || 'nanami';
+                const nativeVoice = this.getEdgeNativeVoice(voicePref);
 
-                // 優先使用 Web SpeechSynthesis (最穩定、無 CORS 阻礙)
-                if ('speechSynthesis' in window && matchedVoice) {
+                // 優先使用 Edge 瀏覽器本機內建 Online Natural 人聲
+                if (nativeVoice && 'speechSynthesis' in window) {
                     try {
                         window.speechSynthesis.cancel();
                         const u = new SpeechSynthesisUtterance(cleanText);
-                        u.voice = matchedVoice;
+                        u.voice = nativeVoice;
                         u.lang = 'ja-JP';
                         u.rate = 0.95;
                         this.currentUtterance = u;
 
-                        // Karaoke 隨音變色追蹤 (依字元索引高亮)
                         if (tokens.length > 0) {
                             u.onboundary = (e) => {
                                 if (this.status !== 'playing') return;
                                 const charIdx = e.charIndex || 0;
-                                let acc = 0;
-                                let activeIdx = 0;
+                                let acc = 0, activeIdx = 0;
                                 for (let i = 0; i < tokens.length; i++) {
                                     const w = tokens[i].dataset.surface || tokens[i].textContent || '';
                                     acc += Math.max(1, w.length);
@@ -8453,69 +8600,87 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                             };
                         }
 
-                        u.onend = () => {
-                            this.handleIterationEnd(containerEl);
-                        };
-                        u.onerror = (err) => {
-                            console.warn('SpeechSynthesis error:', err);
-                            this.fallbackAudioElement(cleanText, containerEl);
-                        };
+                        u.onend = () => this.handleIterationEnd(containerEl);
+                        u.onerror = () => this.playViaEdgeStream(cleanText, voicePref, containerEl);
 
                         window.speechSynthesis.speak(u);
                         return;
                     } catch (e) {
-                        console.warn('SpeechSynthesis speak failed:', e);
+                        console.warn('Native speech failed, switching to Edge Stream:', e);
                     }
                 }
 
-                // 備用方案：Google Translate TTS HTML5 Audio
-                this.fallbackAudioElement(cleanText, containerEl);
+                // Chrome/Firefox 或原生未偵測到時，呼叫微軟 Edge TTS 雲端自然真音
+                await this.playViaEdgeStream(cleanText, voicePref, containerEl);
             },
 
-            fallbackAudioElement(cleanText, containerEl) {
+            async playViaEdgeStream(cleanText, voicePref, containerEl) {
+                try {
+                    const audioUrl = await this.synthesizeEdgeTts(cleanText, voicePref);
+                    const audio = new Audio(audioUrl);
+                    this.currentAudio = audio;
+                    audio.playbackRate = 1.0;
+
+                    this.simulateTokenKaraoke(audio, this.activeTokens);
+
+                    audio.onended = () => this.handleIterationEnd(containerEl);
+                    audio.onerror = () => this.playViaGoogleFallback(cleanText, containerEl);
+
+                    await audio.play();
+                } catch (err) {
+                    console.warn('Edge Stream failed, fallback to Google Natural:', err);
+                    this.playViaGoogleFallback(cleanText, containerEl);
+                }
+            },
+
+            playViaGoogleFallback(cleanText, containerEl) {
+                // 具備 <meta name="referrer" content="no-referrer">，Google TTS 不會被擋
                 const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText.slice(0, 190))}`;
                 const audio = new Audio(audioUrl);
-                this.currentAudioElement = audio;
+                this.currentAudio = audio;
 
-                audio.onended = () => {
-                    this.handleIterationEnd(containerEl);
-                };
+                this.simulateTokenKaraoke(audio, this.activeTokens);
+
+                audio.onended = () => this.handleIterationEnd(containerEl);
                 audio.onerror = () => {
-                    showToast('語音播放失敗，請檢查瀏覽器聲音設定或改用本機語音。');
+                    showToast('語音朗讀失敗，請確認網路連線。');
                     this.stop();
                 };
 
-                audio.play().catch(e => {
-                    console.warn('Audio play failed:', e);
-                    this.stop();
-                });
+                audio.play().catch(() => this.stop());
             },
 
-            // 當單次播放完畢時，處理重複次數邏輯
+            // 音訊播放時的變色 Karaoke 模擬
+            simulateTokenKaraoke(audio, tokens) {
+                if (!tokens || tokens.length === 0) return;
+                const interval = setInterval(() => {
+                    if (this.status !== 'playing' || !this.currentAudio || audio.paused || audio.ended) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    const progress = audio.currentTime / (audio.duration || 1);
+                    const activeIdx = Math.min(tokens.length - 1, Math.floor(progress * tokens.length));
+                    this.applyTokenHighlight(tokens, activeIdx);
+                }, 100);
+            },
+
             handleIterationEnd(containerEl) {
                 this.clearHighlights();
 
                 if (this.totalRepeats === 999) {
-                    // 無限循環復讀
                     setTimeout(() => {
-                        if (this.status === 'playing') {
-                            this.executePlay(this.currentText, containerEl);
-                        }
+                        if (this.status === 'playing') this.executePlay(this.currentText, containerEl);
                     }, 550);
                     return;
                 }
 
                 this.repeatLeft--;
                 if (this.repeatLeft > 0 && this.status === 'playing') {
-                    // 繼續重複播放下一遍
                     showToast(`🔁 正在重複朗讀 (剩餘 ${this.repeatLeft} 次)...`);
                     setTimeout(() => {
-                        if (this.status === 'playing') {
-                            this.executePlay(this.currentText, containerEl);
-                        }
+                        if (this.status === 'playing') this.executePlay(this.currentText, containerEl);
                     }, 600);
                 } else {
-                    // 全部重複次數播畢
                     this.status = 'idle';
                     this.updateUIStatus('idle');
                     if (typeof this.onEndCallback === 'function') {
@@ -8524,28 +8689,26 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }
             },
 
-            // 暫停播放
             pause() {
                 if (this.status !== 'playing') return;
                 this.status = 'paused';
                 if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
                     window.speechSynthesis.pause();
                 }
-                if (this.currentAudioElement) {
-                    this.currentAudioElement.pause();
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
                 }
                 this.updateUIStatus('paused');
                 showToast('語音已暫停');
             },
 
-            // 繼續播放 (Resume)
             resume() {
                 if (this.status !== 'paused') return;
                 this.status = 'playing';
                 if ('speechSynthesis' in window && window.speechSynthesis.paused) {
                     window.speechSynthesis.resume();
-                } else if (this.currentAudioElement) {
-                    this.currentAudioElement.play();
+                } else if (this.currentAudio) {
+                    this.currentAudio.play();
                 } else if (this.currentText) {
                     this.executePlay(this.currentText, null);
                 }
@@ -8553,23 +8716,21 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 showToast('繼續朗讀');
             },
 
-            // 停止播放
             stop(notify = true) {
                 this.status = 'idle';
                 this.repeatLeft = 0;
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                 }
-                if (this.currentAudioElement) {
-                    this.currentAudioElement.pause();
-                    this.currentAudioElement = null;
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio = null;
                 }
                 this.clearHighlights();
                 this.updateUIStatus('idle');
                 if (notify) showToast('已停止朗讀');
             },
 
-            // Karaoke 變色高亮
             applyTokenHighlight(tokens, activeIdx) {
                 tokens.forEach((t, i) => {
                     t.classList.toggle('karaoke-current-word', i === activeIdx);
@@ -8581,7 +8742,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
             },
 
-            // 同步更新工具列與單句按鈕圖示與文字
             updateUIStatus(st) {
                 const mainBtn = document.getElementById('btnPlayNovelAudio');
                 const mainText = document.getElementById('audioPlayBtnText');
@@ -8589,7 +8749,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 const stopBtn = document.getElementById('btnStopNovelAudio');
 
                 const sBarPlayBtn = document.getElementById('btnSentencePlay');
-                const sBarPlayIcon = document.getElementById('sBarPlayIcon');
 
                 if (st === 'playing') {
                     if (mainBtn) mainBtn.className = 'novel-tool-btn btn-audio-pause';
@@ -8625,7 +8784,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }
         };
 
-        // 初始化語音
         window.NovelAudio.init();
 
         // 預設經典名著文本
@@ -8648,11 +8806,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }
         };
 
-        // 初始化頁面監聽
         document.addEventListener('DOMContentLoaded', () => {
             setupDropZone();
             setupToolbarEvents();
             setupSentenceToolbarEvents();
+            setupOcrEvents();
             loadSavedPreferences();
             updateSavedSentencesCountBadge();
         });
@@ -8690,7 +8848,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 e.preventDefault();
                 card.classList.remove('drag-over');
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    handleFileSelection(e.dataTransfer.files[0]);
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        openOcrWithFile(file);
+                    } else {
+                        handleFileSelection(file);
+                    }
                 }
             });
 
@@ -8699,6 +8862,99 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     handleFileSelection(e.target.files[0]);
                 }
             });
+
+            // 支援在整個頁面按下 Ctrl+V 貼上剪貼簿截圖！
+            window.addEventListener('paste', (e) => {
+                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (const item of items) {
+                    if (item.type.startsWith('image/')) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            showToast('偵測到剪貼簿截圖，正在載入 OCR 辨識...');
+                            openOcrWithFile(file);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================================================
+        // 2. 📷 拍照 / 圖片辨識 (OCR) 處理核心
+        // ==========================================================================
+        let currentOcrImageFile = null;
+
+        function setupOcrEvents() {
+            document.getElementById('btnOpenOcrModal').onclick = () => {
+                document.getElementById('ocrModal').style.display = 'flex';
+            };
+
+            document.getElementById('ocrCameraInput').onchange = (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    processOcrImage(e.target.files[0]);
+                }
+            };
+
+            document.getElementById('btnConfirmOcrText').onclick = () => {
+                const text = document.getElementById('ocrResultText').value.trim();
+                if (!text) {
+                    showToast('請先辨識或輸入日文文本！');
+                    return;
+                }
+                closeOcrModal();
+                paginateTextBook('書頁拍照辨識成果', text, 'camera');
+            };
+        }
+
+        window.openOcrModal = function() {
+            document.getElementById('ocrModal').style.display = 'flex';
+        };
+
+        window.closeOcrModal = function() {
+            document.getElementById('ocrModal').style.display = 'none';
+        };
+
+        function openOcrWithFile(file) {
+            document.getElementById('ocrModal').style.display = 'flex';
+            processOcrImage(file);
+        }
+
+        async function processOcrImage(file) {
+            currentOcrImageFile = file;
+            const progressEl = document.getElementById('ocrProgressStatus');
+            const resultBox = document.getElementById('ocrResultText');
+            const dirRadio = document.querySelector('input[name="ocrDirection"]:checked');
+            const langCode = dirRadio && dirRadio.value === 'vert' ? 'jpn_vert' : 'jpn';
+
+            progressEl.style.display = 'inline-block';
+            progressEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在載入辨識模型...';
+            showToast('開始執行高精準日語 OCR 辨識...');
+
+            try {
+                const res = await Tesseract.recognize(file, langCode, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const pct = Math.floor(m.progress * 100);
+                            progressEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 辨識中 ${pct}%`;
+                        } else if (m.status === 'loading tesseract core') {
+                            progressEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 載入辨識引擎...`;
+                        }
+                    }
+                });
+
+                let cleanText = res.data.text || '';
+                // 清洗 OCR 雜訊
+                cleanText = cleanText.replace(/[]/g, '').replace(/ +/g, ' ');
+                resultBox.value = cleanText;
+                document.getElementById('ocrCharCount').textContent = `${cleanText.length} 字`;
+                progressEl.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> 辨識完成！';
+                showToast('書頁拍照辨識完成，可微調後直接開啟解析！');
+            } catch (err) {
+                console.error(err);
+                progressEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-500"></i> 辨識失敗';
+                showToast(`辨識失敗：${err.message}`);
+            }
         }
 
         async function handleFileSelection(file) {
@@ -9028,7 +9284,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         document.getElementById('btnStartNovelReading').addEventListener('click', startNovelReading);
 
         // ==========================================================================
-        // 渲染當前頁面 (包含 941 文法標籤、收藏按鈕、單句選取)
+        // 3. 渲染當前頁面 (包含 941 文法標籤、收藏按鈕、單句選取)
         // ==========================================================================
         function renderCurrentPage() {
             const pNum = window.novelState.currentPageIndex;
@@ -9045,7 +9301,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const analyzed = pageData.analyzed;
             const bookTitle = window.novelState.currentBook.title;
 
-            // 頁首標籤
             const pageHeader = document.createElement('div');
             pageHeader.className = 'novel-page-divider';
             pageHeader.innerHTML = `<span><i class="fa-solid fa-leaf"></i> ${bookTitle} —— 第 ${pNum} 頁</span>`;
@@ -9062,10 +9317,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 sRow.dataset.sentenceIdx = sIdx;
                 sRow.dataset.pageNum = pNum;
 
-                // 檢查是否已收藏
                 const isFav = savedList.some(item => item.text === s.text);
 
-                // 收藏星號圖示
                 const starBtn = document.createElement('button');
                 starBtn.className = `sentence-star-btn ${isFav ? 'is-fav' : ''}`;
                 starBtn.title = isFav ? '已收藏此句' : '收藏此句';
@@ -9079,22 +9332,19 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 });
                 sRow.appendChild(starBtn);
 
-                // 點擊選取句子
                 sRow.addEventListener('click', (e) => {
                     if (e.target.closest('.word-token') || e.target.closest('.sentence-star-btn') || e.target.closest('.novel-grammar-badge')) return;
                     selectNovelSentence(sIdx, pNum, sRow, s);
                 });
 
-                // 渲染單字與假名 (加強文法點擊支援)
                 renderSentenceTokensWithGrammar(sRow, s, sIdx);
 
-                // 若本句含有 941 文法，在句尾附上清晰文法膠囊標籤
                 if (s.grammars && s.grammars.length > 0) {
                     s.grammars.forEach(g => {
                         const gBadge = document.createElement('span');
                         gBadge.className = 'novel-grammar-badge';
-                        gBadge.innerHTML = `<i class="fa-solid fa-bookmark"></i> ${g.level || '941'} ${g.title || g.pattern}`;
-                        gBadge.title = `點擊查看【${g.title || g.pattern}】文法解說`;
+                        gBadge.innerHTML = `<i class="fa-solid fa-bookmark"></i> ${g.level || '941'} ${g.clean_title || g.title || g.pattern}`;
+                        gBadge.title = `點擊查看【${g.title || g.pattern}】文法解說（連動《絵でわかる日本語》）`;
                         gBadge.addEventListener('click', (e) => {
                             e.stopPropagation();
                             showNovelGrammarCard(g.id);
@@ -9126,7 +9376,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }
         }
 
-        // 改良版 Token 渲染器：點擊文法字詞直接彈出 941 文法卡片！
         function renderSentenceTokensWithGrammar(container, sentence, sIdx) {
             const words = sentence.words || [];
             const grammars = sentence.grammars || [];
@@ -9142,7 +9391,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
             words.forEach((w, wIdx) => {
                 const tokenSpan = document.createElement('span');
-                const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
                 tokenSpan.className = `word-token ${w.jlpt ? `jlpt-${w.jlpt}` : ''}`;
                 tokenSpan.innerHTML = w.ruby_html || w.surface;
                 tokenSpan.dataset.surface = w.surface;
@@ -9151,7 +9399,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 tokenSpan.dataset.sentenceIdx = sIdx;
                 tokenSpan.dataset.wordIdx = wIdx;
 
-                // 檢查是否與 941 文法重疊標註
                 const tokenStart = wordOffsets[wIdx].start;
                 const tokenEnd = wordOffsets[wIdx].end;
 
@@ -9168,17 +9415,15 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 if (matchedGrammar) {
                     tokenSpan.classList.add('grammar-highlight');
                     tokenSpan.dataset.grammarId = matchedGrammar.id;
-                    tokenSpan.title = `【${matchedGrammar.level || '941文型'}】${matchedGrammar.title || matchedGrammar.pattern} (點擊查看深度解說)`;
+                    tokenSpan.title = `【${matchedGrammar.level || '941文型'}】${matchedGrammar.clean_title || matchedGrammar.title || matchedGrammar.pattern} (點擊彈出文法詳解)`;
                 }
 
-                // 點擊事件：若為文法標註，優先彈出 941 文法詳細解說卡！
                 tokenSpan.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (matchedGrammar) {
                         showNovelGrammarCard(matchedGrammar.id);
                         return;
                     }
-                    // 否則彈出單字字典卡
                     showWordPopover(tokenSpan, w, e);
                 });
 
@@ -9187,7 +9432,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         // ==========================================================================
-        // 2. 單句選取與朗讀、操作列 (Sentence Selection & Action Toolbar)
+        // 4. 單句選取與朗讀、操作列 (Sentence Selection & Action Toolbar)
         // ==========================================================================
         function selectNovelSentence(sIdx, pNum, rowEl, sObj) {
             document.querySelectorAll('.selected-sentence').forEach(el => el.classList.remove('selected-sentence'));
@@ -9197,18 +9442,15 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const toolbar = document.getElementById('sentenceFloatingToolbar');
             toolbar.classList.add('active');
 
-            // 檢查本句是否已收藏
             const isFav = getSavedSentences().some(item => item.text === sObj.text);
             const favIcon = document.getElementById('sBarFavIcon');
             if (favIcon) {
                 favIcon.className = `fa-${isFav ? 'solid' : 'regular'} fa-star text-amber-500`;
             }
 
-            // 文法數量
             const gCount = (sObj.grammars || []).length;
             document.getElementById('sBarGrammarCount').textContent = gCount;
 
-            // 綁定單句朗讀 (支援重複次數)
             document.getElementById('btnSentencePlay').onclick = () => {
                 if (window.NovelAudio.status === 'playing') {
                     window.NovelAudio.pause();
@@ -9223,7 +9465,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }
             };
 
-            // 綁定單句收藏
             document.getElementById('btnSentenceFav').onclick = () => {
                 const bookTitle = window.novelState.currentBook.title;
                 toggleFavoriteSentence(sObj.text, pNum, bookTitle);
@@ -9236,7 +9477,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }
             };
 
-            // 綁定查看文法
             document.getElementById('btnSentenceGrammars').onclick = () => {
                 if (gCount === 0) {
                     showToast('本句未包含 941 特殊文型。');
@@ -9245,7 +9485,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 showNovelGrammarCard(sObj.grammars[0].id);
             };
 
-            // 綁定單句翻譯
             document.getElementById('btnSentenceTranslate').onclick = async () => {
                 let zhBox = rowEl.querySelector('.novel-sentence-zh');
                 if (zhBox) {
@@ -9286,7 +9525,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         // ==========================================================================
-        // 3. 收藏句子管理 (Favorite Sentences Library)
+        // 5. 收藏句子管理 (Favorite Sentences Library)
         // ==========================================================================
         function getSavedSentences() {
             try {
@@ -9386,7 +9625,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         };
 
         // ==========================================================================
-        // 4. 941 文法詳細解說彈出 (Grammar Detail Popover)
+        // 6. 941 文法深度解說彈出 (全面連動《絵でわかる日本語》檢索系統)
         // ==========================================================================
         window.showNovelGrammarCard = function(grammarId) {
             const g = (typeof GRAMMAR_DATA !== 'undefined') ? GRAMMAR_DATA.find(item => item.id === grammarId) : null;
@@ -9395,26 +9634,52 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 return;
             }
 
-            document.getElementById('novelGrammarTitle').textContent = g.title || g.pattern;
-            document.getElementById('novelGrammarLevelBadge').textContent = g.level ? `${g.level} 文型` : '941 句型';
-            
+            const gLevel = g.level ? `${g.level} 文型` : '941 句型';
+            const gCat = g.category || '日常慣用';
+            const gTitle = g.clean_title || g.title || g.pattern;
+
+            document.getElementById('novelGrammarTitle').textContent = gTitle;
+            document.getElementById('novelGrammarLevelBadge').textContent = gLevel;
+            document.getElementById('novelGrammarCatBadge').textContent = gCat;
+            document.getElementById('novelGrammarExternalLink').href = `https://fobeetsai.github.io/japanese-grammar/?id=${g.id}`;
+
             let html = `
-                <div style="margin-bottom: 14px; background: rgba(99, 102, 241, 0.08); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #6366f1;">
-                    <div style="font-weight: 800; color: #6366f1; margin-bottom: 4px;"><i class="fa-solid fa-link"></i> 【接續形式】</div>
-                    <div style="font-weight: 600;">${g.connection || '（無特定接續形式）'}</div>
+                <div style="margin-bottom: 14px; background: rgba(99, 102, 241, 0.08); padding: 12px 16px; border-radius: 12px; border-left: 4px solid #6366f1;">
+                    <div style="font-weight: 800; color: #4f46e5; margin-bottom: 4px; font-size: 0.95rem;"><i class="fa-solid fa-link"></i> 【接續形式】</div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">${g.form || g.connection || '（副詞／複合接續）'}</div>
                 </div>
-                <div style="margin-bottom: 14px; background: rgba(0, 0, 0, 0.03); padding: 12px 16px; border-radius: 10px;">
-                    <div style="font-weight: 800; color: var(--text-main); margin-bottom: 4px;"><i class="fa-solid fa-lightbulb text-amber-500"></i> 【文法意思】</div>
-                    <div style="font-size: 1.05rem;">${g.meaning || g.meaning_zh || '請參照例句理解語意。'}</div>
+
+                <div style="margin-bottom: 14px; background: rgba(0, 0, 0, 0.03); padding: 12px 16px; border-radius: 12px;">
+                    <div style="font-weight: 800; color: var(--text-main); margin-bottom: 4px; font-size: 0.95rem;"><i class="fa-solid fa-lightbulb text-amber-500"></i> 【中文深度解析】</div>
+                    <div style="font-size: 1.08rem; color: var(--text-main); font-weight: 500;">${g.meaningZh || g.meaning || '（暫無中文解析）'}</div>
+                    ${g.meaningJa ? `<div style="font-size: 0.92rem; color: var(--text-muted); margin-top: 6px; font-style: italic;">日文語意：${g.meaningJa}</div>` : ''}
                 </div>
             `;
 
-            if (g.examples && g.examples.length > 0) {
-                html += `<div style="font-weight: 800; color: var(--text-main); margin-bottom: 6px;"><i class="fa-solid fa-book-open"></i> 【精選例句】</div><ul style="padding-left: 20px; line-height: 2;">`;
-                g.examples.forEach(ex => {
-                    html += `<li><strong style="color: var(--novel-accent);">${ex.ja || ex}</strong>${ex.zh ? `<br><span style="color: var(--text-muted); font-size: 0.9em;">${ex.zh}</span>` : ''}</li>`;
-                });
-                html += `</ul>`;
+            if (g.note) {
+                html += `
+                    <div style="margin-bottom: 14px; background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+                        <strong style="color: #b45309;"><i class="fa-solid fa-circle-exclamation"></i> 情境記憶要點：</strong> ${g.note}
+                    </div>
+                `;
+            }
+
+            // 精選例句（支援振假名與微軟真人發音）
+            const exRuby = g.exampleRuby || g.example || '';
+            const exZh = g.translation || '';
+            if (exRuby || g.examples) {
+                html += `
+                    <div style="margin-bottom: 12px; background: var(--novel-card-bg); border: 1px solid var(--novel-border); border-radius: 12px; padding: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 800; color: var(--text-main); font-size: 0.95rem;"><i class="fa-solid fa-book-open text-emerald-600"></i> 【精選例文】</span>
+                            <button class="pill-btn" onclick="NovelAudio.speak('${(g.example || exRuby).replace(/<[^>]+>/g, '').replace(/'/g, "\\'")}', null, null, 1)" style="padding: 3px 10px; font-size: 0.8rem; background: #059669; color: #fff;">
+                                <i class="fa-solid fa-volume-high"></i> 真人發音
+                            </button>
+                        </div>
+                        <div style="font-size: 1.2rem; font-family: var(--font-jp); line-height: 2.1; margin-bottom: 6px;">${exRuby}</div>
+                        <div style="font-size: 0.98rem; color: var(--text-muted);">${exZh}</div>
+                    </div>
+                `;
             }
 
             document.getElementById('novelGrammarBody').innerHTML = html;
@@ -9493,7 +9758,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 setNovelTheme(themes[nextIdx]);
             };
 
-            // 朗讀與暫停主按鈕
+            // 朗讀與暫停主按鈕 (微軟自然音)
             document.getElementById('btnPlayNovelAudio').onclick = () => {
                 if (window.NovelAudio.status === 'playing') {
                     window.NovelAudio.pause();
@@ -9514,6 +9779,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 showToast(`已設定每句重複 ${e.target.options[e.target.selectedIndex].text}`);
             };
 
+            document.getElementById('novelVoiceSelect').onchange = (e) => {
+                window.novelState.selectedVoice = e.target.value;
+                showToast(`已切換為：${e.target.options[e.target.selectedIndex].text}`);
+            };
+
             document.addEventListener('keydown', (e) => {
                 if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
                 if (window.novelState.currentBook) {
@@ -9531,7 +9801,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             });
         }
 
-        // 朗讀整頁句子
         function playWholePageAudio() {
             const pNum = window.novelState.currentPageIndex;
             const pageData = window.novelState.pagesCache[pNum];
