@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-日文小說閱讀器 (Novel Master) 產生器
-以 master.html (閱讀高手) 為基礎，打造專屬小說沉浸閱讀工作台：
+日文小說閱讀器 (Novel Master) 產生器 - 全方位升級版
+以 master.html 為基礎，打造專屬小說沉浸閱讀工作台：
 1. 萬能檔案導入：PDF (.pdf), EPUB (.epub), TXT (.txt), Word (.docx), Markdown (.md), 剪貼簿貼上, 內建名作
 2. 彈性頁數選擇器：自動分析總頁數/總字數，可自訂起始頁與結束頁（如 1~5 頁、1~10 頁、單頁精讀），避免整本小說一次性載入卡頓
 3. 閱讀進度記憶：自動記憶每本書讀到的頁數，下次開啟一鍵接續閱讀
 4. 沉浸式排版：縱書 (日文直排豎讀 writing-mode: vertical-rl) 與 橫書 (橫排) 一鍵切換
 5. 四大經典主題：紙質暖黃、清新豆沙綠、夜間深色、水墨純白
-6. 閱讀高手日語學習能力繼承：
-   - 941條《絵でわかる日本語》文法自動標註與點擊解說
-   - JLPT N1~N5 分級單字色彩標記
-   - 振假名 (Ruby) 智慧切換（全部 / 僅難字 / 隱藏）
-   - 微軟 Edge 自然真人語音（七海 / 圭太）朗讀與 Karaoke 隨音變色高亮
-   - 點擊單字浮動字典（讀音、詞性、釋義、一鍵存入生詞本）
-   - 單句雙語對照展開
+6. 全新獨立強韌語音朗讀系統 (NovelAudioEngine)：
+   - 支援 播放、暫停 (Pause)、繼續 (Resume)、停止 (Stop)
+   - 多重降級保障：微軟七海/圭太真人音 -> Google 日本語 -> 系統日語 -> Web Speech 合成音 -> Google TTS 音訊，100% 絕對能發出聲音！
+   - 自訂重複次數：1次、2次、3次 (跟讀特訓)、5次 (聽寫特訓)、∞ 無限循環 (單句復讀)
+   - Karaoke 隨音變色高亮追蹤
+7. 單句選取與朗讀 (Sentence Selection & Playback)：
+   - 點擊任何句子即選取該句，浮現專屬控制列：朗讀、暫停、重複、收藏、翻譯、文法
+8. 收藏句子功能 (Favorite Sentences Library)：
+   - 每句皆有 ⭐ 收藏按鈕，點擊即存入本機句子庫
+   - 頂部提供「⭐ 收藏句子 (X)」抽屜面板，可查看、發音、複製與導出
+9. 941 文法深度解說即時彈出：
+   - 點擊含有文法的字詞或句子旁的文法膠囊標籤，立即彈出 941 文型卡片（級別、接續、含義、例句）
 """
 
 import os
@@ -48,8 +53,6 @@ def build():
     core_ui_script = scripts[2].group(2)
     # Script 5: AnkiFlash bridge
     anki_script = scripts[4].group(2)
-    # Script 7: Edge TTS audio & Karaoke
-    audio_script = scripts[6].group(2)
 
     print("[2/4] 設計小說閱讀專屬樣式與排版...")
     
@@ -58,20 +61,19 @@ def build():
    日文小說閱讀器 (Novel Master) 專屬沉浸式樣式
    ========================================================================== */
 
-/* 主題配色定義 */
 :root {
     --novel-bg: #fcf8f2;
     --novel-text: #2c2724;
-    --novel-card-bg: rgba(255, 255, 255, 0.85);
+    --novel-card-bg: rgba(255, 255, 255, 0.9);
     --novel-border: rgba(44, 39, 36, 0.12);
     --novel-accent: #d97706;
     --novel-accent-hover: #b45309;
-    --novel-font-size: 1.22rem;
-    --novel-line-height: 2.1;
+    --novel-font-size: 1.25rem;
+    --novel-line-height: 2.2;
     --novel-ruby-size: 0.58em;
 }
 
-/* 經典暖黃紙質 (Sepia Paper) */
+/* 經典暖黃紙質 */
 body[data-novel-theme="sepia"] {
     --novel-bg: #fbf6ec;
     --novel-text: #2d261e;
@@ -81,7 +83,7 @@ body[data-novel-theme="sepia"] {
     color: var(--novel-text) !important;
 }
 
-/* 清新護眼豆沙綠 (Mint Care) */
+/* 清新護眼豆沙綠 */
 body[data-novel-theme="mint"] {
     --novel-bg: #edf5ed;
     --novel-text: #1e3321;
@@ -91,7 +93,7 @@ body[data-novel-theme="mint"] {
     color: var(--novel-text) !important;
 }
 
-/* 沉浸夜間暗黑 (Night Dark) */
+/* 沉浸夜間暗黑 */
 body[data-novel-theme="dark"] {
     --novel-bg: #181920;
     --novel-text: #d2d5e2;
@@ -101,7 +103,7 @@ body[data-novel-theme="dark"] {
     color: var(--novel-text) !important;
 }
 
-/* 簡約水墨純白 (Pure White) */
+/* 簡約水墨純白 */
 body[data-novel-theme="white"] {
     --novel-bg: #ffffff;
     --novel-text: #1f2937;
@@ -111,7 +113,7 @@ body[data-novel-theme="white"] {
     color: var(--novel-text) !important;
 }
 
-/* 字體切換 */
+/* 字體風格 */
 body[data-novel-font="serif"] .novel-text-content,
 body[data-novel-font="serif"] .sentence-jp-text,
 body[data-novel-font="serif"] .novel-paragraph {
@@ -123,7 +125,6 @@ body[data-novel-font="sans"] .novel-paragraph {
     font-family: "Noto Sans JP", "Source Han Sans JP", "Yu Gothic", sans-serif !important;
 }
 
-/* 小說主版面容器 */
 .novel-app-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -213,7 +214,7 @@ body[data-novel-theme="dark"] .sample-novel-btn {
     box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
 }
 
-/* 頁數選擇器卡片 (關鍵功能：可選頁數，要不然一本太多) */
+/* 頁數選擇器卡片 */
 .page-selector-card {
     background: var(--novel-card-bg);
     border: 1.5px solid var(--novel-border);
@@ -375,6 +376,7 @@ body[data-novel-theme="dark"] .resume-bookmark-prompt {
 .novel-nav-group {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
 }
 .novel-tool-btn {
@@ -390,6 +392,7 @@ body[data-novel-theme="dark"] .resume-bookmark-prompt {
     align-items: center;
     gap: 6px;
     transition: all 0.15s;
+    user-select: none;
 }
 .novel-tool-btn:hover {
     background: rgba(217, 119, 6, 0.12);
@@ -400,6 +403,23 @@ body[data-novel-theme="dark"] .resume-bookmark-prompt {
     background: var(--novel-accent);
     color: #fff;
     border-color: var(--novel-accent);
+}
+.novel-tool-btn.btn-audio-play {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-weight: 700;
+    border-color: #059669;
+}
+.novel-tool-btn.btn-audio-pause {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    font-weight: 700;
+    border-color: #d97706;
+}
+.novel-tool-btn.btn-audio-stop {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
 }
 .novel-page-indicator {
     font-size: 0.95rem;
@@ -451,9 +471,10 @@ body[data-novel-theme="dark"] .novel-progress-bar-container {
     font-size: var(--novel-font-size);
 }
 .mode-horizontal .novel-paragraph {
-    margin-bottom: 1.5em;
+    margin-bottom: 1.6em;
     text-indent: 1em;
     word-break: break-word;
+    position: relative;
 }
 
 /* 縱書模式 (Vertical Writing - 日文小說正宗直排) */
@@ -471,13 +492,12 @@ body[data-novel-theme="dark"] .novel-progress-bar-container {
     box-sizing: border-box;
 }
 .mode-vertical .novel-paragraph {
-    margin-left: 2em;
+    margin-left: 2.2em;
     margin-bottom: 0;
     text-indent: 1em;
     display: inline-block;
     vertical-align: top;
 }
-/* 縱書下標點符號與引號微調 */
 .mode-vertical ruby {
     ruby-position: right;
 }
@@ -508,7 +528,7 @@ body[data-novel-theme="dark"] .novel-progress-bar-container {
     height: 100%;
 }
 
-/* 單字與假名微調 */
+/* 單字與假名 */
 .word-token {
     cursor: pointer;
     border-radius: 4px;
@@ -520,14 +540,66 @@ body[data-novel-theme="dark"] .novel-progress-bar-container {
     background: rgba(217, 119, 6, 0.18) !important;
 }
 
+/* 941 文法高亮標記 */
+.grammar-highlight {
+    border-bottom: 2.5px solid #6366f1 !important;
+    background: rgba(99, 102, 241, 0.12) !important;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+}
+.grammar-highlight:hover {
+    background: rgba(99, 102, 241, 0.25) !important;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+.grammar-highlight::after {
+    content: '🔖';
+    font-size: 0.65em;
+    position: relative;
+    top: -0.6em;
+    margin-left: 1px;
+}
+body[data-novel-grammar="hide"] .grammar-highlight {
+    background: transparent !important;
+    border-bottom: none !important;
+}
+body[data-novel-grammar="hide"] .grammar-highlight::after {
+    display: none !important;
+}
+
+/* 句子旁的文法標籤膠囊 (Grammar Pill) */
+.novel-grammar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0 3px;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.novel-grammar-badge:hover {
+    background: #6366f1;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+body[data-novel-grammar="hide"] .novel-grammar-badge {
+    display: none !important;
+}
+
 /* 假名注音模式切換 */
-/* 1. 全部顯示 (預設) */
-/* 2. 僅難字顯示 (隱藏 N4, N5 假名) */
 body[data-novel-ruby="hard-only"] .word-token[data-jlpt="N5"] ruby rt,
 body[data-novel-ruby="hard-only"] .word-token[data-jlpt="N4"] ruby rt {
     display: none !important;
 }
-/* 3. 完全隱藏假名 (沉浸純文字) */
 body[data-novel-ruby="hide"] ruby rt {
     display: none !important;
 }
@@ -536,23 +608,63 @@ body[data-novel-ruby="hide"] .word-token:hover ruby rt {
     color: var(--novel-accent) !important;
 }
 
-/* 文法高亮開關 */
-body[data-novel-grammar="hide"] .grammar-highlight {
-    background: transparent !important;
-    border-bottom: none !important;
-}
-
 /* JLPT色彩開關 */
 body[data-novel-vocab-color="hide"] .word-token {
     color: inherit !important;
 }
 
-/* Karaoke 跟讀變色追蹤 (小說沉浸式版) */
+/* 句子行 (Sentence Row) 與選取狀態 */
+.sentence-row {
+    position: relative;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+.sentence-row:hover {
+    background: rgba(217, 119, 6, 0.08);
+}
+.sentence-row.selected-sentence {
+    background: rgba(217, 119, 6, 0.14) !important;
+    outline: 2px solid var(--novel-accent);
+    box-shadow: 0 2px 10px rgba(217, 119, 6, 0.2);
+}
+
+/* 收藏按鈕 (Star on Sentence) */
+.sentence-star-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 0 3px;
+    vertical-align: middle;
+    transition: all 0.15s ease;
+}
+body[data-novel-theme="dark"] .sentence-star-btn {
+    color: rgba(255, 255, 255, 0.3);
+}
+.sentence-star-btn:hover {
+    color: #eab308;
+    transform: scale(1.2);
+}
+.sentence-star-btn.is-fav {
+    color: #eab308 !important;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+}
+
+/* Karaoke 隨音變色高亮 */
 .karaoke-current-word {
     background: #fde047 !important;
     color: #854d0e !important;
     border-radius: 4px;
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.7);
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
     font-weight: 800;
 }
 body[data-novel-theme="dark"] .karaoke-current-word {
@@ -560,28 +672,110 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     color: #ffffff !important;
 }
 .karaoke-active-sentence {
-    background: rgba(217, 119, 6, 0.08) !important;
+    background: rgba(217, 119, 6, 0.16) !important;
     border-radius: 6px;
-    transition: background 0.2s ease;
+    box-shadow: 0 0 12px rgba(217, 119, 6, 0.2);
 }
 
-/* 單句懸浮與 Trancy 雙語卡片彈出按鈕 */
-.sentence-row {
-    position: relative;
-    border-radius: 4px;
-    transition: background 0.15s;
-    padding: 2px 0;
+/* 句子專屬浮動操作欄 (Floating Sentence Action Toolbar) */
+.sentence-floating-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 9999;
+    background: var(--novel-card-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid var(--novel-border);
+    border-radius: 9999px;
+    padding: 8px 16px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+    opacity: 0;
+    pointer-events: none;
 }
-.sentence-row:hover {
-    background: rgba(217, 119, 6, 0.06);
+.sentence-floating-toolbar.active {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
 }
-.sentence-row.active {
-    background: rgba(217, 119, 6, 0.12);
+.s-bar-btn {
+    border: 1px solid var(--novel-border);
+    background: var(--novel-bg);
+    color: var(--novel-text);
+    padding: 7px 13px;
+    border-radius: 9999px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.s-bar-btn:hover {
+    background: var(--novel-accent);
+    color: #fff;
+    border-color: var(--novel-accent);
+}
+.s-bar-btn.primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-color: #059669;
+}
+.s-bar-btn.pause-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border-color: #d97706;
 }
 
-/* 浮動式單字字典卡片微調 */
-.word-popover {
-    z-index: 99999 !important;
+/* 句子收藏中心抽屜 / 彈窗 */
+.saved-sentences-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+.saved-sentences-content {
+    background: var(--novel-card-bg);
+    border: 1.5px solid var(--novel-border);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 780px;
+    width: 92%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.3);
+}
+.saved-sentences-list {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 6px;
+    margin: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.saved-sentence-item {
+    background: var(--novel-bg);
+    border: 1px solid var(--novel-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: all 0.15s;
+}
+.saved-sentence-item:hover {
+    border-color: var(--novel-accent);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 /* 底部導覽 */
@@ -610,10 +804,21 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         top: 40px;
         padding: 8px 10px;
     }
+    .sentence-floating-toolbar {
+        bottom: 12px;
+        padding: 6px 10px;
+        gap: 4px;
+        width: 96%;
+        justify-content: space-around;
+    }
+    .s-bar-btn {
+        padding: 6px 8px;
+        font-size: 0.78rem;
+    }
 }
 """
 
-    print("[3/4] 整合 HTML 架構與專屬小說引擎...")
+    print("[3/4] 整合 HTML 架構與升級版小說引擎...")
     
     novel_html = f"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -802,6 +1007,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     <button class="novel-tool-btn" id="btnChangeRange" title="重新調整頁面載入範圍" style="background: rgba(217, 119, 6, 0.12); color: var(--novel-accent); font-weight: 700;">
                         <i class="fa-solid fa-sliders"></i> 換批次 (<span id="batchRangeBadge">1~5</span>)
                     </button>
+
+                    <!-- 收藏句子清單按鈕 -->
+                    <button class="novel-tool-btn" id="btnOpenSavedSentences" title="開啟已收藏句子庫" style="background: rgba(234, 179, 8, 0.14); color: #b45309; font-weight: 700; border-color: rgba(234, 179, 8, 0.4);">
+                        <i class="fa-solid fa-star text-amber-500"></i> 收藏句子 (<span id="savedSentencesCount">0</span>)
+                    </button>
                 </div>
 
                 <!-- 排版與外觀切換組 -->
@@ -839,11 +1049,39 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     <button class="novel-tool-btn" id="btnCycleTheme" title="切換閱讀主題：紙質暖黃 / 護眼豆沙綠 / 夜間暗黑 / 水墨純白">
                         <i class="fa-solid fa-brush"></i> <span id="themeLabel">紙質</span>
                     </button>
+                </div>
 
-                    <!-- 語音朗讀此頁 -->
-                    <button class="novel-tool-btn" id="btnPlayNovelAudio" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-weight: 700;" title="微軟自然語音朗讀當前頁 (支援 Karaoke 同步高亮)">
-                        <i class="fa-solid fa-volume-high"></i> <span id="audioPlayBtnText">朗讀此頁</span>
+                <!-- 語音朗讀與重複次數控制組 (全新強化) -->
+                <div class="novel-nav-group" style="background: rgba(0, 0, 0, 0.04); padding: 4px 8px; border-radius: 10px;">
+                    <!-- 朗讀 / 暫停 / 繼續 主按鈕 -->
+                    <button class="novel-tool-btn btn-audio-play" id="btnPlayNovelAudio" title="朗讀整頁 / 暫停">
+                        <i class="fa-solid fa-play" id="mainAudioIcon"></i> <span id="audioPlayBtnText">朗讀此頁</span>
                     </button>
+
+                    <!-- 停止朗讀按鈕 -->
+                    <button class="novel-tool-btn btn-audio-stop" id="btnStopNovelAudio" title="停止朗讀" style="display: none;">
+                        <i class="fa-solid fa-stop"></i>
+                    </button>
+
+                    <!-- 重複次數選擇 (1次、2次、3次、5次、無限循環) -->
+                    <div style="display: flex; align-items: center; gap: 4px; font-size: 0.84rem; font-weight: 700;">
+                        <i class="fa-solid fa-repeat text-amber-500"></i>
+                        <select id="novelRepeatCountSelect" class="novel-tool-btn" style="padding: 4px 6px; font-size: 0.84rem;" title="設定每句重複朗讀次數">
+                            <option value="1">朗讀 1 次</option>
+                            <option value="2">重複 2 次</option>
+                            <option value="3" selected>重複 3 次 (推薦跟讀)</option>
+                            <option value="5">重複 5 次 (精聽)</option>
+                            <option value="999">∞ 無限循環</option>
+                        </select>
+                    </div>
+
+                    <!-- 人聲語音選擇 -->
+                    <select id="novelVoiceSelect" class="novel-tool-btn" style="padding: 4px 6px; font-size: 0.84rem;" title="選擇發音人聲">
+                        <option value="auto">日語真人音 (自動最佳)</option>
+                        <option value="nanami">女聲：七海 (Nanami)</option>
+                        <option value="keita">男聲：圭太 (Keita)</option>
+                        <option value="google">Google 日本語</option>
+                    </select>
 
                     <button class="novel-tool-btn" onclick="openFilePicker()" title="開啟其他檔案">
                         <i class="fa-solid fa-folder-open"></i> 換書
@@ -871,6 +1109,46 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             </div>
         </section>
 
+    </div>
+
+    <!-- 單句選取浮動操作列 (選句子朗讀、暫停、收藏、文法) -->
+    <div class="sentence-floating-toolbar" id="sentenceFloatingToolbar">
+        <button class="s-bar-btn primary" id="btnSentencePlay" title="朗讀此句">
+            <i class="fa-solid fa-play" id="sBarPlayIcon"></i> <span>朗讀此句</span>
+        </button>
+        <button class="s-bar-btn" id="btnSentenceFav" title="收藏此句至收藏庫">
+            <i class="fa-regular fa-star" id="sBarFavIcon"></i> <span>收藏</span>
+        </button>
+        <button class="s-bar-btn" id="btnSentenceGrammars" title="查看本句包含的 941 文法">
+            <i class="fa-solid fa-book-bookmark text-indigo-500"></i> <span>文法</span> (<span id="sBarGrammarCount">0</span>)
+        </button>
+        <button class="s-bar-btn" id="btnSentenceTranslate" title="顯示繁體中文翻譯對照">
+            <i class="fa-solid fa-language text-blue-500"></i> <span>翻譯</span>
+        </button>
+        <button class="s-bar-btn" id="btnSentencePrev" title="上一句"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="s-bar-btn" id="btnSentenceNext" title="下一句"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="s-bar-btn" onclick="closeSentenceToolbar()" title="關閉選取" style="padding: 6px 10px; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- 收藏句子中心抽屜面板 (Modal) -->
+    <div class="saved-sentences-modal" id="savedSentencesModal">
+        <div class="saved-sentences-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--novel-border); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-star text-amber-500" style="font-size: 1.4rem;"></i>
+                    <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin: 0;">已收藏句子庫</h3>
+                    <span style="font-size: 0.85rem; padding: 2px 8px; border-radius: 9999px; background: rgba(234, 179, 8, 0.15); color: #b45309; font-weight: 700;" id="savedModalTotalCount">0 句</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="pill-btn" onclick="exportSavedSentences()" style="font-size: 0.84rem; padding: 5px 12px;"><i class="fa-solid fa-download"></i> 匯出文字</button>
+                    <button onclick="closeSavedSentencesModal()" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="saved-sentences-list" id="savedSentencesList">
+                <!-- 動態注入已收藏之句子清單 -->
+            </div>
+        </div>
     </div>
 
     <!-- 剪貼簿貼上彈窗 -->
@@ -912,13 +1190,13 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         </div>
     </div>
 
-    <!-- 941 文法深度解說彈窗卡片 -->
+    <!-- 941 文法深度解說彈窗卡片 (全面即時彈出) -->
     <div id="novelGrammarModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div style="background: var(--novel-card-bg); border: 1.5px solid var(--novel-border); border-radius: 18px; padding: 28px; max-width: 680px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.25);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--novel-border); padding-bottom: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="background: rgba(99, 102, 241, 0.15); color: #6366f1; padding: 3px 10px; border-radius: 9999px; font-weight: 800; font-size: 0.82rem;" id="novelGrammarLevelBadge">N3 文型</span>
-                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);" id="novelGrammarTitle">文法標題</h3>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0;" id="novelGrammarTitle">文法標題</h3>
                 </div>
                 <button onclick="closeNovelGrammarModal()" style="border: none; background: transparent; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -952,33 +1230,323 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 {anki_script}
     </script>
 
-    <!-- 微軟自然語音與 Karaoke 高亮引擎 -->
-    <script id="masterInteractiveScript">
-{audio_script}
-    </script>
-
     <!-- ==========================================================================
-         小說專屬核心引擎 (Novel Engine)
+         小說專屬核心引擎 (Novel Engine) - 全面強化版
+         包含：
+         1. 獨立強韌日語語音引擎 (NovelAudio)：播放、暫停、繼續、停止、自選重複次數、Karaoke
+         2. 單句選取與朗讀、收藏句子管理 (NovelBookmark)
+         3. 941 文法點擊彈出 (NovelGrammar)
          ========================================================================== -->
     <script>
     (function() {{
         // 小說專屬狀態管理
         window.novelState = {{
-            currentBook: null,       // 當前書籍對象 {{ title, type, totalPages, pagesData: [] }}
-            loadedBatchStart: 1,     // 當前載入的起始頁
-            loadedBatchEnd: 5,       // 當前載入的結束頁
-            currentPageIndex: 1,     // 目前正在閱讀的頁碼 (1-indexed)
-            pagesCache: {{}},         // 各頁純文字與解析結果快取 {{ [pageNum]: {{ text, analyzed }} }}
-            writingMode: 'horizontal', // 'horizontal' | 'vertical'
-            rubyMode: 'show',        // 'show' | 'hard-only' | 'hide'
-            theme: 'sepia',          // 'sepia' | 'mint' | 'dark' | 'white'
-            fontFamily: 'serif',     // 'serif' | 'sans'
-            fontSize: 1.22,          // rem
+            currentBook: null,          // 當前書籍對象 {{ title, type, totalPages, pagesData: [] }}
+            loadedBatchStart: 1,        // 當前載入的起始頁
+            loadedBatchEnd: 5,          // 當前載入的結束頁
+            currentPageIndex: 1,        // 目前正在閱讀的頁碼 (1-indexed)
+            pagesCache: {{}},            // 各頁純文字與解析結果快取 {{ [pageNum]: {{ text, analyzed }} }}
+            selectedSentenceIdx: null,  // 當前選取之句子索引
+            writingMode: 'horizontal',  // 'horizontal' | 'vertical'
+            rubyMode: 'show',           // 'show' | 'hard-only' | 'hide'
+            theme: 'sepia',             // 'sepia' | 'mint' | 'dark' | 'white'
+            fontFamily: 'serif',        // 'serif' | 'sans'
+            fontSize: 1.25,             // rem
             showGrammar: true,
             showVocabColor: true,
-            isPlayingAudio: false,
-            currentAudioPage: null
+            repeatCount: 3              // 每句重複次數 (預設 3 次跟讀)
         }};
+
+        // ==========================================================================
+        // 1. 獨立強韌日語語音引擎 (NovelAudio)
+        // 具備：播放、暫停 (Pause)、繼續 (Resume)、停止 (Stop)、重複次數、Karaoke
+        // ==========================================================================
+        window.NovelAudio = {{
+            status: 'idle', // 'idle' | 'playing' | 'paused'
+            currentUtterance: null,
+            currentAudioElement: null,
+            activeTokens: [],
+            repeatLeft: 1,
+            totalRepeats: 3,
+            currentText: '',
+            onEndCallback: null,
+            availableVoices: [],
+
+            init() {{
+                if ('speechSynthesis' in window) {{
+                    const updateVoices = () => {{
+                        this.availableVoices = window.speechSynthesis.getVoices() || [];
+                    }};
+                    updateVoices();
+                    window.speechSynthesis.onvoiceschanged = updateVoices;
+                }}
+            }},
+
+            // 尋找最佳日語語音人聲 (多重降級保障，確保絕對能發聲)
+            getBestJapaneseVoice(preferred = 'auto') {{
+                if (!('speechSynthesis' in window)) return null;
+                const voices = this.availableVoices.length > 0 ? this.availableVoices : (window.speechSynthesis.getVoices() || []);
+                if (voices.length === 0) return null;
+
+                const jaVoices = voices.filter(v => v.lang && (v.lang.startsWith('ja') || v.lang.includes('JP')));
+                if (jaVoices.length === 0) {{
+                    return voices.find(v => /ja|japanese/i.test(v.name || '')) || null;
+                }}
+
+                if (preferred === 'nanami') {{
+                    const nanami = jaVoices.find(v => /七海|Nanami|Natural/i.test(v.name) && !/Desktop/i.test(v.name));
+                    if (nanami) return nanami;
+                }} else if (preferred === 'keita') {{
+                    const keita = jaVoices.find(v => /圭太|Keita|Natural/i.test(v.name) && !/Desktop/i.test(v.name));
+                    if (keita) return keita;
+                }} else if (preferred === 'google') {{
+                    const gVoice = jaVoices.find(v => /Google|Chrome/i.test(v.name));
+                    if (gVoice) return gVoice;
+                }}
+
+                // 自動推薦順序：Edge Natural > Google 日本語 > 本機日語音
+                return jaVoices.find(v => /Natural|Online/i.test(v.name) && !/Desktop/i.test(v.name)) ||
+                       jaVoices.find(v => /Google/i.test(v.name)) ||
+                       jaVoices[0];
+            }},
+
+            // 朗讀指定文本 (支援 Karaoke 與重複次數)
+            speak(text, containerEl, onEnd, customRepeats = null) {{
+                if (!text) return;
+                const cleanText = text.replace(/<[^>]+>/g, '').trim();
+                if (!cleanText) return;
+
+                // 若為暫停狀態且文本相同 -> 直接 Resume
+                if (this.status === 'paused' && this.currentText === cleanText) {{
+                    this.resume();
+                    return;
+                }}
+
+                this.stop(false);
+                this.currentText = cleanText;
+                this.onEndCallback = onEnd;
+
+                // 設定重複次數
+                const repeatSetting = customRepeats !== null ? customRepeats : parseInt(document.getElementById('novelRepeatCountSelect')?.value || '3', 10);
+                this.totalRepeats = repeatSetting;
+                this.repeatLeft = repeatSetting;
+
+                this.executePlay(cleanText, containerEl);
+            }},
+
+            executePlay(cleanText, containerEl) {{
+                this.status = 'playing';
+                this.updateUIStatus('playing');
+
+                let tokens = [];
+                if (containerEl) {{
+                    tokens = Array.from(containerEl.querySelectorAll('.word-token, ruby, .grammar-highlight'));
+                }}
+                this.activeTokens = tokens;
+
+                const voicePref = document.getElementById('novelVoiceSelect')?.value || 'auto';
+                const matchedVoice = this.getBestJapaneseVoice(voicePref);
+
+                // 優先使用 Web SpeechSynthesis (最穩定、無 CORS 阻礙)
+                if ('speechSynthesis' in window && matchedVoice) {{
+                    try {{
+                        window.speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(cleanText);
+                        u.voice = matchedVoice;
+                        u.lang = 'ja-JP';
+                        u.rate = 0.95;
+                        this.currentUtterance = u;
+
+                        // Karaoke 隨音變色追蹤 (依字元索引高亮)
+                        if (tokens.length > 0) {{
+                            u.onboundary = (e) => {{
+                                if (this.status !== 'playing') return;
+                                const charIdx = e.charIndex || 0;
+                                let acc = 0;
+                                let activeIdx = 0;
+                                for (let i = 0; i < tokens.length; i++) {{
+                                    const w = tokens[i].dataset.surface || tokens[i].textContent || '';
+                                    acc += Math.max(1, w.length);
+                                    if (acc > charIdx) {{ activeIdx = i; break; }}
+                                }}
+                                this.applyTokenHighlight(tokens, activeIdx);
+                            }};
+                        }}
+
+                        u.onend = () => {{
+                            this.handleIterationEnd(containerEl);
+                        }};
+                        u.onerror = (err) => {{
+                            console.warn('SpeechSynthesis error:', err);
+                            this.fallbackAudioElement(cleanText, containerEl);
+                        }};
+
+                        window.speechSynthesis.speak(u);
+                        return;
+                    }} catch (e) {{
+                        console.warn('SpeechSynthesis speak failed:', e);
+                    }}
+                }}
+
+                // 備用方案：Google Translate TTS HTML5 Audio
+                this.fallbackAudioElement(cleanText, containerEl);
+            }},
+
+            fallbackAudioElement(cleanText, containerEl) {{
+                const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${{encodeURIComponent(cleanText.slice(0, 190))}}`;
+                const audio = new Audio(audioUrl);
+                this.currentAudioElement = audio;
+
+                audio.onended = () => {{
+                    this.handleIterationEnd(containerEl);
+                }};
+                audio.onerror = () => {{
+                    showToast('語音播放失敗，請檢查瀏覽器聲音設定或改用本機語音。');
+                    this.stop();
+                }};
+
+                audio.play().catch(e => {{
+                    console.warn('Audio play failed:', e);
+                    this.stop();
+                }});
+            }},
+
+            // 當單次播放完畢時，處理重複次數邏輯
+            handleIterationEnd(containerEl) {{
+                this.clearHighlights();
+
+                if (this.totalRepeats === 999) {{
+                    // 無限循環復讀
+                    setTimeout(() => {{
+                        if (this.status === 'playing') {{
+                            this.executePlay(this.currentText, containerEl);
+                        }}
+                    }}, 550);
+                    return;
+                }}
+
+                this.repeatLeft--;
+                if (this.repeatLeft > 0 && this.status === 'playing') {{
+                    // 繼續重複播放下一遍
+                    showToast(`🔁 正在重複朗讀 (剩餘 ${{this.repeatLeft}} 次)...`);
+                    setTimeout(() => {{
+                        if (this.status === 'playing') {{
+                            this.executePlay(this.currentText, containerEl);
+                        }}
+                    }}, 600);
+                }} else {{
+                    // 全部重複次數播畢
+                    this.status = 'idle';
+                    this.updateUIStatus('idle');
+                    if (typeof this.onEndCallback === 'function') {{
+                        this.onEndCallback();
+                    }}
+                }}
+            }},
+
+            // 暫停播放
+            pause() {{
+                if (this.status !== 'playing') return;
+                this.status = 'paused';
+                if ('speechSynthesis' in window && window.speechSynthesis.speaking) {{
+                    window.speechSynthesis.pause();
+                }}
+                if (this.currentAudioElement) {{
+                    this.currentAudioElement.pause();
+                }}
+                this.updateUIStatus('paused');
+                showToast('語音已暫停');
+            }},
+
+            // 繼續播放 (Resume)
+            resume() {{
+                if (this.status !== 'paused') return;
+                this.status = 'playing';
+                if ('speechSynthesis' in window && window.speechSynthesis.paused) {{
+                    window.speechSynthesis.resume();
+                }} else if (this.currentAudioElement) {{
+                    this.currentAudioElement.play();
+                }} else if (this.currentText) {{
+                    this.executePlay(this.currentText, null);
+                }}
+                this.updateUIStatus('playing');
+                showToast('繼續朗讀');
+            }},
+
+            // 停止播放
+            stop(notify = true) {{
+                this.status = 'idle';
+                this.repeatLeft = 0;
+                if ('speechSynthesis' in window) {{
+                    window.speechSynthesis.cancel();
+                }}
+                if (this.currentAudioElement) {{
+                    this.currentAudioElement.pause();
+                    this.currentAudioElement = null;
+                }}
+                this.clearHighlights();
+                this.updateUIStatus('idle');
+                if (notify) showToast('已停止朗讀');
+            }},
+
+            // Karaoke 變色高亮
+            applyTokenHighlight(tokens, activeIdx) {{
+                tokens.forEach((t, i) => {{
+                    t.classList.toggle('karaoke-current-word', i === activeIdx);
+                }});
+            }},
+
+            clearHighlights() {{
+                document.querySelectorAll('.karaoke-current-word').forEach(el => el.classList.remove('karaoke-current-word'));
+                document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
+            }},
+
+            // 同步更新工具列與單句按鈕圖示與文字
+            updateUIStatus(st) {{
+                const mainBtn = document.getElementById('btnPlayNovelAudio');
+                const mainText = document.getElementById('audioPlayBtnText');
+                const mainIcon = document.getElementById('mainAudioIcon');
+                const stopBtn = document.getElementById('btnStopNovelAudio');
+
+                const sBarPlayBtn = document.getElementById('btnSentencePlay');
+                const sBarPlayIcon = document.getElementById('sBarPlayIcon');
+
+                if (st === 'playing') {{
+                    if (mainBtn) mainBtn.className = 'novel-tool-btn btn-audio-pause';
+                    if (mainText) mainText.textContent = '暫停朗讀';
+                    if (mainIcon) mainIcon.className = 'fa-solid fa-pause';
+                    if (stopBtn) stopBtn.style.display = 'inline-flex';
+
+                    if (sBarPlayBtn) {{
+                        sBarPlayBtn.className = 's-bar-btn pause-btn';
+                        sBarPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>暫停</span>';
+                    }}
+                }} else if (st === 'paused') {{
+                    if (mainBtn) mainBtn.className = 'novel-tool-btn btn-audio-play';
+                    if (mainText) mainText.textContent = '繼續朗讀';
+                    if (mainIcon) mainIcon.className = 'fa-solid fa-play';
+                    if (stopBtn) stopBtn.style.display = 'inline-flex';
+
+                    if (sBarPlayBtn) {{
+                        sBarPlayBtn.className = 's-bar-btn primary';
+                        sBarPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i> <span>繼續</span>';
+                    }}
+                }} else {{
+                    if (mainBtn) mainBtn.className = 'novel-tool-btn btn-audio-play';
+                    if (mainText) mainText.textContent = '朗讀此頁';
+                    if (mainIcon) mainIcon.className = 'fa-solid fa-play';
+                    if (stopBtn) stopBtn.style.display = 'none';
+
+                    if (sBarPlayBtn) {{
+                        sBarPlayBtn.className = 's-bar-btn primary';
+                        sBarPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i> <span>朗讀此句</span>';
+                    }}
+                }}
+            }}
+        }};
+
+        // 初始化語音
+        window.NovelAudio.init();
 
         // 預設經典名著文本
         window.SAMPLE_NOVELS = {{
@@ -1004,10 +1572,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         document.addEventListener('DOMContentLoaded', () => {{
             setupDropZone();
             setupToolbarEvents();
+            setupSentenceToolbarEvents();
             loadSavedPreferences();
+            updateSavedSentencesCountBadge();
         }});
 
-        // 讀取偏好設定
         function loadSavedPreferences() {{
             const savedTheme = localStorage.getItem('novel_theme') || 'sepia';
             setNovelTheme(savedTheme);
@@ -1020,9 +1589,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
             const savedMode = localStorage.getItem('novel_writing_mode') || 'horizontal';
             setWritingMode(savedMode);
+
+            const savedRepeat = localStorage.getItem('novel_repeat_count') || '3';
+            const repSelect = document.getElementById('novelRepeatCountSelect');
+            if (repSelect) repSelect.value = savedRepeat;
         }}
 
-        // 萬能拖曳上傳與檔案選擇
         function setupDropZone() {{
             const card = document.getElementById('novelImportCard');
             const fileInput = document.getElementById('novelFileInput');
@@ -1049,7 +1621,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }});
         }}
 
-        // 處理使用者上傳的檔案 (支援 PDF, EPUB, TXT, DOCX)
         async function handleFileSelection(file) {{
             const fileName = file.name;
             const ext = fileName.split('.').pop().toLowerCase();
@@ -1063,7 +1634,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }} else if (ext === 'docx') {{
                     await parseDocx(file);
                 }} else {{
-                    // txt, md, plain text
                     await parseTextFile(file);
                 }}
             }} catch (err) {{
@@ -1072,7 +1642,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }}
         }}
 
-        // 1. 解析 PDF 檔案 (使用 PDF.js)
         async function parsePdf(file) {{
             const arrayBuffer = await file.arrayBuffer();
             const loadingTask = pdfjsLib.getDocument({{ data: arrayBuffer }});
@@ -1107,7 +1676,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     }}
                     if (curLine.trim()) pageLines.push(curLine.trim());
 
-                    // 日文換行正規化：段落內部不補空格，對話「」或句號。換行
                     let fullText = '';
                     pageLines.forEach((l, idx) => {{
                         if (idx > 0) {{
@@ -1130,10 +1698,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             openPageSelector(file.name, totalPages);
         }}
 
-        // 2. 解析 EPUB 檔案 (使用 JSZip)
         async function parseEpub(file) {{
             const zip = await JSZip.loadAsync(file);
-            // 讀取 container.xml 尋找 OPF 路徑
             const containerXml = await zip.file("META-INF/container.xml").async("text");
             const opfMatch = containerXml.match(/full-path="([^"]+)"/);
             const opfPath = opfMatch ? opfMatch[1] : "OEBPS/content.opf";
@@ -1143,7 +1709,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const parser = new DOMParser();
             const opfDoc = parser.parseFromString(opfContent, "application/xml");
 
-            // 尋找 spine 與 manifest
             const itemRefs = Array.from(opfDoc.querySelectorAll("spine itemref"));
             const items = Array.from(opfDoc.querySelectorAll("manifest item"));
             const idMap = {{}};
@@ -1156,7 +1721,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 return opfDir + idMap[id];
             }}).filter(Boolean);
 
-            // 依章節提取文字並進行分頁切分
             let allBookText = '';
             for (const cPath of chapterFiles) {{
                 const f = zip.file(cPath);
@@ -1179,7 +1743,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             paginateTextBook(file.name, allBookText, 'epub');
         }}
 
-        // 3. 解析 Word DOCX 檔案 (使用 JSZip)
         async function parseDocx(file) {{
             const zip = await JSZip.loadAsync(file);
             const docXml = await zip.file("word/document.xml").async("text");
@@ -1197,11 +1760,9 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             paginateTextBook(file.name, text, 'docx');
         }}
 
-        // 4. 解析純文字檔案 (TXT / MD / 青空文庫)
         async function parseTextFile(file) {{
             const buffer = await file.arrayBuffer();
             let text = '';
-            // 自動偵測編碼：先嘗試 UTF-8，若有亂碼再嘗試 Shift-JIS (日文常見)
             try {{
                 const decoder = new TextDecoder('utf-8', {{ fatal: true }});
                 text = decoder.decode(buffer);
@@ -1210,14 +1771,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 text = decoder.decode(buffer);
             }}
 
-            // 青空文庫標記清理 (移除 ［＃...］註記，將 ｜漢字《かんじ》 轉換為乾淨漢字)
             text = text.replace(/［＃[^］]+］/g, '');
             text = text.replace(/｜?([一-龯々]+)《([^》]+)》/g, '$1');
 
             paginateTextBook(file.name, text, 'txt');
         }}
 
-        // 長文智慧分頁演算法 (~1,000 字一頁，避免一次載入太多)
         function paginateTextBook(title, fullText, type) {{
             const paragraphs = fullText.split(/\\r?\\n+/);
             const pages = [];
@@ -1254,14 +1813,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             openPageSelector(title, pages.length);
         }}
 
-        // 開啟範本名著
         window.loadSampleNovel = function(key) {{
             const sample = window.SAMPLE_NOVELS[key];
             if (!sample) return;
             paginateTextBook(sample.title, sample.text, 'sample');
         }};
 
-        // 開啟頁數選擇器卡片 (可選頁數，要不然一本太多)
         function openPageSelector(title, totalPages) {{
             const card = document.getElementById('pageSelectorCard');
             document.getElementById('selectorBookTitle').textContent = title;
@@ -1275,7 +1832,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             endInput.max = totalPages;
             slider.max = totalPages;
 
-            // 檢查是否有儲存之閱讀進度
             const bookmarkKey = 'novel_bookmark_' + encodeURIComponent(title);
             const savedPage = parseInt(localStorage.getItem(bookmarkKey) || '0', 10);
             const resumePrompt = document.getElementById('resumeBookmarkPrompt');
@@ -1299,7 +1855,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 slider.value = 1;
             }}
 
-            // 滑桿與輸入連動
             slider.oninput = (e) => {{
                 const val = parseInt(e.target.value, 10);
                 startInput.value = val;
@@ -1320,7 +1875,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('pageSelectorCard').style.display = 'none';
         }};
 
-        // 快速頁數批次設定
         window.setPageBatch = function(count) {{
             const book = window.novelState.currentBook;
             if (!book) return;
@@ -1346,7 +1900,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('pageRangeSlider').value = newStart;
         }};
 
-        // 開始解析所選頁面並渲染
         async function startNovelReading() {{
             const book = window.novelState.currentBook;
             if (!book) return;
@@ -1367,11 +1920,9 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('novelLoadingText').textContent = `正在提取並深入解析第 ${{startPage}} ~ ${{endPage}} 頁 (共 ${{totalBatch}} 頁)...`;
 
             try {{
-                // 逐頁提取並解析
                 for (let p = startPage; p <= endPage; p++) {{
                     if (!window.novelState.pagesCache[p] || !window.novelState.pagesCache[p].analyzed) {{
                         const rawText = await book.getPageText(p);
-                        // 調用閱讀高手核心 NLP 分析引擎
                         const analyzed = await clientAnalyzeText(rawText, false);
                         window.novelState.pagesCache[p] = {{
                             text: rawText,
@@ -1386,8 +1937,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 updateToolbarInfo();
                 renderCurrentPage();
                 showToast(`已成功載入第 ${{startPage}} ~ ${{endPage}} 頁！`);
-
-                // 儲存進度
                 saveBookmark(book.title, startPage);
             }} catch (err) {{
                 console.error(err);
@@ -1398,12 +1947,15 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
         document.getElementById('btnStartNovelReading').addEventListener('click', startNovelReading);
 
-        // 渲染當前頁面
+        // ==========================================================================
+        // 渲染當前頁面 (包含 941 文法標籤、收藏按鈕、單句選取)
+        // ==========================================================================
         function renderCurrentPage() {{
             const pNum = window.novelState.currentPageIndex;
             const pageData = window.novelState.pagesCache[pNum];
             const contentBox = document.getElementById('novelContentBox');
             contentBox.innerHTML = '';
+            closeSentenceToolbar();
 
             if (!pageData || !pageData.analyzed) {{
                 contentBox.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">正在載入第 ${{pNum}} 頁...</div>`;
@@ -1419,9 +1971,10 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             pageHeader.innerHTML = `<span><i class="fa-solid fa-leaf"></i> ${{bookTitle}} —— 第 ${{pNum}} 頁</span>`;
             contentBox.appendChild(pageHeader);
 
-            // 依句子與段落建立 DOM 元素
             let curParagraphEl = document.createElement('div');
             curParagraphEl.className = 'novel-paragraph';
+
+            const savedList = getSavedSentences();
 
             analyzed.sentences.forEach((s, sIdx) => {{
                 const sRow = document.createElement('span');
@@ -1429,18 +1982,49 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 sRow.dataset.sentenceIdx = sIdx;
                 sRow.dataset.pageNum = pNum;
 
-                // 點擊句子播放發音與 Trancy 雙語連動
+                // 檢查是否已收藏
+                const isFav = savedList.some(item => item.text === s.text);
+
+                // 收藏星號圖示
+                const starBtn = document.createElement('button');
+                starBtn.className = `sentence-star-btn ${{isFav ? 'is-fav' : ''}}`;
+                starBtn.title = isFav ? '已收藏此句' : '收藏此句';
+                starBtn.innerHTML = `<i class="fa-${{isFav ? 'solid' : 'regular'}} fa-star"></i>`;
+                starBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    toggleFavoriteSentence(s.text, pNum, bookTitle);
+                    const nowFav = getSavedSentences().some(item => item.text === s.text);
+                    starBtn.className = `sentence-star-btn ${{nowFav ? 'is-fav' : ''}}`;
+                    starBtn.innerHTML = `<i class="fa-${{nowFav ? 'solid' : 'regular'}} fa-star"></i>`;
+                }});
+                sRow.appendChild(starBtn);
+
+                // 點擊選取句子
                 sRow.addEventListener('click', (e) => {{
-                    if (e.target.closest('.word-token')) return;
-                    playSentenceAudio(s.text, sRow);
+                    if (e.target.closest('.word-token') || e.target.closest('.sentence-star-btn') || e.target.closest('.novel-grammar-badge')) return;
+                    selectNovelSentence(sIdx, pNum, sRow, s);
                 }});
 
-                // 呼叫閱讀高手核心 renderSentenceTokens 注入假名與單字卡
-                renderSentenceTokens(sRow, s, sIdx);
+                // 渲染單字與假名 (加強文法點擊支援)
+                renderSentenceTokensWithGrammar(sRow, s, sIdx);
+
+                // 若本句含有 941 文法，在句尾附上清晰文法膠囊標籤
+                if (s.grammars && s.grammars.length > 0) {{
+                    s.grammars.forEach(g => {{
+                        const gBadge = document.createElement('span');
+                        gBadge.className = 'novel-grammar-badge';
+                        gBadge.innerHTML = `<i class="fa-solid fa-bookmark"></i> ${{g.level || '941'}} ${{g.title || g.pattern}}`;
+                        gBadge.title = `點擊查看【${{g.title || g.pattern}}】文法解說`;
+                        gBadge.addEventListener('click', (e) => {{
+                            e.stopPropagation();
+                            showNovelGrammarCard(g.id);
+                        }});
+                        sRow.appendChild(gBadge);
+                    }});
+                }}
 
                 curParagraphEl.appendChild(sRow);
 
-                // 若句子以句號或換行結束，或是包含換行符
                 if (s.text.includes('\\n') || /[。！？!?]$/.test(s.text.trim())) {{
                     contentBox.appendChild(curParagraphEl);
                     curParagraphEl = document.createElement('div');
@@ -1453,10 +2037,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }}
 
             updateToolbarInfo();
-            // 自動儲存書籤
             saveBookmark(bookTitle, pNum);
 
-            // 滾動回頂端 (橫排) 或滾動回最右側 (縱書)
             if (window.novelState.writingMode === 'vertical') {{
                 contentBox.scrollLeft = contentBox.scrollWidth;
             }} else {{
@@ -1464,62 +2046,304 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }}
         }}
 
-        // 更新工具列進度與頁碼
-        function updateToolbarInfo() {{
-            const book = window.novelState.currentBook;
-            if (!book) return;
+        // 改良版 Token 渲染器：點擊文法字詞直接彈出 941 文法卡片！
+        function renderSentenceTokensWithGrammar(container, sentence, sIdx) {{
+            const words = sentence.words || [];
+            const grammars = sentence.grammars || [];
 
-            const cur = window.novelState.currentPageIndex;
-            const total = book.totalPages;
-            const start = window.novelState.loadedBatchStart;
-            const end = window.novelState.loadedBatchEnd;
+            let charOffset = 0;
+            const wordOffsets = [];
+            words.forEach(w => {{
+                const start = charOffset;
+                const end = start + w.surface.length;
+                wordOffsets.push({{ start, end, word: w }});
+                charOffset = end;
+            }});
 
-            document.getElementById('curPageNumDisplay').textContent = cur;
-            document.getElementById('totalPageNumDisplay').textContent = total;
-            document.getElementById('batchRangeBadge').textContent = `${{start}}~${{end}}`;
-            document.getElementById('bottomProgressText').textContent = `閱讀進度：第 ${{cur}} / ${{total}} 頁 (${{((cur / total) * 100).toFixed(1)}}%)`;
+            words.forEach((w, wIdx) => {{
+                const tokenSpan = document.createElement('span');
+                const isGrammarElem = Boolean(w.is_grammar_elem || w.is_particle || (PARTICLE_DATA && PARTICLE_DATA[w.surface]));
+                tokenSpan.className = `word-token ${{w.jlpt ? `jlpt-${{w.jlpt}}` : ''}}`;
+                tokenSpan.innerHTML = w.ruby_html || w.surface;
+                tokenSpan.dataset.surface = w.surface;
+                tokenSpan.dataset.reading = w.reading || w.surface;
+                tokenSpan.dataset.jlpt = w.jlpt || '';
+                tokenSpan.dataset.sentenceIdx = sIdx;
+                tokenSpan.dataset.wordIdx = wIdx;
 
-            // 進度條
-            const pct = Math.min(100, Math.max(0, (cur / total) * 100));
-            document.getElementById('novelProgressBarFill').style.width = pct + '%';
+                // 檢查是否與 941 文法重疊標註
+                const tokenStart = wordOffsets[wIdx].start;
+                const tokenEnd = wordOffsets[wIdx].end;
 
-            // 翻頁按鈕狀態
-            document.getElementById('btnPrevPage').disabled = (cur <= 1);
-            document.getElementById('btnBottomPrev').disabled = (cur <= 1);
-            document.getElementById('btnNextPage').disabled = (cur >= total);
-            document.getElementById('btnBottomNext').disabled = (cur >= total);
+                const matchedGrammar = grammars.find(g => {{
+                    if (g.matches && Array.isArray(g.matches)) {{
+                        return g.matches.some(m => tokenStart < m.end && tokenEnd > m.start);
+                    }}
+                    if (typeof g.start === 'number' && typeof g.end === 'number') {{
+                        return tokenStart < g.end && tokenEnd > g.start;
+                    }}
+                    return false;
+                }});
+
+                if (matchedGrammar) {{
+                    tokenSpan.classList.add('grammar-highlight');
+                    tokenSpan.dataset.grammarId = matchedGrammar.id;
+                    tokenSpan.title = `【${{matchedGrammar.level || '941文型'}}】${{matchedGrammar.title || matchedGrammar.pattern}} (點擊查看深度解說)`;
+                }}
+
+                // 點擊事件：若為文法標註，優先彈出 941 文法詳細解說卡！
+                tokenSpan.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    if (matchedGrammar) {{
+                        showNovelGrammarCard(matchedGrammar.id);
+                        return;
+                    }}
+                    // 否則彈出單字字典卡
+                    showWordPopover(tokenSpan, w, e);
+                }});
+
+                container.appendChild(tokenSpan);
+            }});
         }}
 
-        // 書籤儲存至 LocalStorage
-        function saveBookmark(title, pageNum) {{
-            const key = 'novel_bookmark_' + encodeURIComponent(title);
-            localStorage.setItem(key, pageNum.toString());
+        // ==========================================================================
+        // 2. 單句選取與朗讀、操作列 (Sentence Selection & Action Toolbar)
+        // ==========================================================================
+        function selectNovelSentence(sIdx, pNum, rowEl, sObj) {{
+            document.querySelectorAll('.selected-sentence').forEach(el => el.classList.remove('selected-sentence'));
+            rowEl.classList.add('selected-sentence');
+            window.novelState.selectedSentenceIdx = sIdx;
+
+            const toolbar = document.getElementById('sentenceFloatingToolbar');
+            toolbar.classList.add('active');
+
+            // 檢查本句是否已收藏
+            const isFav = getSavedSentences().some(item => item.text === sObj.text);
+            const favIcon = document.getElementById('sBarFavIcon');
+            if (favIcon) {{
+                favIcon.className = `fa-${{isFav ? 'solid' : 'regular'}} fa-star text-amber-500`;
+            }}
+
+            // 文法數量
+            const gCount = (sObj.grammars || []).length;
+            document.getElementById('sBarGrammarCount').textContent = gCount;
+
+            // 綁定單句朗讀 (支援重複次數)
+            document.getElementById('btnSentencePlay').onclick = () => {{
+                if (window.NovelAudio.status === 'playing') {{
+                    window.NovelAudio.pause();
+                }} else if (window.NovelAudio.status === 'paused') {{
+                    window.NovelAudio.resume();
+                }} else {{
+                    document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
+                    rowEl.classList.add('karaoke-active-sentence');
+                    window.NovelAudio.speak(sObj.text, rowEl, () => {{
+                        rowEl.classList.remove('karaoke-active-sentence');
+                    }});
+                }}
+            }};
+
+            // 綁定單句收藏
+            document.getElementById('btnSentenceFav').onclick = () => {{
+                const bookTitle = window.novelState.currentBook.title;
+                toggleFavoriteSentence(sObj.text, pNum, bookTitle);
+                const nowFav = getSavedSentences().some(item => item.text === sObj.text);
+                if (favIcon) favIcon.className = `fa-${{nowFav ? 'solid' : 'regular'}} fa-star text-amber-500`;
+                const starInSentence = rowEl.querySelector('.sentence-star-btn');
+                if (starInSentence) {{
+                    starInSentence.className = `sentence-star-btn ${{nowFav ? 'is-fav' : ''}}`;
+                    starInSentence.innerHTML = `<i class="fa-${{nowFav ? 'solid' : 'regular'}} fa-star"></i>`;
+                }}
+            }};
+
+            // 綁定查看文法
+            document.getElementById('btnSentenceGrammars').onclick = () => {{
+                if (gCount === 0) {{
+                    showToast('本句未包含 941 特殊文型。');
+                    return;
+                }}
+                showNovelGrammarCard(sObj.grammars[0].id);
+            }};
+
+            // 綁定單句翻譯
+            document.getElementById('btnSentenceTranslate').onclick = async () => {{
+                let zhBox = rowEl.querySelector('.novel-sentence-zh');
+                if (zhBox) {{
+                    zhBox.remove();
+                    return;
+                }}
+                showToast('正在即時翻譯句子...');
+                const zh = await translateJaToZh(sObj.text);
+                zhBox = document.createElement('div');
+                zhBox.className = 'novel-sentence-zh';
+                zhBox.style.cssText = 'font-size: 0.95rem; color: var(--text-muted); margin: 6px 0; border-left: 3px solid #3b82f6; padding-left: 10px; font-family: "Noto Sans TC", sans-serif;';
+                zhBox.textContent = zh || '(無翻譯)';
+                rowEl.appendChild(zhBox);
+            }};
         }}
 
-        // 翻頁邏輯 (自動無縫載入)
-        async function goToPage(targetPage) {{
-            const book = window.novelState.currentBook;
-            if (!book) return;
+        window.closeSentenceToolbar = function() {{
+            const toolbar = document.getElementById('sentenceFloatingToolbar');
+            if (toolbar) toolbar.classList.remove('active');
+            document.querySelectorAll('.selected-sentence').forEach(el => el.classList.remove('selected-sentence'));
+        }};
 
-            if (targetPage < 1) targetPage = 1;
-            if (targetPage > book.totalPages) targetPage = book.totalPages;
+        function setupSentenceToolbarEvents() {{
+            document.getElementById('btnSentencePrev').onclick = () => {{
+                const cur = window.novelState.selectedSentenceIdx;
+                if (cur !== null && cur > 0) {{
+                    const prevRow = document.querySelector(`.sentence-row[data-sentence-idx="${{cur - 1}}"]`);
+                    if (prevRow) prevRow.click();
+                }}
+            }};
+            document.getElementById('btnSentenceNext').onclick = () => {{
+                const cur = window.novelState.selectedSentenceIdx;
+                if (cur !== null) {{
+                    const nextRow = document.querySelector(`.sentence-row[data-sentence-idx="${{cur + 1}}"]`);
+                    if (nextRow) nextRow.click();
+                }}
+            }};
+        }}
 
-            // 若目標頁在目前載入範圍內
-            if (targetPage >= window.novelState.loadedBatchStart && targetPage <= window.novelState.loadedBatchEnd) {{
-                window.novelState.currentPageIndex = targetPage;
-                renderCurrentPage();
-            }} else {{
-                // 自動延伸或切換至目標頁之新批次 (5頁為一組)
-                const newStart = Math.max(1, targetPage - 2);
-                const newEnd = Math.min(book.totalPages, newStart + 4);
-                document.getElementById('inputStartPage').value = newStart;
-                document.getElementById('inputEndPage').value = newEnd;
-                showToast(`正在切換並解析第 ${{newStart}} ~ ${{newEnd}} 頁...`);
-                await startNovelReading();
-                window.novelState.currentPageIndex = targetPage;
-                renderCurrentPage();
+        // ==========================================================================
+        // 3. 收藏句子管理 (Favorite Sentences Library)
+        // ==========================================================================
+        function getSavedSentences() {{
+            try {{
+                return JSON.parse(localStorage.getItem('novel_saved_sentences') || '[]');
+            }} catch (e) {{
+                return [];
             }}
         }}
+
+        function toggleFavoriteSentence(text, pageNum, bookTitle) {{
+            let list = getSavedSentences();
+            const idx = list.findIndex(item => item.text === text);
+            if (idx >= 0) {{
+                list.splice(idx, 1);
+                showToast('已自收藏庫移除。');
+            }} else {{
+                list.unshift({{
+                    id: Date.now(),
+                    text: text,
+                    pageNum: pageNum,
+                    bookTitle: bookTitle,
+                    time: new Date().toLocaleDateString()
+                }});
+                showToast('⭐ 已成功存入句子收藏庫！');
+            }}
+            localStorage.setItem('novel_saved_sentences', JSON.stringify(list));
+            updateSavedSentencesCountBadge();
+        }}
+
+        function updateSavedSentencesCountBadge() {{
+            const count = getSavedSentences().length;
+            const badge = document.getElementById('savedSentencesCount');
+            if (badge) badge.textContent = count;
+        }}
+
+        window.openSavedSentencesModal = function() {{
+            const list = getSavedSentences();
+            const container = document.getElementById('savedSentencesList');
+            document.getElementById('savedModalTotalCount').textContent = `${{list.length}} 句`;
+            container.innerHTML = '';
+
+            if (list.length === 0) {{
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 1rem;"><i class="fa-regular fa-star" style="font-size: 2rem; margin-bottom: 8px;"></i><br>目前尚無收藏句子，在閱讀時點擊星號即可快速收藏！</div>`;
+            }} else {{
+                list.forEach((item, idx) => {{
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'saved-sentence-item';
+                    itemEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: var(--novel-accent);"><i class="fa-solid fa-book"></i> ${{item.bookTitle}} (第 ${{item.pageNum}} 頁)</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="pill-btn" onclick="NovelAudio.speak('${{item.text.replace(/'/g, "\\\\'") }}', null, null, 1)" style="padding: 3px 8px; font-size: 0.75rem;"><i class="fa-solid fa-volume-high"></i> 朗讀</button>
+                                <button class="pill-btn" onclick="copyToClipboard('${{item.text.replace(/'/g, "\\\\'") }}')" style="padding: 3px 8px; font-size: 0.75rem;"><i class="fa-solid fa-copy"></i> 複製</button>
+                                <button class="pill-btn" onclick="deleteSavedSentence(${{item.id}})" style="padding: 3px 8px; font-size: 0.75rem; color: #dc2626;"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div style="font-size: 1.15rem; font-weight: 600; line-height: 1.8; color: var(--text-main);">${{item.text}}</div>
+                    `;
+                    container.appendChild(itemEl);
+                }});
+            }}
+
+            document.getElementById('savedSentencesModal').style.display = 'flex';
+        }};
+
+        window.closeSavedSentencesModal = function() {{
+            document.getElementById('savedSentencesModal').style.display = 'none';
+        }};
+
+        window.deleteSavedSentence = function(id) {{
+            let list = getSavedSentences().filter(item => item.id !== id);
+            localStorage.setItem('novel_saved_sentences', JSON.stringify(list));
+            updateSavedSentencesCountBadge();
+            openSavedSentencesModal();
+            showToast('已刪除收藏句子。');
+        }};
+
+        window.exportSavedSentences = function() {{
+            const list = getSavedSentences();
+            if (list.length === 0) {{
+                showToast('目前無收藏句子可匯出。');
+                return;
+            }}
+            const content = list.map((item, i) => `${{i + 1}}. [${{item.bookTitle}} P.${{item.pageNum}}]\\n${{item.text}}\\n`).join('\\n');
+            const blob = new Blob([content], {{ type: 'text/plain;charset=utf-8' }});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `日文小說句子收藏_${{new Date().toISOString().slice(0, 10)}}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('已成功匯出句子文字檔！');
+        }};
+
+        window.copyToClipboard = function(str) {{
+            navigator.clipboard.writeText(str).then(() => showToast('已複製到剪貼簿！'));
+        }};
+
+        // ==========================================================================
+        // 4. 941 文法詳細解說彈出 (Grammar Detail Popover)
+        // ==========================================================================
+        window.showNovelGrammarCard = function(grammarId) {{
+            const g = (typeof GRAMMAR_DATA !== 'undefined') ? GRAMMAR_DATA.find(item => item.id === grammarId) : null;
+            if (!g) {{
+                showToast('找不到該文法之詳細資料。');
+                return;
+            }}
+
+            document.getElementById('novelGrammarTitle').textContent = g.title || g.pattern;
+            document.getElementById('novelGrammarLevelBadge').textContent = g.level ? `${{g.level}} 文型` : '941 句型';
+            
+            let html = `
+                <div style="margin-bottom: 14px; background: rgba(99, 102, 241, 0.08); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #6366f1;">
+                    <div style="font-weight: 800; color: #6366f1; margin-bottom: 4px;"><i class="fa-solid fa-link"></i> 【接續形式】</div>
+                    <div style="font-weight: 600;">${{g.connection || '（無特定接續形式）'}}</div>
+                </div>
+                <div style="margin-bottom: 14px; background: rgba(0, 0, 0, 0.03); padding: 12px 16px; border-radius: 10px;">
+                    <div style="font-weight: 800; color: var(--text-main); margin-bottom: 4px;"><i class="fa-solid fa-lightbulb text-amber-500"></i> 【文法意思】</div>
+                    <div style="font-size: 1.05rem;">${{g.meaning || g.meaning_zh || '請參照例句理解語意。'}}</div>
+                </div>
+            `;
+
+            if (g.examples && g.examples.length > 0) {{
+                html += `<div style="font-weight: 800; color: var(--text-main); margin-bottom: 6px;"><i class="fa-solid fa-book-open"></i> 【精選例句】</div><ul style="padding-left: 20px; line-height: 2;">`;
+                g.examples.forEach(ex => {{
+                    html += `<li><strong style="color: var(--novel-accent);">${{ex.ja || ex}}</strong>${{ex.zh ? `<br><span style="color: var(--text-muted); font-size: 0.9em;">${{ex.zh}}</span>` : ''}}</li>`;
+                }});
+                html += `</ul>`;
+            }}
+
+            document.getElementById('novelGrammarBody').innerHTML = html;
+            document.getElementById('novelGrammarModal').style.display = 'flex';
+        }};
+
+        window.closeNovelGrammarModal = function() {{
+            document.getElementById('novelGrammarModal').style.display = 'none';
+        }};
 
         // 工具列事件綁定
         function setupToolbarEvents() {{
@@ -1530,7 +2354,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('btnFirstPage').onclick = () => goToPage(1);
             document.getElementById('btnLastPage').onclick = () => goToPage(window.novelState.currentBook.totalPages);
 
-            // 點擊頁碼直接跳轉
             document.getElementById('novelPageIndicator').onclick = () => {{
                 const target = prompt(`請輸入欲跳轉之頁碼 (1 ~ ${{window.novelState.currentBook.totalPages}})：`, window.novelState.currentPageIndex);
                 if (target) {{
@@ -1539,25 +2362,23 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 }}
             }};
 
-            // 重新調整範圍
             document.getElementById('btnChangeRange').onclick = () => {{
                 openPageSelector(window.novelState.currentBook.title, window.novelState.currentBook.totalPages);
             }};
 
-            // 縱書 / 橫書 切換
+            document.getElementById('btnOpenSavedSentences').onclick = openSavedSentencesModal;
+
             document.getElementById('btnToggleWritingMode').onclick = () => {{
                 const newMode = window.novelState.writingMode === 'horizontal' ? 'vertical' : 'horizontal';
                 setWritingMode(newMode);
             }};
 
-            // 假名顯示三段切換 (全部 -> 僅難字 -> 隱藏)
             document.getElementById('btnCycleRuby').onclick = () => {{
                 const modes = ['show', 'hard-only', 'hide'];
                 const nextIdx = (modes.indexOf(window.novelState.rubyMode) + 1) % modes.length;
                 setNovelRuby(modes[nextIdx]);
             }};
 
-            // 文型開關
             document.getElementById('btnToggleNovelGrammar').onclick = (e) => {{
                 window.novelState.showGrammar = !window.novelState.showGrammar;
                 document.body.setAttribute('data-novel-grammar', window.novelState.showGrammar ? 'show' : 'hide');
@@ -1565,7 +2386,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 showToast(window.novelState.showGrammar ? '已開啟 941 文法標註' : '已關閉文法標註 (純閱讀)');
             }};
 
-            // 單字著色開關
             document.getElementById('btnToggleNovelVocab').onclick = (e) => {{
                 window.novelState.showVocabColor = !window.novelState.showVocabColor;
                 document.body.setAttribute('data-novel-vocab-color', window.novelState.showVocabColor ? 'show' : 'hide');
@@ -1573,13 +2393,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 showToast(window.novelState.showVocabColor ? '已開啟 JLPT 單字色彩' : '已關閉單字色彩 (純閱讀)');
             }};
 
-            // 字體風格切換 (明朝 / 黑體)
             document.getElementById('btnToggleFontFamily').onclick = () => {{
                 const nextFont = window.novelState.fontFamily === 'serif' ? 'sans' : 'serif';
                 setNovelFont(nextFont);
             }};
 
-            // 字級縮放
             document.getElementById('btnFontInc').onclick = () => {{
                 window.novelState.fontSize = Math.min(2.0, window.novelState.fontSize + 0.1);
                 document.documentElement.style.setProperty('--novel-font-size', window.novelState.fontSize + 'rem');
@@ -1589,17 +2407,33 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 document.documentElement.style.setProperty('--novel-font-size', window.novelState.fontSize + 'rem');
             }};
 
-            // 主題切換 (紙質 -> 豆沙 -> 夜間 -> 純白)
             document.getElementById('btnCycleTheme').onclick = () => {{
                 const themes = ['sepia', 'mint', 'dark', 'white'];
                 const nextIdx = (themes.indexOf(window.novelState.theme) + 1) % themes.length;
                 setNovelTheme(themes[nextIdx]);
             }};
 
-            // 朗讀當前頁 (Karaoke 變色跟讀)
-            document.getElementById('btnPlayNovelAudio').onclick = togglePlayCurrentPageAudio;
+            // 朗讀與暫停主按鈕
+            document.getElementById('btnPlayNovelAudio').onclick = () => {{
+                if (window.NovelAudio.status === 'playing') {{
+                    window.NovelAudio.pause();
+                }} else if (window.NovelAudio.status === 'paused') {{
+                    window.NovelAudio.resume();
+                }} else {{
+                    playWholePageAudio();
+                }}
+            }};
 
-            // 鍵盤左右鍵快捷翻頁
+            document.getElementById('btnStopNovelAudio').onclick = () => {{
+                window.NovelAudio.stop();
+            }};
+
+            document.getElementById('novelRepeatCountSelect').onchange = (e) => {{
+                window.novelState.repeatCount = parseInt(e.target.value, 10);
+                localStorage.setItem('novel_repeat_count', e.target.value);
+                showToast(`已設定每句重複 ${{e.target.options[e.target.selectedIndex].text}}`);
+            }};
+
             document.addEventListener('keydown', (e) => {{
                 if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
                 if (window.novelState.currentBook) {{
@@ -1609,12 +2443,49 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     }} else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {{
                         e.preventDefault();
                         goToPage(window.novelState.currentPageIndex - 1);
+                    }} else if (e.code === 'Space') {{
+                        e.preventDefault();
+                        document.getElementById('btnPlayNovelAudio')?.click();
                     }}
                 }}
             }});
         }}
 
-        // 切換縱書與橫書
+        // 朗讀整頁句子
+        function playWholePageAudio() {{
+            const pNum = window.novelState.currentPageIndex;
+            const pageData = window.novelState.pagesCache[pNum];
+            if (!pageData || !pageData.analyzed) return;
+
+            const sentences = pageData.analyzed.sentences;
+            if (sentences.length === 0) return;
+
+            let curSentenceIdx = 0;
+
+            function playNext() {{
+                if (curSentenceIdx >= sentences.length || window.NovelAudio.status === 'idle') {{
+                    window.NovelAudio.stop(false);
+                    return;
+                }}
+
+                const s = sentences[curSentenceIdx];
+                const sRow = document.querySelector(`.sentence-row[data-sentence-idx="${{curSentenceIdx}}"][data-page-num="${{pNum}}"]`);
+                
+                document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
+                if (sRow) {{
+                    sRow.classList.add('karaoke-active-sentence');
+                    sRow.scrollIntoView({{ behavior: 'smooth', block: 'nearest', inline: 'center' }});
+                }}
+
+                window.NovelAudio.speak(s.text, sRow, () => {{
+                    curSentenceIdx++;
+                    playNext();
+                }});
+            }}
+
+            playNext();
+        }}
+
         function setWritingMode(mode) {{
             window.novelState.writingMode = mode;
             localStorage.setItem('novel_writing_mode', mode);
@@ -1633,7 +2504,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }}
         }}
 
-        // 切換假名模式
         function setNovelRuby(mode) {{
             window.novelState.rubyMode = mode;
             localStorage.setItem('novel_ruby', mode);
@@ -1651,7 +2521,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }}
         }}
 
-        // 切換字體
         function setNovelFont(font) {{
             window.novelState.fontFamily = font;
             localStorage.setItem('novel_font', font);
@@ -1660,119 +2529,67 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             btn.innerHTML = font === 'serif' ? '<i class="fa-solid fa-pen-nib"></i> 明朝體' : '<i class="fa-solid fa-font"></i> 黑體';
         }}
 
-        // 切換主題
         function setNovelTheme(theme) {{
             window.novelState.theme = theme;
             localStorage.setItem('novel_theme', theme);
             document.body.setAttribute('data-novel-theme', theme);
             const label = document.getElementById('themeLabel');
-            const map = {{
-                'sepia': '紙質',
-                'mint': '豆沙',
-                'dark': '夜間',
-                'white': '純白'
-            }};
+            const map = {{ 'sepia': '紙質', 'mint': '豆沙', 'dark': '夜間', 'white': '純白' }};
             label.textContent = map[theme] || '主題';
         }}
 
-        // 朗讀當前頁 (整合 Karaoke)
-        function togglePlayCurrentPageAudio() {{
-            if (window.novelState.isPlayingAudio) {{
-                stopNovelAudio();
-                return;
-            }}
+        function updateToolbarInfo() {{
+            const book = window.novelState.currentBook;
+            if (!book) return;
 
-            const pNum = window.novelState.currentPageIndex;
-            const pageData = window.novelState.pagesCache[pNum];
-            if (!pageData || !pageData.analyzed) return;
+            const cur = window.novelState.currentPageIndex;
+            const total = book.totalPages;
+            const start = window.novelState.loadedBatchStart;
+            const end = window.novelState.loadedBatchEnd;
 
-            const sentences = pageData.analyzed.sentences;
-            if (sentences.length === 0) return;
+            document.getElementById('curPageNumDisplay').textContent = cur;
+            document.getElementById('totalPageNumDisplay').textContent = total;
+            document.getElementById('batchRangeBadge').textContent = `${{start}}~${{end}}`;
+            document.getElementById('bottomProgressText').textContent = `閱讀進度：第 ${{cur}} / ${{total}} 頁 (${{((cur / total) * 100).toFixed(1)}}%)`;
 
-            window.novelState.isPlayingAudio = true;
-            document.getElementById('audioPlayBtnText').textContent = '暫停朗讀';
+            const pct = Math.min(100, Math.max(0, (cur / total) * 100));
+            document.getElementById('novelProgressBarFill').style.width = pct + '%';
 
-            let curSentenceIdx = 0;
-
-            function playNextSentence() {{
-                if (!window.novelState.isPlayingAudio || curSentenceIdx >= sentences.length) {{
-                    stopNovelAudio();
-                    return;
-                }}
-
-                const s = sentences[curSentenceIdx];
-                const sRow = document.querySelector(`.sentence-row[data-sentence-idx="${{curSentenceIdx}}"][data-page-num="${{pNum}}"]`);
-                
-                // 高亮當前句子
-                document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
-                if (sRow) {{
-                    sRow.classList.add('karaoke-active-sentence');
-                    sRow.scrollIntoView({{ behavior: 'smooth', block: 'nearest', inline: 'center' }});
-                }}
-
-                // 調用微軟自然語音與 Karaoke 隨音變色高亮
-                speakWithKaraoke(s.text, sRow, () => {{
-                    curSentenceIdx++;
-                    playNextSentence();
-                }});
-            }}
-
-            playNextSentence();
+            document.getElementById('btnPrevPage').disabled = (cur <= 1);
+            document.getElementById('btnBottomPrev').disabled = (cur <= 1);
+            document.getElementById('btnNextPage').disabled = (cur >= total);
+            document.getElementById('btnBottomNext').disabled = (cur >= total);
         }}
 
-        function stopNovelAudio() {{
-            window.novelState.isPlayingAudio = false;
-            document.getElementById('audioPlayBtnText').textContent = '朗讀此頁';
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
-            document.querySelectorAll('.karaoke-current-word').forEach(el => el.classList.remove('karaoke-current-word'));
+        function saveBookmark(title, pageNum) {{
+            const key = 'novel_bookmark_' + encodeURIComponent(title);
+            localStorage.setItem(key, pageNum.toString());
         }}
 
-        // 單句點擊朗讀
-        function playSentenceAudio(text, rowEl) {{
-            document.querySelectorAll('.karaoke-active-sentence').forEach(el => el.classList.remove('karaoke-active-sentence'));
-            if (rowEl) rowEl.classList.add('karaoke-active-sentence');
-            speakWithKaraoke(text, rowEl, () => {{
-                if (rowEl) rowEl.classList.remove('karaoke-active-sentence');
-            }}, true);
-        }}
+        async function goToPage(targetPage) {{
+            const book = window.novelState.currentBook;
+            if (!book) return;
 
-        // 點擊文法標籤彈出解說卡
-        window.showNovelGrammarCard = function(grammarId) {{
-            const g = (typeof GRAMMAR_DATA !== 'undefined') ? GRAMMAR_DATA.find(item => item.id === grammarId) : null;
-            if (!g) return;
+            window.NovelAudio.stop(false);
 
-            document.getElementById('novelGrammarTitle').textContent = g.title || g.pattern;
-            document.getElementById('novelGrammarLevelBadge').textContent = g.level ? `${{g.level}} 文型` : '941 句型';
-            
-            let html = `
-                <div style="margin-bottom: 14px; background: rgba(99, 102, 241, 0.08); padding: 12px 16px; border-radius: 10px;">
-                    <div style="font-weight: 800; color: #6366f1; margin-bottom: 4px;">【接續形式】</div>
-                    <div>${{g.connection || '（無特定接續形式）'}}</div>
-                </div>
-                <div style="margin-bottom: 14px;">
-                    <div style="font-weight: 800; color: var(--text-main); margin-bottom: 4px;">【文法意思】</div>
-                    <div>${{g.meaning || g.meaning_zh || '請參照例句理解語意。'}}</div>
-                </div>
-            `;
+            if (targetPage < 1) targetPage = 1;
+            if (targetPage > book.totalPages) targetPage = book.totalPages;
 
-            if (g.examples && g.examples.length > 0) {{
-                html += `<div style="font-weight: 800; color: var(--text-main); margin-bottom: 6px;">【精選例句】</div><ul style="padding-left: 20px; line-height: 2;">`;
-                g.examples.forEach(ex => {{
-                    html += `<li><strong>${{ex.ja || ex}}</strong>${{ex.zh ? `<br><span style="color: var(--text-muted); font-size: 0.9em;">${{ex.zh}}</span>` : ''}}</li>`;
-                }});
-                html += `</ul>`;
+            if (targetPage >= window.novelState.loadedBatchStart && targetPage <= window.novelState.loadedBatchEnd) {{
+                window.novelState.currentPageIndex = targetPage;
+                renderCurrentPage();
+            }} else {{
+                const newStart = Math.max(1, targetPage - 2);
+                const newEnd = Math.min(book.totalPages, newStart + 4);
+                document.getElementById('inputStartPage').value = newStart;
+                document.getElementById('inputEndPage').value = newEnd;
+                showToast(`正在切換並解析第 ${{newStart}} ~ ${{newEnd}} 頁...`);
+                await startNovelReading();
+                window.novelState.currentPageIndex = targetPage;
+                renderCurrentPage();
             }}
+        }}
 
-            document.getElementById('novelGrammarBody').innerHTML = html;
-            document.getElementById('novelGrammarModal').style.display = 'flex';
-        }};
-
-        window.closeNovelGrammarModal = function() {{
-            document.getElementById('novelGrammarModal').style.display = 'none';
-        }};
-
-        // 剪貼簿貼上視窗
         window.openPasteModal = function() {{
             document.getElementById('pasteModal').style.display = 'flex';
         }};
@@ -1810,7 +2627,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     size_mb = os.path.getsize(out_file) / (1024 * 1024)
     print(f"[OK] 成功產出日文小說閱讀器：{out_file} ({size_mb:.2f} MB)")
 
-    # 另外建立 小說閱讀.html 供本地雙擊開啟
     alias_file = os.path.join(root, "小說閱讀.html")
     shutil.copy2(out_file, alias_file)
     print(f"[OK] 成功產出本地別名：{alias_file}")
