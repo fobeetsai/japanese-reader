@@ -4,12 +4,13 @@ sys.stdout.reconfigure(encoding='utf-8')
 SRC_PATH = r"C:\Users\fobee\.gemini\antigravity\brain\6d082372-7b23-40c1-9376-7edebe56bcfe\scratch\c0fac0b_novel.html"
 TARGET_NOVEL = r"C:\Users\fobee\我的雲端硬碟\Antigravity Apps\Ai agent\novel.html"
 TARGET_ALIAS = r"C:\Users\fobee\我的雲端硬碟\Antigravity Apps\Ai agent\小說閱讀.html"
+SCRIPT9_PATH = r"C:\Users\fobee\.gemini\antigravity\brain\6d082372-7b23-40c1-9376-7edebe56bcfe\scratch\script9_full.js"
 
-print("[1/4] 載入使用者認可之經典版型 c0fac0b_novel.html...")
+print("[1/5] 讀取原始 c0fac0b_novel.html 完整版型與代碼...")
 with open(SRC_PATH, "r", encoding="utf-8") as f:
     html = f.read()
 
-# 1. 在 <head> 中加入 no-referrer 與 Tesseract OCR
+# 1. 在 <head> 中加入 no-referrer 與 Tesseract OCR, epub, mammoth
 if '<meta name="referrer"' not in html:
     html = html.replace('<meta name="viewport"', '<meta name="referrer" content="no-referrer">\n    <meta name="viewport"')
 
@@ -26,7 +27,7 @@ ocr_btn_html = """
 if 'openOcrModal()' not in html:
     html = html.replace('<button class="pill-btn" id="btnOpenPasteModal"', ocr_btn_html + '\n                <button class="pill-btn" id="btnOpenPasteModal"')
 
-# 3. 在 novelReadingToolbar 中擴充：微軟真人語音選擇、重複次數、停止按鈕、生詞本與句子收藏庫按鈕
+# 3. 在 novelReadingToolbar 中擴充按鈕
 novel_audio_toolbar_html = """
                     <!-- 微軟自然真人語音切換 -->
                     <select id="novelVoiceSelect" class="novel-tool-btn" style="padding: 5px 8px; font-weight: 600;" title="切換微軟真人自然語音">
@@ -147,33 +148,45 @@ extra_modals_html = """
 if 'id="ocrModal"' not in html:
     html = html.replace('<div class="modal-overlay" id="pasteModal"', extra_modals_html + '\n    <div class="modal-overlay" id="pasteModal"')
 
-# 6. 修復 toastMsg 確保 showToast 絕不崩潰
+# 6. 修復 toastMsg
 if 'id="toastMsg"' not in html:
     html = html.replace('<div id="toast" class="toast"></div>', '<div id="toast" class="toast"><i class="fa-solid fa-circle-check text-emerald-400"></i> <span id="toastMsg">提示訊息</span></div>')
 
-print("[2/4] 升級 Script 9：寫入高相容自然真人語音、941 文法彈窗、收藏與 OCR 核心...")
+print("[2/5] 修復 Script 5 (master.html core_ui_script) 中潛在的 null reference 監聽器...")
+html = html.replace(
+    "dom.articleInput.addEventListener('input', () => {",
+    "if (dom.articleInput) dom.articleInput.addEventListener('input', () => {"
+).replace(
+    "dom.sampleButtonsList.innerHTML = '';",
+    "if (dom.sampleButtonsList) dom.sampleButtonsList.innerHTML = '';"
+)
 
-# 找到 Script 9 的起始位置並用完整升級版腳本替換
-script9_start = html.find('(function() {\n        // 小說專屬狀態管理')
-if script9_start == -1:
-    script9_start = html.find('(function() {\r\n        // 小說專屬狀態管理')
+print("[3/5] 替換 Script 9 為升級版小說控制模組 (包含 5 本名著範本、Edge真人雙聲道、941文法連動)...")
 
-# 讀取全新的 Script 9 代碼
-script9_upgrade_path = r"C:\Users\fobee\.gemini\antigravity\brain\6d082372-7b23-40c1-9376-7edebe56bcfe\scratch\script9_full.js"
-with open(script9_upgrade_path, "r", encoding="utf-8") as f:
-    script9_code = f.read()
+# 找到 Script 9 的標籤位置
+# 在 c0fac0b_novel.html 中，Script 9 是最後一個 <script> 區塊
+last_script_tag = html.rfind('<script>')
+if last_script_tag == -1:
+    last_script_tag = html.rfind('<script ')
 
-# 截取前半部 HTML 直到 Script 9
-prefix_html = html[:script9_start]
-suffix_html = "\n" + script9_code + "\n</body>\n</html>"
+with open(SCRIPT9_PATH, "r", encoding="utf-8") as f:
+    script9_code = f.read().strip()
 
-final_html = prefix_html + suffix_html
+# 組合最終 HTML：保留前面的所有 HTML，並確保 <script> 與 </script> 100% 閉合
+prefix = html[:last_script_tag]
+final_html = f"""{prefix}
+    <script>
+{script9_code}
+    </script>
+</body>
+</html>
+"""
 
-print("[3/4] 寫入目標檔案...")
+print("[4/5] 寫入目標檔案...")
 with open(TARGET_NOVEL, "w", encoding="utf-8") as f:
     f.write(final_html)
-print(f"[OK] 成功更新 novel.html ({len(final_html)} 字元)")
+print(f"[OK] 成功更新 {TARGET_NOVEL} ({len(final_html)} 字元)")
 
 with open(TARGET_ALIAS, "w", encoding="utf-8") as f:
     f.write(final_html)
-print(f"[OK] 成功更新 小說閱讀.html")
+print(f"[OK] 成功更新 {TARGET_ALIAS}")

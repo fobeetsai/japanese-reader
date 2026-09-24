@@ -6230,7 +6230,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             if (dom.btnThemeToggle) dom.btnThemeToggle.addEventListener('click', () => setTheme(state.theme === 'light' ? 'dark' : 'light'));
 
             if (dom.articleInput) {
-                dom.articleInput.addEventListener('input', () => {
+                if (dom.articleInput) dom.articleInput.addEventListener('input', () => {
                     if (dom.inputCharCount) dom.inputCharCount.textContent = `已輸入 ${dom.articleInput.value.length} 字`;
                 });
             }
@@ -6463,7 +6463,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         function renderSampleButtons() {
-            dom.sampleButtonsList.innerHTML = '';
+            if (dom.sampleButtonsList) dom.sampleButtonsList.innerHTML = '';
             SAMPLE_ARTICLES.forEach(a => {
                 const btn = document.createElement('button');
                 btn.className = 'sample-btn';
@@ -9094,8 +9094,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     <!-- ==========================================================================
          小說專屬核心引擎 (Novel Engine)
          ========================================================================== -->
-    <script>
     
+    <script>
 (function() {
         // 小說專屬狀態管理
         window.novelState = {
@@ -10343,6 +10343,6 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
     })();
-
+    </script>
 </body>
 </html>
