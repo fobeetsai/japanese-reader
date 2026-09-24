@@ -86,6 +86,13 @@
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
 }
 
+.cross-app-nav-bar .nav-link-btn.active-novel {
+  color: #ffffff;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+}
+
 @media (max-width: 640px) {
   .cross-app-nav-bar {
     padding: 6px 10px;
