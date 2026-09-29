@@ -4128,13 +4128,22 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     }
 }
 
+    /* 小说阅读与阅读高手共用当前页，工作台仅在需要时加载。 */
+.novel-home-row { max-width: 1360px; margin: 12px auto; }
+.novel-learning-panel { max-width: 1360px; margin: 24px auto 48px; border: 1px solid var(--novel-border); border-radius: 16px; overflow: hidden; background: var(--novel-card-bg); }
+.novel-learning-panel[hidden] { display: none; }
+.novel-learning-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--novel-border); }
+.novel-learning-header strong { display: block; color: var(--novel-text); }
+.novel-learning-header small { display: block; margin-top: 3px; color: var(--text-muted); }
+#novelMasterFrame { display: block; width: 100%; min-height: 1100px; border: 0; background: #fff; }
+@media (max-width: 700px) { #novelMasterFrame { min-height: 900px; } .novel-learning-header { align-items: flex-start; } }
     </style>
 </head>
 <body data-theme="light" data-novel-theme="sepia" data-novel-font="serif" data-novel-ruby="show" data-novel-grammar="show" data-novel-vocab-color="show">
 
     <!-- 全站同源統一頂部導覽列 -->
     <nav class="cross-app-nav-bar" id="learningAppsNav" aria-label="其他學習工具">
-        <a href="master.html" class="nav-brand">
+        <a href="novel.html" class="nav-brand" title="回到小說閱讀首頁">
             <span>🇯🇵 日語學習全方位生態系</span>
             <span class="badge-sync">小說閱讀專用版</span>
         </a>
@@ -4158,6 +4167,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     </nav>
 
     <div class="novel-app-container">
+        <div class="novel-home-row"><button class="novel-tool-btn" id="btnNovelHome" type="button"><i class="fa-solid fa-house"></i> 回到首頁</button></div>
 
         <!-- 檔案匯入面板 (可導入任何類型的檔案 如PDF 等) -->
         <section class="novel-import-card" id="novelImportCard">
@@ -4187,14 +4197,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     <i class="fa-solid fa-camera"></i> 拍照 / 圖片 OCR 辨識
                 </button>
 
-                <button class="pill-btn" id="btnOpenPasteModal" style="padding: 10px 18px; font-weight: 700;">
+                <button class="pill-btn" id="btnOpenPasteModal" onclick="openPasteModal()" style="padding: 10px 18px; font-weight: 700;">
                     <i class="fa-solid fa-paste"></i> 貼上文章
                 </button>
             </div>
 
             <!-- 名著範本文摘快速載入 -->
             <div class="novel-samples-row">
-                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-wand-magic-sparkles"></i> 名作試讀：</span>
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);"><i class="fa-solid fa-wand-magic-sparkles"></i> 名作節錄試讀：</span>
                 <button class="sample-novel-btn" onclick="loadSampleNovel('kokoro')">
                     <span>🌸 夏目漱石《心》</span>
                 </button>
@@ -4351,12 +4361,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     </button>
 
                     <!-- 我的生詞本抽屜按鈕 -->
-                    <button class="novel-tool-btn" id="btnOpenNotebookModal" onclick="openNotebookModal()" title="開啟日語生詞本">
+                    <button class="novel-tool-btn" id="btnOpenNotebookModal" title="開啟閱讀高手單字複習">
                         <i class="fa-solid fa-bookmark text-amber-500"></i> 生詞本 <span class="novel-badge" id="savedWordsCountBadge" style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 9999px; font-size: 0.75rem; margin-left: 4px;">0</span>
                     </button>
 
                     <!-- 我的收藏句子抽屜按鈕 -->
-                    <button class="novel-tool-btn" id="btnOpenSavedSentences" onclick="openSavedSentencesModal()" title="查看已收藏的日語句子">
+                    <button class="novel-tool-btn" id="btnOpenSavedSentences" title="查看已收藏的日語句子">
                         <i class="fa-solid fa-star text-amber-500"></i> 收藏句子 <span class="novel-badge" id="savedSentencesCountBadge" style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 9999px; font-size: 0.75rem; margin-left: 4px;">0</span>
                     </button>
 
@@ -4365,6 +4375,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                         <i class="fa-solid fa-volume-high"></i> <span id="audioPlayBtnText">朗讀此頁</span>
                     </button>
 
+                    <button class="novel-tool-btn" id="btnOpenLearning" type="button" title="在本頁使用閱讀高手的句解、雙語、跟讀與複習"><i class="fa-solid fa-graduation-cap"></i> 深度學習本頁</button>
                     <button class="novel-tool-btn" onclick="openFilePicker()" title="開啟其他檔案">
                         <i class="fa-solid fa-folder-open"></i> 換書
                     </button>
@@ -4391,6 +4402,13 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             </div>
         </section>
 
+        <section class="novel-learning-panel" id="novelLearningPanel" hidden aria-label="閱讀高手學習工作台">
+            <div class="novel-learning-header">
+                <div><strong>閱讀高手・本頁深度學習</strong><small id="learningPageLabel">句解、941 文法、雙語閱讀、跟讀與單字複習</small></div>
+                <button class="novel-tool-btn" id="btnCloseLearning" type="button">收起工作台</button>
+            </div>
+            <iframe id="novelMasterFrame" title="閱讀高手完整學習工作台" loading="lazy" referrerpolicy="same-origin"></iframe>
+        </section>
     </div>
 
     <!-- 剪貼簿貼上彈窗 -->
@@ -5920,6 +5938,11 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         const TRANSLATE_CACHE = new Map([
+            ['コンクリート', '混凝土'],
+            ['配筋', '鋼筋配置'],
+            ['型枠', '模板'],
+            ['打設', '澆置（混凝土）'],
+            ['打設前', '澆置前'],
             ['する', '做、幹、進行'],
             ['できる', '能夠、會、可以'],
             ['いる', '在、有'],
@@ -6178,6 +6201,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
         document.addEventListener('DOMContentLoaded', () => {
             initGrammarPatterns();
+            if (!dom.articleInput) {
+                loadNotebook();
+                dom.btnPlayWordAudio?.addEventListener('click', () => speakJapanese(dom.popoverWordSurface.textContent));
+                document.addEventListener('click', e => {
+                    if (dom.wordPopover && !dom.wordPopover.contains(e.target) && !e.target.closest('.novel-sentence .token')) closeWordPopover();
+                });
+                return;
+            }
             loadSavedSettings();
             loadNotebook();
             setupEventListeners();
@@ -9067,6 +9098,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         function onInit() {
+            if (!document.getElementById('articleInput')) return;
             initMasterListeners();
 
             // 首次開啟自動加載範例一
@@ -9385,6 +9417,19 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             }
         }
 
+        function syncSentenceWithReview(text, isSaved) {
+            try {
+                const stars = JSON.parse(localStorage.getItem('master_starred_sentences') || '[]');
+                const index = stars.findIndex(item => item.text === text);
+                if (isSaved && index < 0) stars.push({ text, translation: '', date: new Date().toLocaleDateString() });
+                if (!isSaved && index >= 0) stars.splice(index, 1);
+                localStorage.setItem('master_starred_sentences', JSON.stringify(stars));
+                document.getElementById('novelMasterFrame')?.contentWindow?.postMessage({ type: 'novel:review-updated' }, location.origin);
+            } catch (err) {
+                console.error('Could not update review sentences', err);
+            }
+        }
+
         function toggleFavoriteSentence(text, pageNum, bookTitle) {
             let list = getSavedSentences();
             const idx = list.findIndex(item => item.text === text);
@@ -9408,6 +9453,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
             try {
                 localStorage.setItem('novel_saved_sentences', JSON.stringify(list));
+                syncSentenceWithReview(text, isNowFav);
             } catch (err) {
                 console.error(err);
             }
@@ -9477,8 +9523,10 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
         window.deleteSavedSentence = function(id) {
             let list = getSavedSentences();
+            const removed = list.find(item => item.id === id);
             list = list.filter(item => item.id !== id);
             localStorage.setItem('novel_saved_sentences', JSON.stringify(list));
+            if (removed) syncSentenceWithReview(removed.text, false);
             updateSavedSentencesCountBadge();
             renderSavedSentencesList();
             showToast('已刪除收藏句子。');
@@ -9792,8 +9840,9 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const pdfDoc = await loadingTask.promise;
             const totalPages = pdfDoc.numPages;
 
+            window.novelState.pagesCache = {};
             window.novelState.currentBook = {
-                title: file.name.replace(/\\.pdf$/i, ''),
+                title: file.name.replace(/\.pdf$/i, ''),
                 type: 'pdf',
                 totalPages: totalPages,
                 pdfDoc: pdfDoc,
@@ -9819,16 +9868,16 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             for (let i = 0; i < totalSections; i++) {
                 const section = spine.get(i);
                 const doc = await section.load(book.load.bind(book));
-                const text = doc.body ? doc.body.innerText.trim() : '';
-                if (text.length > 50) {
-                    pages.push(text);
-                }
+                const text = doc.body ? (doc.body.innerText || doc.body.textContent || '').trim() : '';
+                if (text) pages.push(text);
+                section.unload?.();
             }
 
             if (pages.length === 0) pages.push("EPUB 解析無文字內容。");
 
+            window.novelState.pagesCache = {};
             window.novelState.currentBook = {
-                title: file.name.replace(/\\.epub$/i, ''),
+                title: file.name.replace(/\.epub$/i, ''),
                 type: 'epub',
                 totalPages: pages.length,
                 pagesData: pages,
@@ -9852,38 +9901,41 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         }
 
         function paginateTextBook(title, fullText, type) {
-            const paragraphs = fullText.split(/\\r?\\n+/);
+            // Samples from older builds contain literal \n; imported files use real line breaks.
+            const normalized = String(fullText || '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\r\n?/g, '\n');
+            const paragraphs = normalized.split(/\n+/).map(p => p.trim()).filter(Boolean);
             const pages = [];
-            let curPage = '';
-            const CHARS_PER_PAGE = 900;
+            const CHARS_PER_PAGE = 500;
+            let current = '';
+            const flush = () => { if (current.trim()) pages.push(current.trim()); current = ''; };
 
-            for (const p of paragraphs) {
-                const trimmed = p.trim();
-                if (!trimmed) continue;
-                if ((curPage.length + trimmed.length) > CHARS_PER_PAGE && curPage.length > 300) {
-                    pages.push(curPage.trim());
-                    curPage = trimmed + '\\n\\n';
-                } else {
-                    curPage += trimmed + '\\n\\n';
+            for (const paragraph of paragraphs) {
+                // A chapter without paragraph breaks must also span multiple pages.
+                let remaining = paragraph;
+                while (remaining.length) {
+                    const room = CHARS_PER_PAGE - current.length;
+                    if (room < 80) { flush(); continue; }
+                    if (remaining.length <= room) {
+                        current += remaining + '\n\n';
+                        break;
+                    }
+                    let cut = Math.max(1, room);
+                    const naturalBreak = Math.max(remaining.lastIndexOf('。', cut), remaining.lastIndexOf('！', cut), remaining.lastIndexOf('？', cut));
+                    if (naturalBreak > Math.floor(room * 0.55)) cut = naturalBreak + 1;
+                    current += remaining.slice(0, cut);
+                    remaining = remaining.slice(cut);
+                    flush();
                 }
             }
-            if (curPage.trim()) {
-                pages.push(curPage.trim());
-            }
+            flush();
+            if (!pages.length) pages.push('（此檔案無有效日文文本）');
 
-            if (pages.length === 0) pages.push("（此檔案無有效日文文本）");
-
+            window.NovelAudio?.stop(false);
+            window.novelState.pagesCache = {};
             window.novelState.currentBook = {
-                title: title,
-                type: type,
-                totalPages: pages.length,
-                pagesData: pages,
-                getPageText: async function(pageNum) {
-                    const idx = pageNum - 1;
-                    return pages[idx] || '';
-                }
+                title, type, totalPages: pages.length, pagesData: pages,
+                getPageText: async pageNum => pages[pageNum - 1] || ''
             };
-
             openPageSelector(title, pages.length);
         }
 
@@ -9932,14 +9984,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
         window.closePageSelector = function() {
             document.getElementById('pageSelectorCard').style.display = 'none';
-            document.getElementById('novelImportCard').style.display = 'block';
+            document.getElementById(window.novelState.pagesCache[window.novelState.currentPageIndex] ? 'novelMainSection' : 'novelImportCard').style.display = 'block';
         };
 
         async function startNovelReading() {
             const book = window.novelState.currentBook;
             if (!book) return;
 
-            const startPage = Math.max(1, parseInt(document.getElementById('inputStartPage').value, 10) || 1);
+            const startPage = Math.min(book.totalPages, Math.max(1, parseInt(document.getElementById('inputStartPage').value, 10) || 1));
             const endPage = Math.min(book.totalPages, Math.max(startPage, parseInt(document.getElementById('inputEndPage').value, 10) || 1));
 
             window.novelState.loadedBatchStart = startPage;
@@ -9972,6 +10024,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
                 updateToolbarInfo();
                 renderCurrentPage();
+                syncLearningPage();
                 showToast(`已成功載入第 ${startPage} ~ ${endPage} 頁！`);
                 saveBookmark(book.title, startPage);
             } catch (err) {
@@ -10020,6 +10073,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 // 注入 tokens
                 renderSentenceTokensWithGrammar(sSpan, s, isFav, pNum, bookTitle);
 
+                sSpan.title = '點擊使用閱讀高手分析本句';
+                sSpan.addEventListener('click', () => openLearningPanel('deep', sIdx));
                 curParagraphEl.appendChild(sSpan);
 
                 if (s.text.endsWith('\\n') || s.text.includes('\\n')) {
@@ -10042,10 +10097,13 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 
         function renderSentenceTokensWithGrammar(sentenceSpan, s, isFav, pNum, bookTitle) {
             const words = s.words || [];
+            let charOffset = 0;
 
             words.forEach(w => {
                 const tokenSpan = document.createElement('span');
                 tokenSpan.className = 'token';
+                const tokenStart = charOffset;
+                charOffset += w.surface.length;
 
                 if (w.jlpt && window.novelState.showVocabColor) {
                     tokenSpan.classList.add(`vocab-${w.jlpt.toLowerCase()}`);
@@ -10054,16 +10112,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 const rubyMode = window.novelState.rubyMode;
                 const showFurigana = rubyMode === 'show' || (rubyMode === 'hard-only' && w.jlpt && ['N1','N2','N3'].includes(w.jlpt));
 
-                if (w.reading && w.reading !== w.surface && showFurigana && /[\\u4e00-\\u9faf]/.test(w.surface)) {
+                if (w.reading && w.reading !== w.surface && showFurigana && /[\u3400-\u9fff]/.test(w.surface)) {
                     tokenSpan.innerHTML = `<ruby>${escapeHtml(w.surface)}<rt>${escapeHtml(w.reading)}</rt></ruby>`;
                 } else {
                     tokenSpan.textContent = w.surface;
                 }
 
                 // 941 文法高亮與點擊彈出
-                const matchingGrammar = (s.grammars || []).find(g => {
-                    return s.text.includes(g.title) && (w.surface.includes(g.title) || g.title.includes(w.surface));
-                });
+                const matchingGrammar = (s.grammars || []).find(g => tokenStart < g.end && charOffset > g.start);
 
                 if (matchingGrammar && window.novelState.showGrammar) {
                     tokenSpan.classList.add('grammar-highlight');
@@ -10145,6 +10201,48 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         // ==========================================================================
         function setupToolbarEvents() {
             document.getElementById('btnStartNovelReading').addEventListener('click', startNovelReading);
+            document.getElementById('btnNovelHome').onclick = resetNovelHome;
+            document.getElementById('btnOpenLearning').onclick = () => openLearningPanel('deep');
+            document.getElementById('btnCloseLearning').onclick = () => { document.getElementById('novelLearningPanel').hidden = true; };
+            document.getElementById('btnOpenNotebookModal').onclick = () => openLearningPanel('review', 0, 'notebook');
+            document.getElementById('btnOpenSavedSentences').onclick = () => window.openSavedSentencesModal();
+            document.getElementById('novelMasterFrame').addEventListener('load', () => syncLearningPage());
+            window.addEventListener('message', event => {
+                if (event.origin === location.origin && event.source === document.getElementById('novelMasterFrame').contentWindow && event.data?.type === 'novel:view-changed') {
+                    window.novelState.learningView = event.data.view;
+                }
+            });
+            document.getElementById('btnToggleFontFamily').onclick = () => {
+                const next = window.novelState.fontFamily === 'serif' ? 'sans' : 'serif';
+                window.novelState.fontFamily = next;
+                document.body.dataset.novelFont = next;
+                document.getElementById('btnToggleFontFamily').innerHTML = next === 'serif' ? '<i class="fa-solid fa-pen-nib"></i> 明朝體' : '<i class="fa-solid fa-font"></i> 黑體';
+            };
+            document.getElementById('btnCycleTheme').onclick = () => {
+                const themes = ['sepia', 'mint', 'dark', 'white'];
+                const labels = { sepia: '紙質', mint: '護眼', dark: '夜間', white: '純白' };
+                window.novelState.theme = themes[(themes.indexOf(window.novelState.theme) + 1) % themes.length];
+                document.body.dataset.novelTheme = window.novelState.theme;
+                document.getElementById('themeLabel').textContent = labels[window.novelState.theme];
+            };
+            document.getElementById('novelPageIndicator').onclick = () => {
+                const book = window.novelState.currentBook;
+                if (!book) return;
+                const input = prompt(`請輸入頁碼（1～${book.totalPages}）`, String(window.novelState.currentPageIndex));
+                if (input === null) return;
+                const page = Number(input);
+                if (Number.isInteger(page) && page >= 1 && page <= book.totalPages) goToPage(page);
+                else showToast(`請輸入 1～${book.totalPages} 的頁碼`);
+            };
+            document.getElementById('pageRangeSlider').oninput = e => {
+                const start = Number(e.target.value);
+                const end = Number(document.getElementById('inputEndPage').value);
+                document.getElementById('inputStartPage').value = start;
+                if (end < start) document.getElementById('inputEndPage').value = start;
+            };
+            document.getElementById('inputStartPage').oninput = e => {
+                document.getElementById('pageRangeSlider').value = e.target.value;
+            };
 
             // 朗讀按鈕
             document.getElementById('btnPlayNovelAudio').onclick = () => {
@@ -10174,14 +10272,20 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             };
 
             // 翻頁事件
-            document.getElementById('btnFirstPage').onclick = () => goToPage(window.novelState.loadedBatchStart);
+            document.getElementById('btnFirstPage').onclick = () => goToPage(1);
             document.getElementById('btnPrevPage').onclick = () => goToPage(window.novelState.currentPageIndex - 1);
             document.getElementById('btnNextPage').onclick = () => goToPage(window.novelState.currentPageIndex + 1);
-            document.getElementById('btnLastPage').onclick = () => goToPage(window.novelState.loadedBatchEnd);
+            document.getElementById('btnLastPage').onclick = () => goToPage(window.novelState.currentBook.totalPages);
+            document.getElementById('btnBottomPrev').onclick = () => goToPage(window.novelState.currentPageIndex - 1);
+            document.getElementById('btnBottomNext').onclick = () => goToPage(window.novelState.currentPageIndex + 1);
 
             document.getElementById('btnChangeRange').onclick = () => {
                 const book = window.novelState.currentBook;
-                if (book) openPageSelector(book.title, book.totalPages);
+                if (book) {
+                    openPageSelector(book.title, book.totalPages);
+                    document.getElementById('inputStartPage').value = window.novelState.currentPageIndex;
+                    document.getElementById('inputEndPage').value = Math.min(book.totalPages, window.novelState.currentPageIndex + 4);
+                }
             };
 
             // 縱橫排切換
@@ -10272,28 +10376,100 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('curPageNumDisplay').textContent = cur;
             document.getElementById('totalPageNumDisplay').textContent = total;
             document.getElementById('batchRangeBadge').textContent = `${window.novelState.loadedBatchStart}~${window.novelState.loadedBatchEnd}`;
+            document.getElementById('bottomProgressText').textContent = `進度：第 ${cur} / ${total} 頁`;
 
             const percent = ((cur / total) * 100).toFixed(1);
             document.getElementById('novelProgressBarFill').style.width = `${percent}%`;
 
-            document.getElementById('btnFirstPage').disabled = (cur <= window.novelState.loadedBatchStart);
-            document.getElementById('btnPrevPage').disabled = (cur <= window.novelState.loadedBatchStart);
-            document.getElementById('btnNextPage').disabled = (cur >= window.novelState.loadedBatchEnd);
-            document.getElementById('btnLastPage').disabled = (cur >= window.novelState.loadedBatchEnd);
+            document.getElementById('btnFirstPage').disabled = cur <= 1;
+            document.getElementById('btnPrevPage').disabled = cur <= 1;
+            document.getElementById('btnBottomPrev').disabled = cur <= 1;
+            document.getElementById('btnNextPage').disabled = cur >= total;
+            document.getElementById('btnBottomNext').disabled = cur >= total;
+            document.getElementById('btnLastPage').disabled = cur >= total;
         }
 
-        function goToPage(targetPage) {
+        async function goToPage(targetPage) {
+            const book = window.novelState.currentBook;
+            if (!book || targetPage < 1 || targetPage > book.totalPages) return;
             window.NovelAudio.stop(false);
-            const start = window.novelState.loadedBatchStart;
-            const end = window.novelState.loadedBatchEnd;
-            if (targetPage >= start && targetPage <= end) {
-                window.novelState.currentPageIndex = targetPage;
-                updateToolbarInfo();
-                renderCurrentPage();
-                document.getElementById('novelPagesScrollContainer').scrollTop = 0;
-                document.getElementById('novelPagesScrollContainer').scrollLeft = 0;
-                saveBookmark(window.novelState.currentBook.title, targetPage);
+            if (targetPage < window.novelState.loadedBatchStart || targetPage > window.novelState.loadedBatchEnd) {
+                // Crossing a batch boundary fetches and analyzes the requested page.
+                // Keep the batch small so long novels remain responsive.
+                window.novelState.loadedBatchStart = targetPage;
+                window.novelState.loadedBatchEnd = Math.min(book.totalPages, targetPage + 4);
             }
+            if (!window.novelState.pagesCache[targetPage]?.analyzed) {
+                document.getElementById('novelLoadingState').style.display = 'flex';
+                document.getElementById('novelLoadingText').textContent = `正在解析第 ${targetPage} 頁...`;
+                try {
+                    const text = await book.getPageText(targetPage);
+                    window.novelState.pagesCache[targetPage] = { text, analyzed: await clientAnalyzeText(text, false) };
+                } catch (err) {
+                    showToast(`第 ${targetPage} 頁解析失敗：${err.message}`);
+                    return;
+                } finally {
+                    document.getElementById('novelLoadingState').style.display = 'none';
+                }
+            }
+            window.novelState.currentPageIndex = targetPage;
+            updateToolbarInfo();
+            renderCurrentPage();
+            document.getElementById('novelContentBox').scrollTop = 0;
+            document.getElementById('novelContentBox').scrollLeft = 0;
+            saveBookmark(book.title, targetPage);
+            syncLearningPage();
+        }
+
+        window.setPageBatch = function(count) {
+            const book = window.novelState.currentBook;
+            if (!book) return;
+            const start = Math.min(book.totalPages, Math.max(1, Number(document.getElementById('inputStartPage').value) || 1));
+            document.getElementById('inputEndPage').value = Math.min(book.totalPages, start + count - 1);
+        };
+        window.shiftPageBatch = function(direction) {
+            const book = window.novelState.currentBook;
+            if (!book) return;
+            const startInput = document.getElementById('inputStartPage');
+            const endInput = document.getElementById('inputEndPage');
+            const size = Math.max(1, (Number(endInput.value) || 1) - (Number(startInput.value) || 1) + 1);
+            const start = Math.min(book.totalPages, Math.max(1, (Number(startInput.value) || 1) + direction * size));
+            startInput.value = start;
+            endInput.value = Math.min(book.totalPages, start + size - 1);
+        };
+
+        function resetNovelHome() {
+            window.NovelAudio.stop(false);
+            document.getElementById('pageSelectorCard').style.display = 'none';
+            document.getElementById('novelLoadingState').style.display = 'none';
+            document.getElementById('novelMainSection').style.display = 'none';
+            document.getElementById('novelLearningPanel').hidden = true;
+            document.getElementById('novelImportCard').style.display = 'block';
+            document.getElementById('novelImportCard').scrollIntoView({ block: 'start' });
+        }
+
+        function syncLearningPage(sentenceIndex = 0, view = window.novelState.learningView || 'deep', section = window.novelState.learningSection || '') {
+            const panel = document.getElementById('novelLearningPanel');
+            const frame = document.getElementById('novelMasterFrame');
+            const book = window.novelState.currentBook;
+            const page = window.novelState.currentPageIndex;
+            if (panel.hidden || !frame.contentWindow || !book) return;
+            const text = window.novelState.pagesCache[page]?.text;
+            if (!text) return;
+            document.getElementById('learningPageLabel').textContent = `${book.title}・第 ${page} / ${book.totalPages} 頁`;
+            frame.contentWindow.postMessage({ type: 'novel:load-page', title: `${book.title}・第 ${page} 頁`, text, sentenceIndex, view, section }, location.origin);
+            window.novelState.learningSection = '';
+        }
+
+        function openLearningPanel(view = 'deep', sentenceIndex = 0, section = '') {
+            const panel = document.getElementById('novelLearningPanel');
+            const frame = document.getElementById('novelMasterFrame');
+            window.novelState.learningView = view;
+            window.novelState.learningSection = section;
+            panel.hidden = false;
+            if (!frame.getAttribute('src')) frame.setAttribute('src', 'master.html?embedded=novel');
+            else syncLearningPage(sentenceIndex, view);
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function saveBookmark(title, page) {

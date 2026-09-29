@@ -6235,6 +6235,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         }
 
         const TRANSLATE_CACHE = new Map([
+            ['コンクリート', '混凝土'],
+            ['配筋', '鋼筋配置'],
+            ['型枠', '模板'],
+            ['打設', '澆置（混凝土）'],
+            ['打設前', '澆置前'],
             ['する', '做、幹、進行'],
             ['できる', '能夠、會、可以'],
             ['いる', '在、有'],
@@ -6862,6 +6867,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 state.currentSentenceIdx = 0;
 
                 renderReaderView();
+                window.onMasterAnalysisReady?.();
                 showToast('文章解析完成！100% 漢字假名已標註完畢');
                 dom.readerDeck.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
@@ -6870,6 +6876,20 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                 dom.loadingState.style.display = 'none';
             }
         }
+
+        window.loadNovelPageIntoMaster = async function({ title, text, sentenceIndex = 0, view = 'deep', section = '' }) {
+            if (!text || !dom.articleInput) return;
+            dom.articleInput.value = text;
+            dom.readerArticleTitle.textContent = title || '小說閱讀';
+            if (dom.inputCharCount) dom.inputCharCount.textContent = `已輸入 ${text.length} 字`;
+            // The book may contain many sentences. Translation remains available
+            // through the visible checkbox and reanalysis button when requested.
+            dom.chkAutoTranslate.checked = false;
+            await handleStartReadingClient();
+            selectSentence(Math.max(0, Math.min(sentenceIndex, (state.analyzedData?.sentences.length || 1) - 1)));
+            window.switchMasterView?.(view);
+            if (section === 'notebook') openNotebookModal();
+        };
 
         function renderReaderView() {
             const data = state.analyzedData;
@@ -9607,7 +9627,11 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
 
             document.querySelectorAll('.master-tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.view === viewId);
+                btn.setAttribute('aria-selected', String(btn.dataset.view === viewId));
             });
+            if (new URLSearchParams(location.search).get('embedded') === 'novel') {
+                window.parent.postMessage({ type: 'novel:view-changed', view: viewId }, location.origin);
+            }
 
             document.querySelectorAll('.master-view-pane').forEach(p => p.classList.remove('active'));
 
@@ -10540,6 +10564,12 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             updateReviewCounters();
         };
 
+        window.onMasterAnalysisReady = () => {
+            renderTrancyStream();
+            updateShadowingCard(0);
+            updateReviewCounters();
+        };
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', onInit);
         } else {
@@ -10549,6 +10579,8 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
         function onInit() {
             initMasterListeners();
 
+            // Embedded novel pages supply their own text; do not replace it with a sample.
+            if (new URLSearchParams(location.search).get('embedded') === 'novel') return;
             // 首次開啟自動加載範例一
             setTimeout(() => {
                 const sentences = getSentences();
@@ -10620,5 +10652,19 @@ window.readerSendWord = index => { const w=state.notebook.words[index]; if(w) se
 <script src="static/master/drive-store.js?v=20260922-2"></script>
 <script src="static/master/reader-cloud.js?v=20260922-2"></script>
 
+<script>
+    window.addEventListener('message', event => {
+        if (event.origin !== location.origin || event.source !== window.parent) return;
+        if (event.data?.type === 'novel:review-updated') {
+            try {
+                window.readerSetStars?.(JSON.parse(localStorage.getItem('master_starred_sentences') || '[]'));
+                window.ReaderCloud?.changed();
+            } catch (err) { console.error('Could not refresh review sentences', err); }
+            return;
+        }
+        if (event.data?.type !== 'novel:load-page') return;
+        window.loadNovelPageIntoMaster?.(event.data);
+    });
+</script>
 </body>
 </html>
