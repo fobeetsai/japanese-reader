@@ -36,7 +36,7 @@ for (const page of ['master.html', 'novel.html']) {
     }
     vm.runInContext('initGrammarPatterns()', context);
     const falseCitation = vm.runInContext('findSentenceGrammars("海岸へ行って泳いだ。", tokenizeSentence("海岸へ行って泳いだ。"))', context);
-    assert.ok(!falseCitation.some(item => item.title.includes('引用')), `${page}: 行って is not a quotation`);
+    assert.ok(!falseCitation.some(item => item.matched_text === 'って'), `${page}: 行って is an inflection, not a って grammar`);
     const realCitation = vm.runInContext('findSentenceGrammars("明日行くって。", tokenizeSentence("明日行くって。"))', context);
     assert.ok(realCitation.some(item => item.title.includes('引用')), `${page}: 行くって remains a quotation`);
     const kunHtml = vm.runInContext('getKanjiReadingsHtml("行って", "いって")', context);

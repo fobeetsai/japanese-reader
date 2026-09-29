@@ -5136,7 +5136,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     const endPos = pos + pat.length;
 
                     // 活用語尾の「って」は引用助詞ではない（例：行って、泳いで）。
-                    if (pat === 'って' && /引用/.test(g.title || '') && wordSpans.some(span =>
+                    if (pat === 'って' && wordSpans.some(span =>
                         span.start < pos && endPos <= span.end &&
                         span.word.base_form !== span.word.surface &&
                         (span.word.pos === '動詞' || span.word.pos === '形容詞'))) {
