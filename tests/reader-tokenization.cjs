@@ -34,6 +34,11 @@ for (const page of ['master.html', 'novel.html']) {
         assert.ok(token, `${page}: missing 行 token in ${sentence}`);
         assert.equal(token.reading, expected, `${page}: ${sentence}`);
     }
+    vm.runInContext('initGrammarPatterns()', context);
+    const falseCitation = vm.runInContext('findSentenceGrammars("海岸へ行って泳いだ。", tokenizeSentence("海岸へ行って泳いだ。"))', context);
+    assert.ok(!falseCitation.some(item => item.title.includes('引用')), `${page}: 行って is not a quotation`);
+    const realCitation = vm.runInContext('findSentenceGrammars("明日行くって。", tokenizeSentence("明日行くって。"))', context);
+    assert.ok(realCitation.some(item => item.title.includes('引用')), `${page}: 行くって remains a quotation`);
     const kunHtml = vm.runInContext('getKanjiReadingsHtml("行って", "いって")', context);
     assert.match(kunHtml, /和語型・訓讀/);
     assert.match(kunHtml, /【訓讀】/);

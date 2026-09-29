@@ -4817,9 +4817,15 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             COMPILED_GRAMMAR_PATTERNS.sort((a, b) => b.pattern.length - a.pattern.length);
         }
 
-        function findSentenceGrammars(sentenceText) {
+        function findSentenceGrammars(sentenceText, words = []) {
             const found = [];
             const matchedSpans = [];
+            let tokenOffset = 0;
+            const wordSpans = words.map(word => {
+                const span = { start: tokenOffset, end: tokenOffset + word.surface.length, word };
+                tokenOffset = span.end;
+                return span;
+            });
 
             for (let i = 0; i < COMPILED_GRAMMAR_PATTERNS.length; i++) {
                 const pInfo = COMPILED_GRAMMAR_PATTERNS[i];
@@ -4831,6 +4837,15 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                     const pos = sentenceText.indexOf(pat, startIdx);
                     if (pos === -1) break;
                     const endPos = pos + pat.length;
+
+                    // 活用語尾の「って」は引用助詞ではない（例：行って、泳いで）。
+                    if (pat === 'って' && /引用/.test(g.title || '') && wordSpans.some(span =>
+                        span.start < pos && endPos <= span.end &&
+                        span.word.base_form !== span.word.surface &&
+                        (span.word.pos === '動詞' || span.word.pos === '形容詞'))) {
+                        startIdx = pos + 1;
+                        continue;
+                    }
 
                     if ((pat === 'ちゃ' || pat === 'じゃ') && endPos < sentenceText.length &&
                         (sentenceText[endPos] === 'ん' || sentenceText[endPos] === 'ン')) {
@@ -5902,7 +5917,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             for (let sIdx = 0; sIdx < sentencesRaw.length; sIdx++) {
                 const sText = sentencesRaw[sIdx];
                 const words = tokenizeSentence(sText);
-                const grammars = findSentenceGrammars(sText);
+                const grammars = findSentenceGrammars(sText, words);
 
                 words.forEach(w => {
                     if (w.jlpt && jlptCounts[w.jlpt] !== undefined) {
