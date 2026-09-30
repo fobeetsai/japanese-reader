@@ -18,7 +18,8 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="static/vendor/ocr/tesseract.min.js?v=5.1.1"></script>
+    <script src="static/master/novel-ocr.js?v=20260930-2"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- JSZip (EPUB / Word docx 萬能解包解析庫) -->
@@ -4390,6 +4391,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             </div>
 
             <!-- 小說正文展示卡片 -->
+            <section id="novelOcrReference" hidden style="margin:16px 0;padding:16px;border:1px solid var(--novel-border);border-radius:12px;background:var(--novel-card-bg);overflow:auto;"></section>
             <div class="novel-reader-deck mode-horizontal" id="novelContentBox">
                 <!-- 動態注入各頁文章與段落 -->
             </div>
@@ -4420,7 +4422,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 <h3 id="ocrModalTitle" style="font-weight: 800; font-size: 1.25rem; color: var(--novel-accent);"><i class="fa-solid fa-camera"></i> 拍照 / 圖片 OCR 辨識</h3>
                 <button type="button" aria-label="關閉 OCR 視窗" onclick="closeOcrModal()" style="border: none; background: transparent; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;">選擇日文書頁照片或截圖。辨識完成後可先校對文字，再匯入分頁閱讀。</p>
+            <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;">選擇原始書頁照片，依版面辨識文字。規則框線表格會逐格擷取；圖形保留原圖，匯入後可對照閱讀。直排書頁請選「直排日文」。</p>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
                 <label class="btn-primary" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; cursor: pointer; background: #4f46e5; color: #fff; font-weight: 700;">
                     <i class="fa-solid fa-image"></i> 選擇圖片
@@ -4432,9 +4434,14 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 </label>
             </div>
             <fieldset style="border: 1px solid var(--novel-border); border-radius: 9px; padding: 10px 14px; margin-bottom: 14px;">
-                <legend style="padding: 0 5px; font-weight: 700;">文字方向</legend>
-                <label style="margin-right: 18px; cursor: pointer;"><input type="radio" name="ocrDirection" value="jpn_vert" checked> 直排（日文小說）</label>
-                <label style="cursor: pointer;"><input type="radio" name="ocrDirection" value="jpn"> 橫排</label>
+                <legend style="padding: 0 5px; font-weight: 700;">圖片版面與辨識範圍</legend>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                    <label>版面 <select id="ocrLayout" style="max-width:100%;padding:6px;"><option value="auto">一般文件／圖文混排</option><option value="vertical">直排日文（由右到左）</option><option value="horizontal">橫排單一段落</option><option value="table">表格（逐格辨識框線表）</option><option value="figure">圖解／散布的標籤文字</option></select></label>
+                    <label>語言 <select id="ocrLanguage" style="padding:6px;"><option value="japanese">日文（含英數）</option><option value="mixed">繁中＋日文（含英數）</option></select></label>
+                    <label>辨識範圍 <select id="ocrRegion" style="padding:6px;"><option value="full">整張圖片</option><option value="right">右半頁</option><option value="left">左半頁</option></select></label>
+                    <label>旋轉 <select id="ocrRotation" style="padding:6px;"><option value="0">不旋轉</option><option value="90">順時針 90°</option><option value="180">180°</option><option value="270">逆時針 90°</option></select></label>
+                </div>
+                <label style="display:block;margin-top:12px;"><input id="ocrEnhance" type="checkbox" checked> 加強對比與小字大小</label>
             </fieldset>
             <div id="ocrPreviewArea" style="display: none; margin-bottom: 14px;">
                 <img id="ocrImagePreview" alt="待辨識的書頁圖片" style="display: block; max-width: 100%; max-height: 240px; margin: 0 auto; object-fit: contain; border-radius: 8px;">
@@ -4443,6 +4450,10 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             <div id="ocrResultArea" style="display: none;">
                 <label for="ocrRecognizedText" style="display: block; font-weight: 700; margin-bottom: 6px;">辨識文字（可校對修改）</label>
                 <textarea id="ocrRecognizedText" rows="8" style="width: 100%; border: 1px solid var(--novel-border); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 1rem; line-height: 1.7; background: var(--novel-bg); color: var(--novel-text);"></textarea>
+                <div id="ocrTableArea" hidden>
+                    <label for="ocrTableText" style="display:block;font-weight:700;margin-top:12px;">表格內容（每行一列，以 Tab 分隔各欄；可校對）</label>
+                    <textarea id="ocrTableText" rows="7" wrap="off" style="width:100%;padding:10px;border:1px solid var(--novel-border);border-radius:8px;background:var(--novel-bg);color:var(--novel-text);"></textarea>
+                </div>
             </div>
             <div style="display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 14px;">
                 <button class="pill-btn" type="button" onclick="closeOcrModal()">取消</button>
@@ -9662,152 +9673,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         // ==========================================================================
         // 拍照 / 圖片 OCR 引擎 (Tesseract.js)
         // ==========================================================================
-        let selectedOcrImageFile = null;
-
-        window.openOcrModal = function() {
-            const m = document.getElementById('ocrModal');
-            if (m) {
-                m.style.display = 'flex';
-                m.querySelector('button')?.focus();
-            }
-        };
-
-        window.closeOcrModal = function() {
-            const m = document.getElementById('ocrModal');
-            if (m) m.style.display = 'none';
-        };
-
-        window.handleImageFileSelect = function(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                showToast('請選擇圖片檔案。');
-                return;
-            }
-            selectedOcrImageFile = file;
-            document.getElementById('ocrResultArea').style.display = 'none';
-            document.getElementById('btnImportOcrText').style.display = 'none';
-            document.getElementById('ocrRecognizedText').value = '';
-            document.getElementById('ocrStatusText').textContent = '圖片已載入，請選擇文字方向後開始辨識。';
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const previewImg = document.getElementById('ocrImagePreview');
-                const previewArea = document.getElementById('ocrPreviewArea');
-                const startBtn = document.getElementById('btnStartOcrRecognize');
-                if (previewImg) previewImg.src = e.target.result;
-                if (previewArea) previewArea.style.display = 'block';
-                if (startBtn) startBtn.style.display = 'inline-flex';
-                showToast('圖片已載入，請點擊「開始 OCR 辨識」！');
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        };
-
-        // 監聽 Ctrl + V 貼上截圖
-        window.addEventListener('paste', (e) => {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-            for (let item of items) {
-                if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    const blob = item.getAsFile();
-                    if (!blob) continue;
-                    selectedOcrImageFile = blob;
-                    document.getElementById('ocrResultArea').style.display = 'none';
-                    document.getElementById('btnImportOcrText').style.display = 'none';
-                    document.getElementById('ocrRecognizedText').value = '';
-                    document.getElementById('ocrStatusText').textContent = '截圖已載入，請選擇文字方向後開始辨識。';
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                        openOcrModal();
-                        const previewImg = document.getElementById('ocrImagePreview');
-                        const previewArea = document.getElementById('ocrPreviewArea');
-                        const startBtn = document.getElementById('btnStartOcrRecognize');
-                        if (previewImg) previewImg.src = evt.target.result;
-                        if (previewArea) previewArea.style.display = 'block';
-                        if (startBtn) startBtn.style.display = 'inline-flex';
-                        showToast('已偵測到剪貼簿截圖，可直接進行 OCR 分析！');
-                    };
-                    reader.readAsDataURL(blob);
-                    break;
-                }
-            }
-        });
-
-        window.runOcrRecognition = async function() {
-            if (!selectedOcrImageFile) {
-                document.getElementById('ocrStatusText').textContent = '請先選擇圖片或拍照。';
-                return;
-            }
-
-            const directionRadios = document.getElementsByName('ocrDirection');
-            let lang = 'jpn_vert';
-            for (let r of directionRadios) {
-                if (r.checked) { lang = r.value; break; }
-            }
-
-            const statusText = document.getElementById('ocrStatusText');
-            const startBtn = document.getElementById('btnStartOcrRecognize');
-            startBtn.disabled = true;
-            if (statusText) statusText.textContent = '正在初始化 OCR 辨識模型...';
-            showToast('正在辨識書頁日文文字，請稍候...');
-
-            let worker;
-            try {
-                if (typeof Tesseract === 'undefined') {
-                    throw new Error('OCR 元件無法載入，請確認網路連線後重新整理頁面。');
-                }
-
-                worker = await Tesseract.createWorker(lang, 1, {
-                    logger: message => {
-                        if (!statusText || !message?.status) return;
-                        const percent = typeof message.progress === 'number' ? ` ${Math.round(message.progress * 100)}%` : '';
-                        const labels = {
-                            'loading tesseract core': '載入辨識引擎',
-                            'loading language traineddata': '載入日文模型',
-                            'initializing tesseract': '初始化辨識引擎',
-                            'recognizing text': '辨識圖片文字'
-                        };
-                        statusText.textContent = `${labels[message.status] || message.status}${percent}`;
-                    }
-                });
-                if (statusText) statusText.textContent = '正在辨識圖片中的日文文字...';
-
-                const ret = await worker.recognize(selectedOcrImageFile);
-                const text = (ret?.data?.text || '').trim();
-                if (!text) {
-                    throw new Error('未在圖片中偵測到清晰文字，請更換光線充足之圖片重試。');
-                }
-
-                document.getElementById('ocrRecognizedText').value = text;
-                document.getElementById('ocrResultArea').style.display = 'block';
-                document.getElementById('btnImportOcrText').style.display = 'inline-flex';
-                if (statusText) statusText.textContent = '辨識完成。請校對文字，再匯入閱讀。';
-                showToast('辨識完成，請校對文字。');
-            } catch (err) {
-                console.error('OCR 辨識失敗', err);
-                const detail = err?.message || err?.data?.error || (typeof err === 'string' ? err : JSON.stringify(err));
-                const message = /Aborted\(-1\)/.test(detail)
-                    ? '圖片或辨識模型處理失敗，請改用原始 JPG/PNG 圖片重試。'
-                    : (detail && detail !== '{}' ? detail : 'OCR 模型初始化失敗，請確認網路連線後重試。');
-                if (statusText) statusText.textContent = `辨識出錯：${message}`;
-                showToast(`辨識失敗：${message}`);
-            } finally {
-                if (worker) await worker.terminate().catch(() => {});
-                startBtn.disabled = false;
-            }
-        };
-
-        window.importOcrText = function() {
-            const text = document.getElementById('ocrRecognizedText').value.trim();
-            if (!text) {
-                document.getElementById('ocrStatusText').textContent = '請保留或輸入要匯入的日文文字。';
-                return;
-            }
-            closeOcrModal();
-            paginateTextBook('📸 拍照書頁辨識', text, 'ocr');
-            showToast('書頁文字已匯入，可以開始分頁閱讀。');
-        };
+        window.NovelOCR.install(paginateTextBook, showToast);
 
         // ==========================================================================
         // 檔案拖曳與匯入 (PDF / EPUB / TXT / DOCX)
@@ -10076,6 +9942,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         // 渲染當前頁面核心 (包含句子播放、收藏、文法高亮與單字卡片)
         // ==========================================================================
         function renderCurrentPage() {
+            window.NovelOCR.renderReference(window.novelState.currentBook);
             const pNum = window.novelState.currentPageIndex;
             const pageData = window.novelState.pagesCache[pNum];
             const contentBox = document.getElementById('novelContentBox');

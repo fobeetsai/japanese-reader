@@ -1,0 +1,40 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>OCR 品質回歸測試</title>
+<script src="../static/vendor/ocr/tesseract.min.js"></script>
+<script src="../static/master/novel-ocr.js"></script>
+<h1>OCR 品質回歸測試（合成圖片）</h1><button id="run">執行真實辨識與舊版比較</button><pre id="progress"></pre><pre id="results"></pre>
+<script>
+const compact = s => s.replace(/\s/g, '');
+function cer(actual, expected) {
+    actual = compact(actual); expected = compact(expected);
+    let prev = Array.from({length: expected.length + 1}, (_,i) => i);
+    for (let i = 1; i <= actual.length; i++) {
+        const next = [i]; for (let j = 1; j <= expected.length; j++) next[j] = Math.min(next[j-1]+1,prev[j]+1,prev[j-1]+(actual[i-1]===expected[j-1]?0:1)); prev=next;
+    }
+    return +(prev[expected.length] / expected.length).toFixed(4);
+}
+document.getElementById('run').onclick = async function () {
+    this.disabled=true; const output=document.getElementById('results'), progress=document.getElementById('progress'); output.textContent='';
+    const cases = [
+        {name:'vertical',mode:'vertical',expected:'日本語の文章を読みます。図面の内容を確認します。工事の安全を守ります。'},
+        {name:'table',mode:'table',rows:[['項目','数量','単位'],['鉄筋','120','本'],['型枠','350','枚'],['安全確認','2','回']]},
+        {name:'figure',mode:'auto',labels:['作業の順序','計画','施工','確認','計画を立ててから施工を始めます。','作業後に品質を確認します。']}
+    ];
+    try {
+        for (const c of cases) {
+            const url=`fixtures/ocr-${c.name}.png`;
+            progress.textContent=`舊版 ${c.name}`;
+            const assets=new URL('../static/vendor/ocr/',location.href).href;
+            const old=await Tesseract.createWorker(c.mode==='vertical'?'jpn_vert':'jpn',1,{workerPath:assets+'worker.min.js',corePath:assets+'core',langPath:assets+'lang',workerBlobURL:false});
+            let baseline; try {baseline=(await old.recognize(url)).data.text;} finally {await old.terminate();}
+            const prepared=await NovelOCR.prepareImage(url,{enhance:true});
+            const current=await NovelOCR.recognize(prepared,{mode:c.mode,language:'japanese'},{progress:t=>progress.textContent=c.name+' '+t});
+            const record={case:c.name,baseline,current};
+            if(c.expected){record.oldCER=cer(baseline,c.expected);record.newCER=cer(current.text,c.expected);record.pass=record.newCER<0.1;}
+            if(c.rows){record.correctCells=current.rows.flat().filter((s,i)=>compact(s)===compact(c.rows.flat()[i]||'')).length;record.totalCells=12;record.pass=record.correctCells===12;}
+            if(c.labels){record.labelsFound=c.labels.filter(s=>current.text.split(/\n+/).map(compact).includes(compact(s)));record.pass=record.labelsFound.length===c.labels.length;}
+            output.textContent+=JSON.stringify(record,null,2)+'\n';
+        }
+        progress.textContent='FINISHED';
+    } catch(e){progress.textContent='FAILED '+String(e);} finally {this.disabled=false;}
+};
+</script></html>
