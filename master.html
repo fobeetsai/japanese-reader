@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>閱讀高手 (Reading Master) | 句解霸・941條文法・沉浸雙語・跟讀聽力・字幕挖空・單句復讀</title>
+    <script src="static/master/reader-translation.js?v=20260930-1"></script>
     <!-- Google Fonts & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6170,6 +6171,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             const trimmed = text.trim();
             if (!trimmed) return '';
             if (TRANSLATE_CACHE.has(trimmed)) return TRANSLATE_CACHE.get(trimmed);
+            if (window.ReaderTranslation) return window.ReaderTranslation.translate(trimmed);
 
             try {
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURIComponent(trimmed)}`;
@@ -6776,16 +6778,25 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
             }
         }
 
-        window.loadNovelPageIntoMaster = async function({ title, text, sentenceIndex = 0, view = 'deep', section = '' }) {
+        let novelLoadGeneration = 0;
+        window.loadNovelPageIntoMaster = async function({ title, text, sentenceIndex = 0, view = 'deep', section = '', translations = [] }) {
             if (!text || !dom.articleInput) return;
+            const generation = ++novelLoadGeneration;
+            window.ReaderTranslation.seed(translations);
+            for (const item of translations) if (item.translation) TRANSLATE_CACHE.set(item.text.trim(), item.translation);
+            const analyzed = await clientAnalyzeText(text, false);
+            if (generation !== novelLoadGeneration) return;
+            const byText = new Map(translations.map(item => [item.text, item.translation]));
+            for (const sentence of analyzed.sentences) sentence.translation = byText.get(sentence.text) || '';
             dom.articleInput.value = text;
             dom.readerArticleTitle.textContent = title || '小說閱讀';
             if (dom.inputCharCount) dom.inputCharCount.textContent = `已輸入 ${text.length} 字`;
-            // The book may contain many sentences. Translation remains available
-            // through the visible checkbox and reanalysis button when requested.
-            dom.chkAutoTranslate.checked = false;
-            await handleStartReadingClient();
-            selectSentence(Math.max(0, Math.min(sentenceIndex, (state.analyzedData?.sentences.length || 1) - 1)));
+            dom.chkAutoTranslate.checked = true;
+            state.analyzedData = analyzed;
+            state.currentSentenceIdx = 0;
+            renderReaderView();
+            window.onMasterAnalysisReady?.();
+            selectSentence(Math.max(0, Math.min(sentenceIndex, analyzed.sentences.length - 1)));
             window.switchMasterView?.(view);
             if (section === 'notebook') openNotebookModal();
         };
@@ -6827,7 +6838,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                     transRow.className = 'sentence-trans-row';
                     transRow.innerHTML = `
                         <span class="trans-tag">繁中</span>
-                        <span class="trans-text" onclick="event.stopPropagation(); this.classList.toggle('revealed');" title="點擊切換揭示/遮蔽">${s.translation}</span>
+                        <span class="trans-text" onclick="event.stopPropagation(); this.classList.toggle('revealed');" title="點擊切換揭示/遮蔽">${escapeHtml(s.translation)}</span>
                     `;
                     row.appendChild(transRow);
                 }
@@ -9954,7 +9965,7 @@ body[data-grammar-mode^="mask"] .sentence-row:hover .grammar-elem-token::before 
                         ${jpTokensHtml}
                     </div>
                     <div class="trancy-card-zh">
-                        ${s.translation || '(正在產生中文翻譯...)'}
+                        ${escapeHtml(s.translation || '(翻譯暫不可用，請回到小說頁重試翻譯。)')}
                     </div>
                 `;
 
@@ -10564,6 +10575,7 @@ window.readerSendWord = index => { const w=state.notebook.words[index]; if(w) se
         if (event.data?.type !== 'novel:load-page') return;
         window.loadNovelPageIntoMaster?.(event.data);
     });
+    if (new URLSearchParams(location.search).get('embedded') === 'novel') window.parent.postMessage({ type: 'novel:ready' }, location.origin);
 </script>
 </body>
 </html>

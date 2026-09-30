@@ -20,6 +20,8 @@
     
     <script src="static/vendor/ocr/tesseract.min.js?v=5.1.1"></script>
     <script src="static/master/novel-ocr.js?v=20260930-2"></script>
+    <script src="static/master/reader-translation.js?v=20260930-1"></script>
+    <script src="static/master/novel-translation.js?v=20260930-1"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- JSZip (EPUB / Word docx 萬能解包解析庫) -->
@@ -4129,6 +4131,13 @@ body[data-novel-theme="dark"] .karaoke-current-word {
     }
 }
 
+.novel-translation-panel { margin:16px 0; padding:20px; border:1px solid var(--novel-border); border-radius:12px; background:var(--novel-card-bg); color:var(--novel-text); }
+.novel-translation-panel[hidden] { display:none; }
+.novel-translation-row { padding:12px 0; border-bottom:1px solid var(--novel-border); }
+.novel-translation-row p { line-height:1.8; margin:0 0 8px; }
+.novel-translation-text { display:block; width:100%; text-align:left; padding:10px; border:1px solid var(--novel-border); border-radius:8px; background:var(--novel-bg); color:var(--novel-text); font:inherit; line-height:1.8; cursor:pointer; }
+.novel-translation-text.is-masked { background:var(--novel-border); color:var(--text-muted); }
+.novel-learning-actions { display:flex; flex-wrap:wrap; gap:8px; }
     /* 小说阅读与阅读高手共用当前页，工作台仅在需要时加载。 */
 .novel-home-row { max-width: 1360px; margin: 12px auto; }
 .novel-learning-panel { max-width: 1360px; margin: 24px auto 48px; border: 1px solid var(--novel-border); border-radius: 16px; overflow: hidden; background: var(--novel-card-bg); }
@@ -4378,6 +4387,8 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                         <i class="fa-solid fa-volume-high"></i> <span id="audioPlayBtnText">朗讀此頁</span>
                     </button>
 
+                    <label class="novel-tool-btn">中文翻譯 <select id="novelTranslationMode" aria-label="中文翻譯顯示模式"><option value="show">顯示</option><option value="mask">遮蔽自測</option><option value="hide">隱藏</option></select></label>
+                    <button class="novel-tool-btn" id="btnOpenBilingual" type="button">閱讀高手雙語翻譯</button>
                     <button class="novel-tool-btn" id="btnOpenLearning" type="button" title="在本頁使用閱讀高手的句解、雙語、跟讀與複習"><i class="fa-solid fa-graduation-cap"></i> 深度學習本頁</button>
                     <button class="novel-tool-btn" onclick="openFilePicker()" title="開啟其他檔案">
                         <i class="fa-solid fa-folder-open"></i> 換書
@@ -4397,6 +4408,12 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             </div>
 
             <!-- 小說底部翻頁列 -->
+            <section id="novelTranslationPanel" class="novel-translation-panel" hidden aria-label="本頁中文翻譯">
+                <h3>本頁中日對照</h3>
+                <p id="novelTranslationStatus" role="status" aria-live="polite"></p>
+                <button id="btnRetryNovelTranslation" class="novel-tool-btn" type="button">重試翻譯</button>
+                <div id="novelTranslationList"></div>
+            </section>
             <div class="novel-bottom-bar">
                 <button class="novel-tool-btn" id="btnBottomPrev"><i class="fa-solid fa-chevron-left"></i> 上一頁</button>
                 <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-muted);" id="bottomProgressText">
@@ -4409,7 +4426,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         <section class="novel-learning-panel" id="novelLearningPanel" hidden aria-label="閱讀高手學習工作台">
             <div class="novel-learning-header">
                 <div><strong>閱讀高手・本頁深度學習</strong><small id="learningPageLabel">句解、941 文法、雙語閱讀、跟讀與單字複習</small></div>
-                <button class="novel-tool-btn" id="btnCloseLearning" type="button">收起工作台</button>
+                <div class="novel-learning-actions"><button class="novel-tool-btn" id="btnLearningDeep" type="button">句解與文法</button><button class="novel-tool-btn" id="btnLearningBilingual" type="button">雙語翻譯</button><button class="novel-tool-btn" id="btnCloseLearning" type="button">收起工作台</button></div>
             </div>
             <iframe id="novelMasterFrame" title="閱讀高手完整學習工作台" loading="lazy" referrerpolicy="same-origin"></iframe>
         </section>
@@ -5925,6 +5942,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const trimmed = text.trim();
             if (!trimmed) return '';
             if (TRANSLATE_CACHE.has(trimmed)) return TRANSLATE_CACHE.get(trimmed);
+            if (window.ReaderTranslation) return window.ReaderTranslation.translate(trimmed);
 
             try {
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=zh-TW&dt=t&q=${encodeURIComponent(trimmed)}`;
@@ -9953,6 +9971,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
                 return;
             }
 
+            window.NovelTranslation.render();
             const analyzed = pageData.analyzed;
             const bookTitle = window.novelState.currentBook.title;
 
@@ -10106,12 +10125,17 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         function setupToolbarEvents() {
             document.getElementById('btnStartNovelReading').addEventListener('click', startNovelReading);
             document.getElementById('btnNovelHome').onclick = resetNovelHome;
+            window.NovelTranslation.install();
+            document.getElementById('btnOpenBilingual').onclick = () => openLearningPanel('trancy');
+            document.getElementById('btnLearningBilingual').onclick = () => openLearningPanel('trancy');
+            document.getElementById('btnLearningDeep').onclick = () => openLearningPanel('deep');
             document.getElementById('btnOpenLearning').onclick = () => openLearningPanel('deep');
             document.getElementById('btnCloseLearning').onclick = () => { document.getElementById('novelLearningPanel').hidden = true; };
             document.getElementById('btnOpenNotebookModal').onclick = () => openLearningPanel('review', 0, 'notebook');
             document.getElementById('btnOpenSavedSentences').onclick = () => window.openSavedSentencesModal();
-            document.getElementById('novelMasterFrame').addEventListener('load', () => syncLearningPage());
+            document.getElementById('novelMasterFrame').addEventListener('load', () => syncLearningPage(window.novelState.learningSentenceIndex || 0));
             window.addEventListener('message', event => {
+                if (event.origin === location.origin && event.source === document.getElementById('novelMasterFrame').contentWindow && event.data?.type === 'novel:ready') syncLearningPage(window.novelState.learningSentenceIndex || 0);
                 if (event.origin === location.origin && event.source === document.getElementById('novelMasterFrame').contentWindow && event.data?.type === 'novel:view-changed') {
                     window.novelState.learningView = event.data.view;
                 }
@@ -10354,16 +10378,23 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             document.getElementById('novelImportCard').scrollIntoView({ block: 'start' });
         }
 
-        function syncLearningPage(sentenceIndex = 0, view = window.novelState.learningView || 'deep', section = window.novelState.learningSection || '') {
+        let learningSyncId = 0;
+        window.syncNovelLearningPage = () => syncLearningPage();
+        async function syncLearningPage(sentenceIndex = 0, view = window.novelState.learningView || 'deep', section = window.novelState.learningSection || '') {
             const panel = document.getElementById('novelLearningPanel');
             const frame = document.getElementById('novelMasterFrame');
             const book = window.novelState.currentBook;
             const page = window.novelState.currentPageIndex;
             if (panel.hidden || !frame.contentWindow || !book) return;
-            const text = window.novelState.pagesCache[page]?.text;
+            const pageData = window.novelState.pagesCache[page];
+            const text = pageData?.text;
             if (!text) return;
+            const requestId = ++learningSyncId;
+            document.getElementById('learningPageLabel').textContent = '正在準備本頁中文翻譯…';
+            await window.NovelTranslation.ensure(pageData);
+            if (requestId !== learningSyncId || panel.hidden || window.novelState.currentBook !== book || window.novelState.currentPageIndex !== page) return;
             document.getElementById('learningPageLabel').textContent = `${book.title}・第 ${page} / ${book.totalPages} 頁`;
-            frame.contentWindow.postMessage({ type: 'novel:load-page', title: `${book.title}・第 ${page} 頁`, text, sentenceIndex, view, section }, location.origin);
+            frame.contentWindow.postMessage({ type: 'novel:load-page', title: `${book.title}・第 ${page} 頁`, text, sentenceIndex, view, section, translations: pageData.analyzed.sentences.map(s => ({ text: s.text, translation: s.translation || '' })) }, location.origin);
             window.novelState.learningSection = '';
         }
 
@@ -10371,9 +10402,10 @@ body[data-novel-theme="dark"] .karaoke-current-word {
             const panel = document.getElementById('novelLearningPanel');
             const frame = document.getElementById('novelMasterFrame');
             window.novelState.learningView = view;
+            window.novelState.learningSentenceIndex = sentenceIndex;
             window.novelState.learningSection = section;
             panel.hidden = false;
-            if (!frame.getAttribute('src')) frame.setAttribute('src', 'master.html?embedded=novel');
+            if (!frame.getAttribute('src')) frame.setAttribute('src', 'master.html?embedded=novel&v=20260930-1');
             else syncLearningPage(sentenceIndex, view);
             panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
