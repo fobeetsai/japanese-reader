@@ -3895,8 +3895,13 @@ body[data-novel-theme="dark"] .resume-bookmark-prompt {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
 }
 .novel-tool-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
     border: 1px solid var(--novel-border);
     background: var(--novel-bg);
     color: var(--novel-text);
@@ -4126,6 +4131,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
         height: 560px !important;
     }
     .novel-reading-toolbar {
+        position: static;
         top: 40px;
         padding: 8px 10px;
     }
@@ -4142,7 +4148,7 @@ body[data-novel-theme="dark"] .karaoke-current-word {
 .novel-home-row { max-width: 1360px; margin: 12px auto; }
 .novel-learning-panel { max-width: 1360px; margin: 24px auto 48px; border: 1px solid var(--novel-border); border-radius: 16px; overflow: hidden; background: var(--novel-card-bg); }
 .novel-learning-panel[hidden] { display: none; }
-.novel-learning-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--novel-border); }
+.novel-learning-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--novel-border); }
 .novel-learning-header strong { display: block; color: var(--novel-text); }
 .novel-learning-header small { display: block; margin-top: 3px; color: var(--text-muted); }
 #novelMasterFrame { display: block; width: 100%; min-height: 1100px; border: 0; background: #fff; }
