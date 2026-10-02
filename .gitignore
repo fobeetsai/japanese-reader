@@ -8,3 +8,4 @@ Thumbs.db
 kanji_data.json
 kanji_single_map.json
 index *.html
+tools/speech-relay/node_modules/

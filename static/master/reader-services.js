@@ -272,7 +272,7 @@
             try {
                 const voiceName = azureVoices.includes(config.voice) ? config.voice : 'ja-JP-NanamiNeural';
                 const nativeVoice = selectNatural(env.speechSynthesis?.getVoices() || [], config.preferred);
-                if (config.provider !== 'azure' && nativeVoice && nativeVoice.name.includes(voiceName.includes('Keita') ? 'Keita' : 'Nanami')) {
+                if (config.provider === 'edge' && nativeVoice && nativeVoice.name.includes(voiceName.includes('Keita') ? 'Keita' : 'Nanami')) {
                     const voice = nativeVoice;
                     report('Edge 自然人聲：' + voice.name);
                     const queue = audioChunks(text);
@@ -295,7 +295,23 @@
                     report(`正在產生微軟 ${voiceName} 自然人聲（${i + 1}/${chunks.length}）…`);
                     request = new AbortController();
                     let blob;
-                    if (config.provider !== 'azure') {
+                    if (config.provider === 'local') {
+                        const endpoint = 'http://127.0.0.1:17863/speech';
+                        const timer = env.setTimeout(() => request?.abort(), 45000);
+                        try {
+                            const response = await env.fetch(endpoint, {
+                                method: 'POST', signal: request.signal, targetAddressSpace: 'loopback',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ text: chunks[i], voice: voiceName })
+                            });
+                            if (!response.ok) throw new Error('語音服務忙碌或無法取得微軟音訊，請重試。');
+                            blob = await response.blob();
+                            if (!blob.size) throw new Error('語音服務傳回空白音訊。');
+                        } catch (error) {
+                            if (error instanceof TypeError || request.signal.aborted) throw new Error('請先開啟「Chrome 日文閱讀助手」啟動檔；使用線上網站時，也需允許 Chrome 的本機網路連線。');
+                            throw error;
+                        } finally { env.clearTimeout(timer); }
+                    } else if (config.provider !== 'azure') {
                         blob = await edgeAudio(env, chunks[i], voiceName, request.signal);
                     } else {
                     const timer = env.setTimeout(() => request?.abort(), 30000);

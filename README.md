@@ -20,10 +20,14 @@
 - Edge 模式提供 Nanami／Keita Neural，免 Azure Key。優先使用同名原生自然語音；系統語音清單沒有自然語音時，直接以 WebSocket 取得 Microsoft Edge Read Aloud 的 MP3。日文僅在按朗讀時送至 Microsoft，無第三方 CDN 或中繼伺服器。此消費者服務介面可能變動，已在 Edge 實測；其他瀏覽器未保證支援，可改用 Azure。
 - 「微軟自然人聲設定與試聽」可切換 Azure Speech，輸入自己的 Key、服務區域並選擇 Nanami／Keita Neural。Key 僅存於此分頁的 `sessionStorage`，日文直接送至所選 Microsoft Azure 區域；可能依服務方案計費。
 - 長文會完整分段播放，可停止；自動播放被阻擋時保留音訊並提供原生播放控制列。Haruka 等系統語音不會當成自然人聲。
+- Windows Chrome 免 Key 版：雙擊 `Chrome-Reader.cmd`，會啟動只綁定 `127.0.0.1:17863` 的本機語音服務，並用 Chrome 開啟 `http://127.0.0.1:17863/index.html`。需 Node.js 18+；第一次啟動安裝固定版本 `ws`，不新增開機自動啟動或防火牆規則。朗讀日文經本機服務送至 Microsoft，無須 Azure。服務運作至關機；下次使用再雙擊啟動檔。
+- Chrome 的網站直連 Edge 語音實測失敗，本機版本已以 Nanami 試聽句驗證 MP3 與完整播放進度。手機及其他電腦不會自動取得這台電腦的服務。原 GitHub Pages 頁面也可選本機服務，可能需要允許 Chrome 本機網路權限；使用本機入口可避免跨來源連線。
 
 驗證：`node tests/reader-services.cjs` 涵蓋實際變流器文章、活用、數值／術語保留、原文對照與還原、非同步過期結果、Gemini 回應錯誤、PWA 呼叫限制、自然語音辨識、Edge 音訊封包／取消與 Azure 音訊生命週期。自動 API 測試使用固定回應；Edge 另以公開日文試聽句驗證真實 MP3 與播放進度。真實 AI 與 Azure 合成仍需自己的服務設定。
 
 官方介面：[Gemini Generate Content](https://ai.google.dev/api/generate-content)、[Microsoft Speech REST](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech)。
+
+本機服務範圍：只提供固定 Nanami／Keita 合成和閱讀頁面的公開檔案；拒絕任意目的地、其他網站來源、超長請求及隱藏／工具目錄。文字不寫入紀錄檔。Microsoft 消費者語音介面可能變動；若服務失敗會顯示錯誤並保留原文。
 
 ---
 

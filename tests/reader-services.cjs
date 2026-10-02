@@ -122,6 +122,12 @@ async function main() {
     assert.equal(audio.length, 2, 'cloud audio works without natural voices in getVoices');
     assert.equal(statuses.at(-1), '微軟自然人聲播放完成');
     assert.ok(socket.closed);
+    await speech.speak('こんにちは。', { provider: 'local', voice: 'ja-JP-NanamiNeural' }, s => statuses.push(s));
+    assert.equal(sent, 'http://127.0.0.1:17863/speech');
+    assert.equal(options.targetAddressSpace, 'loopback');
+    assert.deepEqual(JSON.parse(options.body), { text: 'こんにちは。', voice: 'ja-JP-NanamiNeural' });
+    assert.ok(!options.headers['Ocp-Apim-Subscription-Key']);
+    assert.equal(statuses.at(-1), '微軟自然人聲播放完成');
     env.WebSocket = class { constructor() { socket = this; } close() { this.closed = true; } };
     const controller = new AbortController();
     const pending = S.edgeAudio(env, 'こんにちは。', 'ja-JP-NanamiNeural', controller.signal);

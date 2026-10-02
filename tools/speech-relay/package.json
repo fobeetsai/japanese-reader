@@ -1,0 +1,8 @@
+{
+  "name": "japanese-reader-speech-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Microsoft natural speech companion for Chrome",
+  "dependencies": { "ws": "8.18.3" },
+  "scripts": { "start": "node server.cjs" }
+}
