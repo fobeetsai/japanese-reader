@@ -10,6 +10,23 @@
 
 ---
 
+## 閱讀助手降維與微軟自然人聲（2026-10-02）
+
+`index.html`、`japanese_reader.html` 與 `static/index.html` 共用 `static/master/reader-services.js`。
+
+- 快捷按鈕、自動降維與雙欄對照採用同一個引擎設定。雙欄視窗可見、可操作；套用後可還原原文。
+- 本地詞句簡化支援動詞活用與三種目標程度，只簡化可辨識的詞句，不保證整篇符合特定 JLPT 級數。未命中時保留原文並顯示原因。
+- AI 全文改寫需在雙欄視窗輸入自己的 Gemini Key 與可用模型。沒有內建免費 AI 通道；失敗、逾時、未完成或數值／術語被改動時保留原文，且不偽裝成改寫成功。Key 沿用本機瀏覽器儲存，僅在選擇 AI 並執行時送至 Google。
+- Edge 模式僅選擇微軟日文 Natural／Neural／Online 語音。Haruka、Ayumi、Ichiro、Sayaka 等系統語音與 Google 語音不會被當作自然人聲。瀏覽器未提供自然語音時會提示。
+- 「微軟自然人聲設定與試聽」可切換 Azure Speech，輸入自己的 Key、服務區域並選擇 Nanami／Keita Neural。Key 僅存於此分頁的 `sessionStorage`，日文直接送至所選 Microsoft Azure 區域；可能依服務方案計費。
+- 長文會完整分段播放，可停止；不再以截斷的 Google TTS 作為備援。
+
+驗證：`node tests/reader-services.cjs` 涵蓋活用、數值／術語保留、還原、非同步過期結果、Gemini 回應錯誤、PWA 呼叫限制、自然語音辨識與 Azure 音訊生命週期。API／音訊測試使用固定測試回應；真實 AI 與 Azure 合成仍需自己的服務設定。
+
+官方介面：[Gemini Generate Content](https://ai.google.dev/api/generate-content)、[Microsoft Speech REST](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech)。
+
+---
+
 ## 👑 全新旗艦：閱讀高手 (Reading Master - `master.html`)
 針對學生與自學者深度整合「閱讀理解」、「聽力跟讀」、「文法解析」、「單字記憶」之全功能一站式 Web APP：
 - 📖 **文章深度解析 (句解霸)**：941 條文法抽屜、8,138 JLPT 單字等級色彩標註、助詞文型階層防拆保護、代用換句話說深度分析。

@@ -1,5 +1,5 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v15-reader-cloud';
+const CACHE_NAME = 'ankiflash-v16-reader-services';
 const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
@@ -27,7 +27,19 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   // Also stop old controlled tabs before their cached code can contact paid AI.
   if (/(^|\.)(generativelanguage\.googleapis\.com|aiplatform\.googleapis\.com|openai\.com|anthropic\.com)$/.test(url.hostname)) {
-    event.respondWith(Promise.resolve(new Response(JSON.stringify({code: 'PAID_AI_DISABLED'}), {status: 410, headers: {'Content-Type': 'application/json'}})));
+    event.respondWith((async () => {
+      const client = event.clientId ? await self.clients.get(event.clientId) : null;
+      const scope = new URL(self.registration.scope);
+      const clientUrl = client ? new URL(client.url) : null;
+      const path = clientUrl?.pathname.slice(scope.pathname.length);
+      // Only the reader's explicitly configured Gemini call is allowed. Legacy paid-AI paths remain disabled.
+      if (clientUrl?.origin === scope.origin && clientUrl.pathname.startsWith(scope.pathname) &&
+          ['', 'index.html', 'japanese_reader.html', 'static/index.html'].includes(path) &&
+          url.hostname === 'generativelanguage.googleapis.com' &&
+          /^\/v1beta\/models\/[a-zA-Z0-9._-]+:generateContent$/.test(url.pathname) &&
+          event.request.method === 'POST' && event.request.headers.has('x-goog-api-key')) return fetch(event.request);
+      return new Response(JSON.stringify({code: 'PAID_AI_DISABLED'}), {status: 410, headers: {'Content-Type': 'application/json'}});
+    })());
     return;
   }
   const scope = new URL(self.registration.scope);
