@@ -724,6 +724,7 @@ body {
 
 
 .voice-picker-pill {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
@@ -770,59 +771,18 @@ body {
 }
 
 
-.voice-picker-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    background: var(--bg-sub);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 0.15rem 0.4rem;
-}
-.voice-picker-pill:focus-within {
-    border-color: var(--primary);
-}
-.voice-pill-icon {
-    font-size: 0.75rem;
-    color: var(--primary);
-}
-.reader-voice-select {
-    background: transparent;
-    border: none;
-    color: var(--text-main);
-    font-size: 0.78rem;
-    font-weight: 700;
-    outline: none;
-    cursor: pointer;
-    max-width: 185px;
-    padding: 0.15rem 0;
-}
-.reader-voice-select option {
-    background: var(--bg-card);
-    color: var(--text-main);
-}
-.btn-voice-test {
-    padding: 0.2rem 0.45rem;
-    font-size: 0.72rem;
-    background: var(--primary-light, #eff6ff);
-    color: var(--primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-weight: 700;
-    cursor: pointer;
-}
-[data-theme="dark"] .btn-voice-test {
-    background: #1e293b;
-    color: #60a5fa;
-}
+#readerSpeechSettings { scroll-margin-top: 260px; }
 
 .reader-text-tools {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem;
 }
 
 .tool-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
     background: var(--bg-sub);
     border: 1px solid var(--border-color);
     color: var(--text-main);
