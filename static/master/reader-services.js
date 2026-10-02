@@ -7,6 +7,10 @@
     }
     // Complete phrases and inflected verbs: never replace a bare verb stem.
     const phrases = [
+        [0, '計測しよう', '測ろう'], [0, '測定しよう', '測ろう'],
+        [0, '動作させる', '動かす'], [0, '動作させます', '動かします'],
+        [0, '動作させない', '動かさない'], [0, '動作させて', '動かして'],
+        [0, '動作させた', '動かした'], [0, '動作させました', '動かしました'],
         [0, 'にほかならない', 'そのものだ'],
         [0, 'にもかかわらず', 'のに'], [0, 'のみならず', 'だけでなく'],
         [0, 'と言わざるを得ない', 'と言うしかない'],
@@ -40,6 +44,7 @@
     ];
     phrases.forEach(([rank, original, target]) => add(rank, original, target, '文型句型'));
     [
+        [0, '大電流', '大きな電流'],
         [0, '懸念', '心配'], [0, '利便性', '便利さ'], [0, '絆', 'つながり'],
         [0, '措置', '対応'], [0, '余地', '可能性'], [0, '不可欠な', 'どうしても必要な'],
         [0, '甚大な', 'とても大きな'], [0, '顕著な', 'はっきりと分かる'],
@@ -53,6 +58,9 @@
     ].forEach(([rank, original, target]) => add(rank, original, target));
     // [dictionary, masu stem, negative stem, te form, past, conditional, passive].
     const verbs = [
+        [0, '変換', '変える', '変え', '変え', '変えて', '変えた', '変えれば', '変えられる'],
+        [0, '計測', '測る', '測り', '測ら', '測って', '測った', '測れば', '測られる'],
+        [0, '測定', '測る', '測り', '測ら', '測って', '測った', '測れば', '測られる'],
         [0, '把握', '分かる', '分かり', '分から', '分かって', '分かった', '分かれば', null],
         [0, '遵守', '守る', '守り', '守ら', '守って', '守った', '守れば', '守られる'],
         [0, '検討', 'よく考える', 'よく考え', 'よく考え', 'よく考えて', 'よく考えた', 'よく考えれば', 'よく考えられる'],
@@ -92,7 +100,7 @@
         Object.entries(endings).forEach(([ending, target]) => add(rank, noun + ending, target));
     }
     // Numeric values, units, standards and selected engineering terms retain their exact wording.
-    const protectedPattern = /(?:JIS|ISO|ASTM|CNS|GB)[A-Za-z\d .:/-]*\d|[\d０-９]+(?:[.,，．][\d０-９]+)*(?:\s*(?:mm|cm|m|kN|N|MPa|kPa|Pa|kg|t|%|％|℃|°C|時間|日|年|月|個))?|設計基準強度|圧縮強度|水セメント比|切羽|覆工|配筋|養生|型枠|打設|耐震等級/g;
+    const protectedPattern = /(?:JIS|ISO|ASTM|CNS|GB)[A-Za-z\d .:/-]*\d|[\d０-９]+(?:[.,，．][\d０-９]+)*(?:\s*(?:mm|cm|m|kN|N|MPa|kPa|Pa|kg|t|%|％|℃|°C|時間|日|年|月|個))?|設計基準強度|圧縮強度|水セメント比|保護継電器|変流器|絶縁|低圧|高圧|電路|切羽|覆工|配筋|養生|型枠|打設|耐震等級/g;
     function facts(text) { return String(text).match(protectedPattern) || []; }
     function simplify(text, level) {
         if (!(level in ranks)) throw new Error('請選擇有效的降維等級。');
@@ -103,7 +111,7 @@
         for (const rule of available) lookup.set(rule.original, rule);
         const regex = new RegExp([...lookup.keys()].map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
         const changed = new Map();
-        const simplifiedText = text.replace(regex, (original, offset) => {
+        let simplifiedText = text.replace(regex, (original, offset) => {
             if (protectedSpans.some(([start, end]) => offset < end && offset + original.length > start)) return original;
             // Don't change fragments inside kanji compounds (e.g. 未確認, 使用率).
             if (/[\p{Script=Han}]/u.test(original[0]) && /[\p{Script=Han}]/u.test(text[offset - 1] || '')) return original;
@@ -113,8 +121,29 @@
             changed.get(original).count++;
             return rule.target;
         });
-        // One pass avoids cascading replacement and leaves sentence endings grammatically intact.
-        return { simplifiedText, changes: [...changed.values()], sentenceSplitCount: 0, engine: 'rule', changed: simplifiedText !== text };
+        // Split constrained explanatory constructions, never arbitrary locative 「で」.
+        let sentenceSplitCount = 0;
+        function restructure(pattern, replacement, desc, category = '長句拆解') {
+            simplifiedText = simplifiedText.replace(pattern, (...args) => {
+                const original = args[0], target = replacement(...args);
+                const key = desc + original;
+                if (!changed.has(key)) changed.set(key, { original, target, category, desc, count: 0 });
+                changed.get(key).count++;
+                sentenceSplitCount += Math.max(0, (target.match(/。/g) || []).length - (original.match(/。/g) || []).length);
+                return target;
+            });
+        }
+        restructure(/ための(装置|機器|設備|道具|方法)(?:で|であり)、/g,
+            (_, noun) => `ための${noun}です。\n`, '將定義與用途分成短句');
+        // Only a use-list ending in 「ために使う」 is rewritten; conditions and unfinished endings stay intact.
+        restructure(/(計測|測定)や、([^。！？\n]+?)ために使(?:う|います)。/g,
+            (_, action, purpose) => `${action}（測ること）に使います。\nまた、${purpose}ためにも使います。`, '將兩個用途分句，補上易懂說明');
+        restructure(/使う(?=。)/g, () => '使います', '將句尾改為易讀的敬體', '文型句型');
+        // Nominal technical actions need a gloss, not a verb replacement that breaks 「の計測」.
+        restructure(/(?<![\p{Script=Han}])(計測|測定)(?=[をやに、。])/gu,
+            action => `${action}（測ること）`, '保留術語並補上易懂說明', '詞彙替換');
+        if (changed.size) simplifiedText = simplifiedText.replace(/。(?=[^\s」』])/g, '。\n');
+        return { simplifiedText, changes: [...changed.values()], sentenceSplitCount, engine: 'rule', changed: simplifiedText !== text };
     }
     async function rewrite(text, level, key, model = 'gemini-2.5-flash', signal) {
         if (!key) throw new Error('AI 全文改寫需要 Gemini API Key；目前沒有內建 AI 通道。請在雙欄對照視窗設定，或選擇本地詞句簡化。');
@@ -178,6 +207,57 @@
         return chunks;
     }
     const azureVoices = ['ja-JP-NanamiNeural', 'ja-JP-KeitaNeural'];
+    // Edge Read Aloud wire protocol. Browser WebSocket support is tested in Edge;
+    // this consumer endpoint is not the Azure API and can change independently.
+    async function edgeAudio(env, text, voice, signal) {
+        if (!azureVoices.includes(voice)) throw new Error('請選擇 Nanami 或 Keita。');
+        if (!env.WebSocket || !env.crypto?.subtle) throw new Error('Edge 線上語音需要 HTTPS 與支援 WebSocket 的瀏覽器。');
+        const token = '6A5AA1D4EAFF4E9FB37E23D68491D6F4'; // Public Edge client identifier, not a user credential.
+        const seconds = Math.floor(Date.now() / 1000) + 11644473600;
+        const ticks = (seconds - seconds % 300) * 10000000;
+        const hash = await env.crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(ticks) + token));
+        if (signal?.aborted) throw new Error('已停止播放');
+        const signature = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        const id = env.crypto.randomUUID().replace(/-/g, '');
+        const params = new URLSearchParams({ TrustedClientToken: token, 'Sec-MS-GEC': signature, 'Sec-MS-GEC-Version': '1-143.0.3650', ConnectionId: id });
+        return new Promise((resolve, reject) => {
+            const socket = new env.WebSocket('wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?' + params);
+            socket.binaryType = 'arraybuffer';
+            const chunks = []; let settled = false, timer;
+            const finish = (error) => {
+                if (settled) return;
+                settled = true; env.clearTimeout(timer); signal?.removeEventListener('abort', abort);
+                socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
+                socket.close();
+                if (error) reject(error);
+                else if (!chunks.length) reject(new Error('微軟傳回空白音訊，請稍後重試。'));
+                else resolve(new env.Blob(chunks, { type: 'audio/mpeg' }));
+            };
+            const abort = () => finish(new Error('已停止播放'));
+            const touch = () => { env.clearTimeout(timer); timer = env.setTimeout(() => finish(new Error('Edge 線上語音逾時，請確認網路。')), 30000); };
+            signal?.addEventListener('abort', abort, { once: true }); touch();
+            socket.onopen = () => {
+                const headers = fields => Object.entries(fields).map(([key, value]) => `${key}:${value}`).join('\r\n') + '\r\n\r\n';
+                socket.send(headers({ 'X-Timestamp': new Date().toUTCString(), 'Content-Type': 'application/json; charset=utf-8', Path: 'speech.config' }) + JSON.stringify({ context: { synthesis: { audio: { metadataoptions: { sentenceBoundaryEnabled: false, wordBoundaryEnabled: false }, outputFormat: 'audio-24khz-48kbitrate-mono-mp3' } } } }));
+                socket.send(headers({ 'X-RequestId': id, 'Content-Type': 'application/ssml+xml', 'X-Timestamp': new Date().toUTCString(), Path: 'ssml' }) + `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="${voice}"><prosody rate="-5%">${xml(text)}</prosody></voice></speak>`);
+            };
+            socket.onmessage = event => {
+                touch();
+                if (typeof event.data === 'string') {
+                    if (/Path:turn.end(?:\r|\n|$)/.test(event.data)) finish();
+                    return;
+                }
+                const bytes = new Uint8Array(event.data);
+                if (bytes.length < 2) return;
+                const headerLength = bytes[0] * 256 + bytes[1];
+                if (headerLength + 2 > bytes.length) return;
+                const headers = new TextDecoder().decode(bytes.subarray(2, headerLength + 2));
+                if (/Path:audio(?:\r|\n|$)/.test(headers) && bytes.length > headerLength + 2) chunks.push(bytes.slice(headerLength + 2));
+            };
+            socket.onerror = () => finish(new Error('無法連線 Edge 自然人聲。請使用 Edge 並確認網路，或改用 Azure 設定。'));
+            socket.onclose = () => finish(new Error('Edge 語音連線中斷，請重試。'));
+        });
+    }
     function createSpeech(env) {
         let generation = 0, audio = null, objectUrl = null, request = null, utterance = null, finishPlayback = null;
         const release = () => {
@@ -190,16 +270,10 @@
             text = String(text || '').replace(/<[^>]+>/g, '').trim();
             if (!text) return;
             try {
-                if (config.provider !== 'azure') {
-                    report('正在載入 Edge 自然人聲…');
-                    let voice = null;
-                    for (let i = 0; i < 12 && ticket === generation; i++) {
-                        voice = selectNatural(env.speechSynthesis?.getVoices() || [], config.preferred);
-                        if (voice) break;
-                        await new Promise(resolve => env.setTimeout(resolve, 250));
-                    }
-                    if (ticket !== generation) return;
-                    if (!voice) throw new Error('此瀏覽器未提供微軟自然人聲。請用 Edge，或在語音設定啟用 Azure Speech。');
+                const voiceName = azureVoices.includes(config.voice) ? config.voice : 'ja-JP-NanamiNeural';
+                const nativeVoice = selectNatural(env.speechSynthesis?.getVoices() || [], config.preferred);
+                if (config.provider !== 'azure' && nativeVoice && nativeVoice.name.includes(voiceName.includes('Keita') ? 'Keita' : 'Nanami')) {
+                    const voice = nativeVoice;
                     report('Edge 自然人聲：' + voice.name);
                     const queue = audioChunks(text);
                     const next = () => {
@@ -213,13 +287,17 @@
                     };
                     next(); return;
                 }
-                if (!config.key || !/^[a-z]+[a-z0-9]*$/.test(config.region || '')) throw new Error('請先在語音設定輸入 Azure Speech Key 與服務區域。');
-                if (!azureVoices.includes(config.voice)) throw new Error('請選擇 Nanami 或 Keita Neural 語音。');
+                if (config.provider === 'azure' && (!config.key || !/^[a-z]+[a-z0-9]*$/.test(config.region || ''))) throw new Error('請先在語音設定輸入 Azure Speech Key 與服務區域。');
+                if (config.provider === 'azure' && !azureVoices.includes(config.voice)) throw new Error('請選擇 Nanami 或 Keita Neural 語音。');
                 const chunks = audioChunks(text);
                 for (let i = 0; i < chunks.length; i++) {
                     if (ticket !== generation) return;
-                    report(`正在產生微軟 ${config.voice} 自然人聲（${i + 1}/${chunks.length}）…`);
+                    report(`正在產生微軟 ${voiceName} 自然人聲（${i + 1}/${chunks.length}）…`);
                     request = new AbortController();
+                    let blob;
+                    if (config.provider !== 'azure') {
+                        blob = await edgeAudio(env, chunks[i], voiceName, request.signal);
+                    } else {
                     const timer = env.setTimeout(() => request?.abort(), 30000);
                     let response;
                     try {
@@ -229,29 +307,35 @@
                             body: `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="${config.voice}"><prosody rate="-5%">${xml(chunks[i])}</prosody></voice></speak>`
                         });
                         if (!response.ok) throw new Error(`Azure 語音失敗（HTTP ${response.status}），請確認 Key、區域與額度。`);
-                        const blob = await response.blob();
+                        blob = await response.blob();
                         if (ticket !== generation) return;
                         if (!blob.size) throw new Error('Azure 傳回空白音訊。');
-                        release(); objectUrl = env.URL.createObjectURL(blob); audio = new env.Audio(objectUrl);
                     } finally { env.clearTimeout(timer); }
+                    }
                     if (ticket !== generation) return;
-                    report(`播放微軟 ${config.voice} 自然人聲（${i + 1}/${chunks.length}）`);
+                    release(); objectUrl = env.URL.createObjectURL(blob);
+                    audio = config.player || new env.Audio(); audio.src = objectUrl;
+                    if (config.player) config.player.hidden = false;
+                    report(`播放微軟 ${voiceName} 自然人聲（${i + 1}/${chunks.length}）`);
                     await new Promise((resolve, reject) => {
                         finishPlayback = resolve;
                         audio.onended = resolve;
                         audio.onerror = () => reject(new Error('語音音訊無法播放。'));
-                        audio.play().catch(() => reject(new Error('瀏覽器阻擋播放，請再按一次朗讀。')));
+                        audio.play().catch(() => {
+                            if (config.player) report('音訊已產生。請按下音訊控制列的 ▶ 播放。');
+                            else reject(new Error('瀏覽器阻擋播放，請再按一次朗讀。'));
+                        });
                     });
                     finishPlayback = null;
                 }
-                if (ticket === generation) { release(); report('微軟自然人聲播放完成'); }
+                if (ticket === generation) { report('微軟自然人聲播放完成'); }
             } catch (error) {
                 if (ticket === generation) { stop(); report(error.message || '微軟語音暫時無法播放。'); }
             }
         }
         return { speak, stop };
     }
-    const api = { simplify, rewrite, isNatural, selectNatural, createSpeech, audioChunks, facts, xml, azureVoices };
+    const api = { simplify, rewrite, isNatural, selectNatural, createSpeech, edgeAudio, audioChunks, facts, xml, azureVoices };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.ReaderServices = api;
 })(typeof window !== 'undefined' ? window : globalThis);

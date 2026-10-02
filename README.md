@@ -15,13 +15,13 @@
 `index.html`、`japanese_reader.html` 與 `static/index.html` 共用 `static/master/reader-services.js`。
 
 - 快捷按鈕、自動降維與雙欄對照採用同一個引擎設定。雙欄視窗可見、可操作；套用後可還原原文。
-- 本地詞句簡化支援動詞活用與三種目標程度，只簡化可辨識的詞句，不保證整篇符合特定 JLPT 級數。未命中時保留原文並顯示原因。
+- 本地詞句簡化支援動詞活用、技術說明中的定義／用途拆句與三種目標程度；例如變流器文章會拆開裝置定義與兩種用途，簡化「変換する」「動作させる」「計測しよう」，保留專業術語、數值與未完成的末尾。只處理可辨識結構，不保證整篇符合特定 JLPT 級數。
 - AI 全文改寫需在雙欄視窗輸入自己的 Gemini Key 與可用模型。沒有內建免費 AI 通道；失敗、逾時、未完成或數值／術語被改動時保留原文，且不偽裝成改寫成功。Key 沿用本機瀏覽器儲存，僅在選擇 AI 並執行時送至 Google。
-- Edge 模式僅選擇微軟日文 Natural／Neural／Online 語音。Haruka、Ayumi、Ichiro、Sayaka 等系統語音與 Google 語音不會被當作自然人聲。瀏覽器未提供自然語音時會提示。
+- Edge 模式提供 Nanami／Keita Neural，免 Azure Key。優先使用同名原生自然語音；系統語音清單沒有自然語音時，直接以 WebSocket 取得 Microsoft Edge Read Aloud 的 MP3。日文僅在按朗讀時送至 Microsoft，無第三方 CDN 或中繼伺服器。此消費者服務介面可能變動，已在 Edge 實測；其他瀏覽器未保證支援，可改用 Azure。
 - 「微軟自然人聲設定與試聽」可切換 Azure Speech，輸入自己的 Key、服務區域並選擇 Nanami／Keita Neural。Key 僅存於此分頁的 `sessionStorage`，日文直接送至所選 Microsoft Azure 區域；可能依服務方案計費。
-- 長文會完整分段播放，可停止；不再以截斷的 Google TTS 作為備援。
+- 長文會完整分段播放，可停止；自動播放被阻擋時保留音訊並提供原生播放控制列。Haruka 等系統語音不會當成自然人聲。
 
-驗證：`node tests/reader-services.cjs` 涵蓋活用、數值／術語保留、還原、非同步過期結果、Gemini 回應錯誤、PWA 呼叫限制、自然語音辨識與 Azure 音訊生命週期。API／音訊測試使用固定測試回應；真實 AI 與 Azure 合成仍需自己的服務設定。
+驗證：`node tests/reader-services.cjs` 涵蓋實際變流器文章、活用、數值／術語保留、原文對照與還原、非同步過期結果、Gemini 回應錯誤、PWA 呼叫限制、自然語音辨識、Edge 音訊封包／取消與 Azure 音訊生命週期。自動 API 測試使用固定回應；Edge 另以公開日文試聽句驗證真實 MP3 與播放進度。真實 AI 與 Azure 合成仍需自己的服務設定。
 
 官方介面：[Gemini Generate Content](https://ai.google.dev/api/generate-content)、[Microsoft Speech REST](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech)。
 

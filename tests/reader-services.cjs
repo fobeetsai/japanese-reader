@@ -15,9 +15,23 @@ async function main() {
     assert.deepEqual(S.facts(outputs[2].simplifiedText), S.facts(original));
     assert.equal(S.simplify('未確認事項と使用率を調べた。', 'easy_jp').simplifiedText, '未確認事項と使用率を調べた。');
     assert.equal(S.simplify('今日は学校へ行きます。', 'easy_jp').changed, false);
+    assert.equal(S.simplify('猫です。犬です。', 'easy_jp').changed, false, 'formatting alone is not simplification');
     assert.equal(S.simplify('機械を使用していました。', 'easy_jp').simplifiedText, '機械を使っていました。');
     assert.equal(S.simplify('道具を購入しませんでした。', 'easy_jp').simplifiedText, '道具を買いませんでした。');
     assert.equal(S.simplify('可能とは限らない。', 'easy_jp').simplifiedText, '可能とは限らない。');
+    const transformer = '変流器は、電流の大きさを変換するための装置で、大電流が流れる電路の計測や、保護継電器を動作させるために使う。低圧・高圧の大電流をそのまま計測しようとすると、測定機器の絶縁を…';
+    const technical = S.simplify(transformer, 'n2_to_n3');
+    assert.ok(technical.changed);
+    assert.match(technical.simplifiedText, /変えるための装置です。\n/);
+    assert.match(technical.simplifiedText, /計測（測ること）に使います。\nまた、保護継電器を動かすためにも使います。/);
+    assert.match(technical.simplifiedText, /そのまま測ろうとすると/);
+    assert.ok(technical.simplifiedText.endsWith('測定機器の絶縁を…'));
+    assert.equal(technical.sentenceSplitCount, 2);
+    assert.deepEqual(S.facts(technical.simplifiedText), S.facts(transformer));
+    assert.equal(S.simplify(technical.simplifiedText, 'n2_to_n3').changed, false);
+    assert.deepEqual(S.facts(S.simplify(transformer + transformer, 'easy_jp').simplifiedText), S.facts(transformer + transformer));
+    assert.equal(S.simplify('この装置で、電流を測る。', 'n2_to_n3').simplifiedText, 'この装置で、電流を測る。');
+    assert.match(S.simplify('信号を変換しない。装置を動作させない。電圧を測定しませんでした。', 'n2_to_n3').simplifiedText, /変えない。\n装置を動かさない。\n電圧を測りませんでした。/);
     assert.equal(S.audioChunks('あ'.repeat(5000)).join(''), 'あ'.repeat(5000));
     assert.equal(S.xml('A&B < > " \''), 'A&amp;B &lt; &gt; &quot; &apos;');
 
@@ -77,8 +91,43 @@ async function main() {
     env.speechSynthesis.getVoices = () => [desktop];
     env.setTimeout = fn => setTimeout(fn, 0);
     await speech.speak('日文', { provider: 'edge' }, s => statuses.push(s));
-    assert.match(statuses.at(-1), /未提供微軟自然人聲/);
+    assert.match(statuses.at(-1), /HTTPS 與支援 WebSocket/);
     assert.equal(spoken.length, 3, 'no desktop fallback is spoken');
+
+    // With no native natural voice, Edge must synthesize over WebSocket, not return a no-voice message.
+    let socket;
+    env.crypto = require('node:crypto').webcrypto;
+    env.Blob = Blob;
+    env.setTimeout = setTimeout;
+    env.WebSocket = class {
+        constructor(url) { socket = this; this.url = url; this.messages = []; queueMicrotask(() => this.onopen?.()); }
+        send(message) {
+            this.messages.push(message);
+            if (!message.includes('Path:ssml')) return;
+            queueMicrotask(() => {
+                const header = new TextEncoder().encode('Content-Type:audio/mpeg\r\nPath:audio\r\n');
+                const payload = new Uint8Array(2 + header.length + 4);
+                payload[0] = header.length >> 8; payload[1] = header.length & 255;
+                payload.set(header, 2); payload.set([1, 2, 3, 4], 2 + header.length);
+                this.onmessage?.({ data: payload.buffer });
+                this.onmessage?.({ data: 'Path:turn.end\r\n' });
+            });
+        }
+        close() { this.closed = true; }
+    };
+    await speech.speak('A&B、こんにちは。', { provider: 'edge', voice: 'ja-JP-KeitaNeural' }, s => statuses.push(s));
+    assert.equal(new URL(socket.url).hostname, 'speech.platform.bing.com');
+    assert.match(socket.messages[1], /KeitaNeural/);
+    assert.match(socket.messages[1], /A&amp;B/);
+    assert.equal(audio.length, 2, 'cloud audio works without natural voices in getVoices');
+    assert.equal(statuses.at(-1), '微軟自然人聲播放完成');
+    assert.ok(socket.closed);
+    env.WebSocket = class { constructor() { socket = this; } close() { this.closed = true; } };
+    const controller = new AbortController();
+    const pending = S.edgeAudio(env, 'こんにちは。', 'ja-JP-NanamiNeural', controller.signal);
+    await new Promise(resolve => setImmediate(resolve)); controller.abort();
+    await assert.rejects(pending, /已停止/);
+    assert.ok(socket.closed);
 
     // Real reader controller: an older AI reply cannot overwrite edited input or a newer target.
     const html = fs.readFileSync('index.html', 'utf8');
@@ -106,6 +155,13 @@ async function main() {
     await context.directSimplifyInputArticle();
     context.revertOriginalInputArticle();
     assert.equal(node('articleInput').value, original, 'repeated simplification retains the first original');
+    node('articleInput').value = transformer;
+    await context.directSimplifyInputArticle();
+    context.openSimplifyModal(false);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(node('origTextDisplay').textContent, transformer, 'comparison retains source after shortcut');
+    assert.equal(node('simplifiedTextarea').value, technical.simplifiedText);
+    context.closeSimplifyModal();
     context.syncSimplifyEngine('ai');
     const old = context.directSimplifyInputArticle();
     node('articleInput').value = '新しい文章。';

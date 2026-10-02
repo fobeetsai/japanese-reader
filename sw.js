@@ -1,5 +1,5 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v16-reader-services';
+const CACHE_NAME = 'ankiflash-v17-edge-audio';
 const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',
