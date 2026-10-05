@@ -1,5 +1,5 @@
 /** Versioned flashcard assets: never combine cached controllers with newer HTML. */
-const CACHE_NAME = 'ankiflash-v18-chrome-audio';
+const CACHE_NAME = 'ankiflash-v19-child10';
 const VERSION = '20260916-13';
 const ASSETS_TO_CACHE = [
   './flashcard.html', './manifest.json',

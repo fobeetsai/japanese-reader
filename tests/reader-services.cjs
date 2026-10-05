@@ -29,6 +29,19 @@ async function main() {
     assert.equal(technical.sentenceSplitCount, 2);
     assert.deepEqual(S.facts(technical.simplifiedText), S.facts(transformer));
     assert.equal(S.simplify(technical.simplifiedText, 'n2_to_n3').changed, false);
+    const child = S.simplify(transformer, 'child10');
+    assert.match(child.simplifiedText, /流れる電気の量を変える機械です/);
+    assert.match(child.simplifiedText, /電気の量を調べるために使います/);
+    assert.match(child.simplifiedText, /安全を守るための機械/);
+    assert.match(child.simplifiedText, /保護継電器（ほごけいでんき）/);
+    assert.ok(!child.simplifiedText.includes('そのまま量を調べ'));
+    assert.ok(!child.simplifiedText.includes('電気をそのまま量を'));
+    assert.ok(child.sentenceSplitCount > technical.sentenceSplitCount);
+    assert.deepEqual(S.facts(child.simplifiedText), S.facts(transformer));
+    assert.ok(child.simplifiedText.endsWith('を…'));
+    assert.equal(S.simplify(child.simplifiedText, 'child10').changed, false);
+    assert.equal(S.simplify('児童会館へ行きます。', 'child10').changed, false);
+    assert.match(S.simplify('近隣住民のために、事前に調査を実施しました。', 'child10').simplifiedText, /近くに住んでいる人のために、始める前に調べました/);
     assert.deepEqual(S.facts(S.simplify(transformer + transformer, 'easy_jp').simplifiedText), S.facts(transformer + transformer));
     assert.equal(S.simplify('この装置で、電流を測る。', 'n2_to_n3').simplifiedText, 'この装置で、電流を測る。');
     assert.match(S.simplify('信号を変換しない。装置を動作させない。電圧を測定しませんでした。', 'n2_to_n3').simplifiedText, /変えない。\n装置を動かさない。\n電圧を測りませんでした。/);
@@ -53,7 +66,11 @@ async function main() {
     assert.match(rewritten.simplifiedText, /使いました/);
     assert.ok(!sent.includes('fixture-only-key'));
     assert.equal(options.headers['x-goog-api-key'], 'fixture-only-key');
-    assert.match(JSON.parse(options.body).systemInstruction.parts[0].text, /N4〜N5/);
+    assert.equal(JSON.parse(options.body).systemInstruction.parts[0].text, S.childPrompt);
+    assert.match(S.childPrompt, /10歳.*小学4年生/);
+    assert.match(S.childPrompt, /単語を数個置き換えるだけで終わらず/);
+    assert.match(S.childPrompt, /一文で伝えることは一つ/);
+    assert.match(S.childPrompt, /用語を残すだけでは不十分/);
     await assert.rejects(S.rewrite('原文', 'easy_jp', ''), /沒有內建 AI 通道/);
     global.fetch = async () => ({ ok: false, status: 429 });
     await assert.rejects(S.rewrite('原文', 'easy_jp', 'fixture'), /429/);
@@ -61,6 +78,14 @@ async function main() {
         global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason, content: { parts: [{ text: JSON.stringify({ text, changes: [] }) }] } }] }) });
         await assert.rejects(S.rewrite(text.includes('MPa') ? '機械を使用しました。30 MPa。' : '原文。', 'easy_jp', 'fixture'), error);
     }
+    global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ text: '長い説明'.repeat(20) + '。', changes: [] }) }] } }] }) });
+    await assert.rejects(S.rewrite('説明。', 'child10', 'fixture'), /過長/);
+    global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ text: '続きも書きました。', changes: [] }) }] } }] }) });
+    await assert.rejects(S.rewrite('文章の途中…', 'child10', 'fixture'), /缺失的結尾/);
+    global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ text: '電路を確かめました。\n変流器も確かめました。\n30 MPa。', changes: [] }) }] } }] }) });
+    await S.rewrite('変流器を確認し、電路を確認しました。30 MPa。', 'child10', 'fixture');
+    global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ text: '機械を確かめました。30 MPa。', changes: [] }) }] } }] }) });
+    await assert.rejects(S.rewrite('変流器を確認しました。30 MPa。', 'child10', 'fixture'), /遺漏工程術語/);
 
     const audio = [], spoken = [], statuses = [];
     class FakeAudio {
@@ -147,7 +172,7 @@ async function main() {
         }
         return nodes.get(id);
     };
-    node('simplifyLevelSelect').value = 'easy_jp';
+    node('simplifyLevelSelect').value = 'child10';
     const storage = new Map(), waiting = [];
     const service = { ...S, rewrite: text => new Promise(resolve => waiting.push({ text, resolve })) };
     const context = vm.createContext({ ReaderServices: service, AbortController, showToast() {}, escapeHtml: value => value,
@@ -166,7 +191,10 @@ async function main() {
     context.openSimplifyModal(false);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(node('origTextDisplay').textContent, transformer, 'comparison retains source after shortcut');
-    assert.equal(node('simplifiedTextarea').value, technical.simplifiedText);
+    assert.equal(node('simplifiedTextarea').value, child.simplifiedText);
+    assert.equal(node('simplifyInstructionDisplay').textContent, S.childPrompt);
+    assert.ok(html.includes('<option value="child10" selected>'));
+    assert.ok(!html.includes('<option value="n2_to_n3"'));
     context.closeSimplifyModal();
     context.syncSimplifyEngine('ai');
     const old = context.directSimplifyInputArticle();

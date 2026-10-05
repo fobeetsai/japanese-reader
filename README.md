@@ -15,7 +15,8 @@
 `index.html`、`japanese_reader.html` 與 `static/index.html` 共用 `static/master/reader-services.js`。
 
 - 快捷按鈕、自動降維與雙欄對照採用同一個引擎設定。雙欄視窗可見、可操作；套用後可還原原文。
-- 本地詞句簡化支援動詞活用、技術說明中的定義／用途拆句與三種目標程度；例如變流器文章會拆開裝置定義與兩種用途，簡化「変換する」「動作させる」「計測しよう」，保留專業術語、數值與未完成的末尾。只處理可辨識結構，不保證整篇符合特定 JLPT 級數。
+- 所有閱讀助手入口、快捷降維、自動降維及雙欄對照的目標固定為「10歲小孩能懂的日文」（2026-10-05），不再預設 N3。全文 AI 指令要求重組每個段落、一句一個重點、日常詞與敬體，先解釋專業詞再附正式名稱和讀音，保留數值、單位、否定／條件／義務與未完結尾。雙欄視窗可展開查看實際指令。
+- 本地模式加強日常詞、定義／用途／條件拆句及已查核電氣詞彙的解釋。例如變流器文章改為「流れる電気の量を変える機械」「安全を守るための機械」，再附正式名称與讀音。本地規則只能處理已支援詞句，不保證任意文章全文都達到10歲易懂程度；任意文章全文重寫需設定 Gemini Key。
 - AI 全文改寫需在雙欄視窗輸入自己的 Gemini Key 與可用模型。沒有內建免費 AI 通道；失敗、逾時、未完成或數值／術語被改動時保留原文，且不偽裝成改寫成功。Key 沿用本機瀏覽器儲存，僅在選擇 AI 並執行時送至 Google。
 - Edge 模式提供 Nanami／Keita Neural，免 Azure Key。優先使用同名原生自然語音；系統語音清單沒有自然語音時，直接以 WebSocket 取得 Microsoft Edge Read Aloud 的 MP3。日文僅在按朗讀時送至 Microsoft，無第三方 CDN 或中繼伺服器。此消費者服務介面可能變動，已在 Edge 實測；其他瀏覽器未保證支援，可改用 Azure。
 - 「微軟自然人聲設定與試聽」可切換 Azure Speech，輸入自己的 Key、服務區域並選擇 Nanami／Keita Neural。Key 僅存於此分頁的 `sessionStorage`，日文直接送至所選 Microsoft Azure 區域；可能依服務方案計費。
@@ -26,6 +27,8 @@
 驗證：`node tests/reader-services.cjs` 涵蓋實際變流器文章、活用、數值／術語保留、原文對照與還原、非同步過期結果、Gemini 回應錯誤、PWA 呼叫限制、自然語音辨識、Edge 音訊封包／取消與 Azure 音訊生命週期。自動 API 測試使用固定回應；Edge 另以公開日文試聽句驗證真實 MP3 與播放進度。真實 AI 與 Azure 合成仍需自己的服務設定。
 
 官方介面：[Gemini Generate Content](https://ai.google.dev/api/generate-content)、[Microsoft Speech REST](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech)。
+
+電氣詞彙解釋參考：[三菱電機 CT](https://www.mitsubishielectric.co.jp/fa/products/pmng/pmd/pmerit/itr/index_2.html)、[東芝保護継電器](https://www.toshiba-tips.co.jp/products/powersupply/protective-relay.html)、[KEYENCE 電壓用語](https://www.keyence.co.jp/ss/products/recorder/lab/glossary/)、[Panasonic 絕緣體說明](https://www.panasonic.com/jp/energy/study/academy/storage.html)。僅提供名詞解釋，不補写原文未提供的工程數值、範例或作業步驟。
 
 本機服務範圍：只提供固定 Nanami／Keita 合成和閱讀頁面的公開檔案；拒絕任意目的地、其他網站來源、超長請求及隱藏／工具目錄。文字不寫入紀錄檔。Microsoft 消費者語音介面可能變動；若服務失敗會顯示錯誤並保留原文。
 
